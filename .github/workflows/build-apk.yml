@@ -8,7 +8,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y default-jdk-headless aapt apksigner zipalign dalvik-exchange libandroid-23-java
       - name: Restore signing key (from repo secret KEYSTORE_B64)
         run: mkdir -p signing && echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > signing/sweldopulse.jks
-      - run: ./scripts/build_apk.sh
+      - run: bash ./scripts/build_apk.sh
         env: { KEYSTORE_PASS: "${{ secrets.KEYSTORE_PASS }}" }
       - uses: actions/upload-artifact@v4
         with: { name: SweldoPulse-apk, path: "SweldoPulse-v*.apk" }
