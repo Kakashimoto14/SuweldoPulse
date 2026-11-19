@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F6F7FB" id="meta-theme">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>SweldoPulse — Salary & Shift Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>
+/* Runs before first paint: lock the app + apply theme so nothing ever flashes. */
+(function(){var d=document.documentElement;try{
+ if(localStorage.getItem('sweldo_pulse_lock_v1'))d.classList.add('locked');
+ var raw=localStorage.getItem('sweldo_pulse_settings_v2'),s=JSON.parse(raw||'{}');
+ var m=s.themeMode||(raw?(s.darkMode?'dark':'light'):'system');
+ var dark=m==='dark'||(m==='system'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+ if(dark)d.classList.add('dark');
+}catch(e){}
+if(window.AndroidBridge){window.Notification=function(t,o){AndroidBridge.notify(t,(o&&o.body)||"")};Notification.permission="granted";Notification.requestPermission=function(){return Promise.resolve("granted")};}
+})();
+</script>
+<style>
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/inter-latin-400-normal.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/inter-latin-500-normal.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/inter-latin-600-normal.woff2) format('woff2')}@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/inter-latin-700-normal.woff2) format('woff2')}
+:root{
+  --accent:#4F46E5;--accent-hover:#4338CA;--accent-soft:#EEF2FF;--accent-soft-border:#C7D2FE;--accent-text:#4338CA;--accent-glow:rgba(79,70,229,.22);
+  --bg:#F6F7FB;--card:#FFFFFF;--subtle:#F1F4F9;--line:#E5E9F0;
+  --t1:#0F172A;--t2:#475569;--t3:#8190A5;
+  --ok:#059669;--ok-soft:rgba(5,150,105,.12);--bad:#E11D48;--bad-soft:rgba(225,29,72,.10);--warn:#D97706;--warn-soft:rgba(217,119,6,.12);
+  --nav:rgba(255,255,255,.97);--shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -8px rgba(15,23,42,.08);
+  --r-lg:22px;--r-md:16px;--r-sm:12px;
+  --ease:cubic-bezier(.22,1,.36,1);--ease-sheet:cubic-bezier(.32,.72,0,1);
+  --safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
+  color-scheme:light;
+}
+html.dark{--bg:#090D16;--card:#121A29;--subtle:#1A2438;--line:#243049;--t1:#F4F7FB;--t2:#C3CCDA;--t3:#7C8AA3;--nav:rgba(14,20,33,.97);
+  --shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px -10px rgba(0,0,0,.5);--ok:#34D399;--ok-soft:rgba(52,211,153,.14);--bad:#FB7185;--bad-soft:rgba(251,113,133,.14);--warn:#FBBF24;--warn-soft:rgba(251,191,36,.14);color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
+html,body{background:var(--bg);color:var(--t1);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.4;-webkit-text-size-adjust:100%;touch-action:manipulation;overscroll-behavior-y:none}
+body{min-height:100dvh}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0}
+input,select,textarea{outline:none}
+.hidden{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;pointer-events:none}
+.ic.sm{width:16px;height:16px}.ic.xs{width:14px;height:14px}
+.press{transition:transform .12s var(--ease),opacity .12s linear,background-color .2s ease}
+.press:active{transform:scale(.97)}
+
+/* ---------- lock-first: nothing of the app is visible while locked ---------- */
+html.locked #app,html.locked #sp-splash,html.locked #toast{visibility:hidden}
+#sp-lock{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;padding:24px;
+  background:radial-gradient(120% 80% at 50% 30%,#1D1A2E 0%,#07090F 64%)}
+html.locked #sp-lock,html.pin-open #sp-lock{display:flex}
+#sp-veil{position:fixed;inset:0;z-index:290;display:none;background:radial-gradient(120% 80% at 50% 30%,#1D1A2E 0%,#07090F 64%)}
+html.veil #sp-veil{display:block}
+.lock-logo{width:64px;height:64px;border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(245,165,36,.25)}
+.pin-dots{display:flex;gap:16px;margin:6px 0}
+.pin-dot{width:13px;height:13px;border-radius:99px;border:1.5px solid #F5A524;transition:background-color .12s,transform .12s}
+.pin-dot.f{background:#F5A524;transform:scale(1.15)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px}
+.pin-key{width:72px;height:72px;border-radius:99px;background:rgba(255,255,255,.08);font-size:25px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;transition:transform .1s,background-color .1s}
+.pin-key:active{transform:scale(.9);background:rgba(245,165,36,.32)}
+@keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.shake{animation:shake .4s}
+
+/* ---------- splash (short, only on a cold start) ---------- */
+#sp-splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:radial-gradient(120% 80% at 50% 36%,#1D1A2E 0%,#07090F 64%);transition:opacity .35s ease,visibility .35s}
+#sp-splash.out{opacity:0;visibility:hidden}
+.sp-tile{width:104px;height:104px;filter:drop-shadow(0 22px 46px rgba(245,165,36,.28));animation:spTile .55s var(--ease) both}
+@keyframes spTile{from{opacity:0;transform:scale(.85) translateY(6px)}}
+.sp-a,.sp-b,.sp-k{stroke-dasharray:1;animation:spDraw .6s cubic-bezier(.65,0,.35,1) both}
+.sp-a{animation-delay:.1s}.sp-b,.sp-k{animation-delay:.4s}
+@keyframes spDraw{from{stroke-dashoffset:1;opacity:0}2%{opacity:1}to{stroke-dashoffset:0}}
+.sp-word{font-size:28px;font-weight:700;letter-spacing:-.03em;color:#fff;animation:spWord .5s var(--ease) .4s both}
+.sp-word span{background:linear-gradient(90deg,#FFE08A,#F5A524 55%,#F0643C);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes spWord{from{opacity:0;transform:translateY(8px)}}
+
+/* ---------- shell & layout ---------- */
+#app{width:100%;max-width:520px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative}
+.hdr{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + var(--safe-t)) 18px 10px;background:var(--bg)}
+.hdr-l{display:flex;align-items:center;gap:11px;min-width:0}
+.hdr-logo{width:38px;height:38px;border-radius:11px;overflow:hidden;flex:none;box-shadow:0 4px 14px var(--accent-glow)}
+.hdr-logo svg{width:100%;height:100%;display:block}
+.hdr-sub{font-size:11px;font-weight:500;color:var(--t3);line-height:1.2}
+.hdr-title{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.icon-btn{width:40px;height:40px;border-radius:99px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--t2);flex:none}
+main{flex:1;padding:6px 16px calc(112px + var(--safe-b))}
+.view{display:none}
+.view.active{display:flex;flex-direction:column;gap:14px;animation:viewIn .26s var(--ease) both}
+@keyframes viewIn{from{opacity:0;transform:translate3d(0,10px,0)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.card-t{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.card-s{font-size:12px;color:var(--t3);margin-top:2px}
+.lbl{font-size:12px;font-weight:600;color:var(--t3);display:block;margin-bottom:6px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.chip{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:99px;font-size:11.5px;font-weight:700;background:var(--accent-soft);color:var(--accent-text);white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.mute{background:var(--subtle);color:var(--t2)}
+.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.grow{flex:1;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.muted{color:var(--t3)}.sub{color:var(--t2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:14px;font-size:14px;font-weight:600;white-space:nowrap}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 8px 20px -8px var(--accent-glow)}
+.btn.soft{background:var(--accent-soft);color:var(--accent-text)}
+.btn.ghost{background:var(--card);border:1px solid var(--line);color:var(--t1)}
+.btn.danger{background:var(--bad);color:#fff}
+.btn.sm{min-height:38px;padding:0 14px;font-size:13px;border-radius:12px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.4;pointer-events:none}
+.field{width:100%;min-height:46px;padding:0 14px;border-radius:14px;background:var(--subtle);border:1px solid var(--line);font-size:14px;font-weight:600;transition:border-color .15s}
+.field:focus{border-color:var(--accent)}
+textarea.field{padding:12px 14px;min-height:96px;font-weight:500;line-height:1.5;resize:none}
+select.field{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238190A5' stroke-width='2.4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;text-overflow:ellipsis}
+.money-field{display:flex;align-items:center;gap:6px;min-height:46px;padding:0 14px;border-radius:14px;background:var(--subtle);border:1px solid var(--line)}
+.money-field:focus-within{border-color:var(--accent)}
+.money-field span{color:var(--t3);font-weight:600}
+.money-field input{flex:1;min-width:0;width:100%;background:none;border:0;font-weight:700;font-size:15px;text-align:right}
+.seg{display:flex;padding:3px;border-radius:14px;background:var(--subtle);border:1px solid var(--line);gap:2px}
+.seg button{flex:1;min-height:36px;border-radius:11px;font-size:13px;font-weight:600;color:var(--t2);transition:background-color .2s,color .2s}
+.seg button.on{background:var(--card);color:var(--t1);box-shadow:0 1px 4px rgba(15,23,42,.12)}
+.switch{position:relative;width:46px;height:28px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;width:100%;height:100%;z-index:1;cursor:pointer}
+.switch i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:background-color .2s}
+.switch i::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .22s var(--ease)}
+.switch input:checked+i{background:var(--ok)}.switch input:checked+i::after{transform:translateX(18px)}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:48px}
+.setting+.setting{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.setting .k{font-size:14px;font-weight:600}.setting .d{font-size:12px;color:var(--t3);margin-top:1px}
+
+/* ---------- cutoff switcher ---------- */
+.switcher{display:flex;align-items:center;gap:8px}
+.switcher .icon-btn{width:42px;height:42px;border-radius:14px}
+.switcher .mid{position:relative;flex:1;min-width:0;height:42px;border-radius:14px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:14px;padding:0 10px}
+.switcher .mid span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.switcher .mid select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px}
+
+/* ---------- wallet card (net pay) ---------- */
+.wallet{position:relative;overflow:hidden;border-radius:24px;padding:14px 16px;color:#fff;isolation:isolate;background:var(--accent);background:linear-gradient(145deg,var(--accent) 0%,color-mix(in srgb,var(--accent) 52%,#0a0e22) 100%);box-shadow:0 16px 32px -16px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.2)}
+.wallet::before{content:'';position:absolute;inset:-35%;z-index:-1;background:radial-gradient(38% 38% at 80% 18%,rgba(255,255,255,.24),transparent 70%),radial-gradient(42% 42% at 12% 100%,rgba(255,255,255,.13),transparent 70%);animation:drift 9s ease-in-out 2 alternate both;will-change:transform}
+@keyframes drift{to{transform:translate3d(5%,3%,0) rotate(7deg)}}
+.wallet::after{content:'';position:absolute;top:0;bottom:0;width:55%;left:-70%;z-index:-1;background:linear-gradient(100deg,transparent,rgba(255,255,255,.2),transparent);transform:skewX(-18deg);animation:shine 1.3s .3s var(--ease) 1 both}
+@keyframes shine{to{left:135%}}
+.w-top{display:flex;align-items:center;justify-content:space-between;min-height:28px}
+.w-lbl{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:rgba(255,255,255,.88)}
+.w-live{position:relative;width:7px;height:7px;border-radius:9px;background:#4ADE80}
+.w-live::after{content:'';position:absolute;inset:0;border-radius:9px;background:#4ADE80;animation:ping 1.8s ease-out 4}
+@keyframes ping{from{transform:scale(1);opacity:.7}to{transform:scale(3.2);opacity:0}}
+.w-eye{width:30px;height:30px;border-radius:99px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;color:#fff;transition:transform .18s cubic-bezier(.34,1.56,.64,1)}
+.w-eye:active{transform:scale(.82)}
+.w-eye .ic{width:16px;height:16px}
+.blink{animation:eyeBlink .32s var(--ease)}
+@keyframes eyeBlink{45%{transform:scaleY(.08)}}
+.w-main{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+.w-amt{display:flex;align-items:baseline;font-weight:700;letter-spacing:-.035em;line-height:1.05;white-space:nowrap;font-variant-numeric:tabular-nums}
+.w-amt .cur{font-size:19px;opacity:.78;margin-right:3px;font-weight:600}
+.w-amt .int{font-size:clamp(30px,9.2vw,36px)}
+.w-amt .dec{font-size:18px;opacity:.72;font-weight:600}
+.w-amt.mask .int{letter-spacing:.08em}
+.ring{position:relative;width:44px;height:44px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4;stroke-linecap:round}
+.ring .tr{stroke:rgba(255,255,255,.22)}
+.ring .pg{stroke:#fff;stroke-dasharray:100.5;stroke-dashoffset:100.5;transition:stroke-dashoffset .9s var(--ease)}
+.ring .tx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.ring .tx b{font-size:14px;font-weight:700}.ring .tx small{font-size:7.5px;font-weight:700;opacity:.8;margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.w-sub{font-size:11.5px;color:rgba(255,255,255,.82);margin-top:4px;min-height:15px}
+.spark{display:block;width:100%;height:40px;margin:4px 0 0;overflow:visible;clip-path:inset(-6px 100% -6px 0);transition:clip-path 1s var(--ease)}
+.spark.in{clip-path:inset(-6px -6px -6px 0)}
+.spark .area{fill:url(#sparkG)}.spark .ln{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spark .fu{fill:none;stroke:rgba(255,255,255,.6);stroke-width:1.6;stroke-dasharray:3 5;stroke-linecap:round}
+.spark .idle{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.spark .hd{fill:#fff}.spark .hd-r{fill:rgba(255,255,255,.35)}
+.w-goal{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:10.5px;color:rgba(255,255,255,.8);font-weight:600}
+.w-goal .gb{flex:1;height:4px;border-radius:9px;background:rgba(255,255,255,.2);overflow:hidden}
+.w-goal .gb i{display:block;height:100%;width:100%;border-radius:9px;background:#A7F3D0;transform-origin:left;transition:transform .8s var(--ease)}
+.w-strip{display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:1px;margin-top:10px;border-radius:14px;overflow:hidden;background:rgba(255,255,255,.16)}
+.w-strip>div{padding:7px 10px;background:rgba(10,14,34,.18)}
+.w-strip span{display:block;font-size:10px;font-weight:500;color:rgba(255,255,255,.7)}
+.w-strip b{display:block;font-size:12.5px;font-weight:700;white-space:nowrap;margin-top:1px}
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.qa-i{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--t2);padding:2px 0}
+.qa-ic{width:46px;height:46px;border-radius:16px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--accent-text);box-shadow:var(--shadow);transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.qa-i:active .qa-ic{transform:scale(.88)}
+.qa-ic.primary{background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 10px 20px -8px var(--accent-glow)}
+/* ---------- lists ---------- */
+.sec-h{display:flex;align-items:center;justify-content:space-between;padding:0 2px}
+.link{font-size:13px;font-weight:600;color:var(--accent-text);padding:6px 2px}
+.day-h{display:flex;align-items:center;justify-content:space-between;padding:6px 4px 0;font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.02em}
+.list{display:flex;flex-direction:column;gap:8px}
+.shift{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--r-md);background:var(--card);border:1px solid var(--line);content-visibility:auto;contain-intrinsic-size:auto 68px;text-align:left;width:100%}
+.shift .tag{width:42px;height:42px;border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent-text);flex:none;line-height:1.05}
+.shift .tag b{font-size:16px;font-weight:700}.shift .tag small{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.shift .tag.hol{background:var(--ok-soft);color:var(--ok)}
+.shift .t{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shift .s{font-size:12px;color:var(--t3);margin-top:2px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.shift .amt{font-size:14.5px;font-weight:700;white-space:nowrap}
+.dot-b{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:99px}
+.dot-b.nd{background:var(--accent-soft);color:var(--accent-text)}.dot-b.ot{background:var(--warn-soft);color:var(--warn)}.dot-b.hl{background:var(--ok-soft);color:var(--ok)}
+.trash{width:36px;height:36px;border-radius:11px;color:var(--t3);display:flex;align-items:center;justify-content:center;flex:none}
+.trash:active{background:var(--bad-soft);color:var(--bad)}
+.empty{text-align:center;padding:30px 20px;border:1.5px dashed var(--line);border-radius:var(--r-lg);color:var(--t3);font-size:13px}
+.empty b{display:block;color:var(--t1);font-size:15px;margin-bottom:4px}
+.filters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.filters::-webkit-scrollbar{display:none}
+.fchip{height:34px;padding:0 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--t2);white-space:nowrap;flex:none;transition:background-color .15s,color .15s,border-color .15s}
+.fchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.search{position:relative}
+.search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--t3)}
+.search input{padding-left:42px;padding-right:40px;font-weight:500}
+.search button{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;color:var(--t3);display:flex;align-items:center;justify-content:center}
+.sumline{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--t3);padding:0 2px}
+.sumline b{color:var(--t1)}
+
+/* ---------- budget (compact on home) ---------- */
+.mini-budget{display:block;width:100%;text-align:left}
+.stackbar{display:flex;gap:3px;height:8px;border-radius:99px;overflow:hidden;background:var(--subtle)}
+.stackbar i{display:block;height:100%;transition:width .5s var(--ease)}
+.c-needs{background:var(--accent)}.c-wants{background:#F59E0B}.c-save{background:#10B981}
+
+/* ---------- payslip ---------- */
+.ps-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:34px;font-size:14px}
+.ps-row .k{color:var(--t2)}.ps-row .v{font-weight:600;font-variant-numeric:tabular-nums}
+.ps-row.total{font-weight:700;padding-top:10px;margin-top:6px;border-top:1px dashed var(--line)}.ps-row.total .k{color:var(--t1)}.ps-row.total .v{font-weight:700}
+.ps-group{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin:14px 0 4px}
+.ps-group:first-of-type{margin-top:0}
+.ps-net{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:16px;border-radius:var(--r-md);background:var(--accent-soft);border:1px solid var(--accent-soft-border)}
+.ps-net .v{font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--accent-text)}
+.neg{color:var(--bad)}.pos-nd{color:var(--accent-text)}.pos-ot{color:var(--warn)}
+details.fold>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;min-height:28px}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary .ic{transition:transform .2s var(--ease);color:var(--t3)}
+details.fold[open]>summary .ic{transform:rotate(180deg)}
+details.fold>.body{padding-top:14px}
+.note{font-size:12px;line-height:1.55;color:var(--t3)}
+
+/* ---------- nav ---------- */
+.nav{position:fixed;left:0;right:0;bottom:0;margin:0 auto;width:100%;max-width:520px;z-index:30;background:var(--nav);border-top:1px solid var(--line);padding:6px 8px calc(6px + var(--safe-b));box-shadow:0 -10px 30px -12px rgba(15,23,42,.14)}
+.nav-grid{position:relative;display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.nav-pill{position:absolute;top:0;bottom:0;left:0;width:20%;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:transform .38s var(--ease);will-change:transform}
+.nav-pill i{display:block;width:62px;height:50px;border-radius:17px;background:var(--accent-soft)}
+.nav-it{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:54px;color:var(--t3);font-size:11px;font-weight:600;transition:color .2s}
+.nav-it.on{color:var(--accent-text)}
+.fab{position:relative;z-index:2;justify-self:center;width:56px;height:56px;margin-top:-26px;border-radius:19px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 24px -8px var(--accent-glow);transition:transform .15s var(--ease)}
+.fab:active{transform:scale(.92)}
+.fab .ic{width:26px;height:26px;stroke-width:2.4}
+
+/* ---------- sheets ---------- */
+.scrim{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,12,22,.55);opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s}
+.scrim.open{opacity:1;visibility:visible}
+.scrim.top{z-index:400;align-items:center;padding:20px}
+.sheet{width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--card);border-radius:28px 28px 0 0;padding:10px 18px calc(18px + var(--safe-b));transform:translate3d(0,100%,0);transition:transform .32s var(--ease-sheet);will-change:transform}
+.scrim.open .sheet{transform:translate3d(0,0,0)}
+.scrim.top .sheet{border-radius:26px;max-width:380px;transform:translate3d(0,14px,0) scale(.96);opacity:0;transition:transform .24s var(--ease),opacity .2s;padding:20px}
+.scrim.top.open .sheet{transform:none;opacity:1}
+.grab{width:40px;height:4px;border-radius:9px;background:var(--line);margin:0 auto 14px}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.sheet-t{font-size:18px;font-weight:700;letter-spacing:-.02em}
+.preview{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:var(--r-md);background:var(--accent-soft);color:var(--accent-text)}
+.preview .big{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.menu-it{display:flex;align-items:center;gap:14px;width:100%;min-height:54px;padding:0 6px;font-size:15px;font-weight:600;text-align:left}
+.menu-it .ico{width:38px;height:38px;border-radius:12px;background:var(--accent-soft);color:var(--accent-text);display:flex;align-items:center;justify-content:center}
+.menu-it.bad .ico{background:var(--bad-soft);color:var(--bad)}.menu-it.bad{color:var(--bad)}
+.presets{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:0 18px}
+.presets::-webkit-scrollbar{display:none}
+.confirm-ic{width:46px;height:46px;border-radius:15px;background:var(--bad-soft);color:var(--bad);display:flex;align-items:center;justify-content:center;flex:none}
+.confirm-ic.neutral{background:var(--accent-soft);color:var(--accent-text)}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:calc(92px + var(--safe-b));z-index:450;display:flex;align-items:center;gap:12px;max-width:calc(100% - 32px);padding:11px 16px;border-radius:16px;background:#111827;color:#fff;font-size:13px;font-weight:500;box-shadow:0 12px 30px rgba(0,0,0,.35);opacity:0;transform:translate3d(-50%,10px,0);pointer-events:none;transition:opacity .22s ease,transform .3s var(--ease)}
+#toast.on{opacity:1;transform:translate3d(-50%,0,0);pointer-events:auto}
+#toast button{color:#A5B4FC;font-weight:700;font-size:13px;padding:2px 4px}
+
+/* ---------- misc ---------- */
+.theme-sw{width:36px;height:36px;border-radius:99px;border:0;transition:transform .15s var(--ease),box-shadow .2s}
+.theme-sw:active{transform:scale(.88)}
+.theme-sw.on{box-shadow:0 0 0 3px var(--card),0 0 0 5px currentColor}
+#payslip-modal{position:fixed;inset:0;z-index:150;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;background:rgba(6,9,20,.9)}
+#payslip-modal.on{display:flex}
+#print-area{display:none}
+#tour{position:fixed;inset:0;z-index:120;display:none;touch-action:none}
+#tour.on{display:block}
+#tour-spot{position:fixed;border-radius:18px;pointer-events:none;box-shadow:0 0 0 2px rgba(129,140,248,.95),0 0 0 9999px rgba(6,9,20,.78);transition:left .4s var(--ease),top .4s var(--ease),width .4s var(--ease),height .4s var(--ease)}
+#tour-card{position:fixed;width:min(340px,calc(100% - 32px));background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.4);transition:top .4s var(--ease),opacity .18s ease}
+.tour-dot{height:5px;width:5px;border-radius:9px;background:var(--line);transition:width .3s,background-color .3s}.tour-dot.on{width:18px;background:var(--accent)}
+
+
+/* ---------- v1.13: compact scale + motion ---------- */
+html,body{font-size:13.5px}
+.hdr{padding:calc(8px + var(--safe-t)) 16px 8px}.hdr-logo{width:34px;height:34px;border-radius:10px}.hdr-title{font-size:17px}.hdr-sub{font-size:10.5px}
+.icon-btn{width:36px;height:36px}
+main{padding:4px 14px calc(92px + var(--safe-b))}.view.active{gap:12px}
+.card{padding:14px;border-radius:20px}.card-t{font-size:14px}.card-s{font-size:11.5px}.card-h{margin-bottom:12px}
+.btn{min-height:42px;font-size:13.5px;border-radius:13px;padding:0 16px}.btn.sm{min-height:36px;font-size:12.5px}
+.field,.money-field{min-height:42px;border-radius:13px;font-size:13.5px}
+.switcher .icon-btn{width:38px;height:38px;border-radius:12px}.switcher .mid{height:38px;border-radius:12px;font-size:13px}
+.shift{padding:10px 12px;gap:10px;border-radius:14px}.shift .tag{width:38px;height:38px;border-radius:11px}.shift .tag b{font-size:14.5px}.shift .t{font-size:13.5px}.shift .s{font-size:11.5px}.shift .amt{font-size:13.5px}
+.nav{padding:5px 8px calc(5px + var(--safe-b))}.nav-it{height:48px;font-size:10.5px;gap:2px}.nav-pill i{width:54px;height:42px;border-radius:15px}.fab{width:50px;height:50px;margin-top:-22px;border-radius:17px}.fab .ic{width:24px;height:24px}
+.sheet-t{font-size:17px}.sheet{padding:10px 16px calc(16px + var(--safe-b))}
+.ps-row{font-size:13.5px;min-height:31px}.ps-net .v{font-size:23px}
+.dot-b.up{background:transparent;border:1px solid var(--accent-soft-border);color:var(--accent-text)}
+/* ported from v1.11: sun/moon morph, spring easing, staggered cards */
+.theme-svg{overflow:visible;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+html.dark .theme-svg{transform:rotate(-35deg)}
+.sun-rays line{transform-origin:12px 12px;transition:opacity .3s ease,transform .4s var(--ease)}
+html.dark .sun-rays line{opacity:0;transform:scale(.25)}
+.sun-core{transform-origin:12px 12px;transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+html.dark .sun-core{transform:scale(1.42)}
+.moon-mask-circle{transition:cx .45s cubic-bezier(.34,1.56,.64,1),cy .45s cubic-bezier(.34,1.56,.64,1),r .45s cubic-bezier(.34,1.56,.64,1)}
+.icon-btn:active,.fchip:active,.btn:active{transition-timing-function:cubic-bezier(.34,1.56,.64,1)}
+@keyframes cardIn{from{opacity:0;transform:translate3d(0,12px,0)}}
+.enter>*{animation:cardIn .32s var(--ease) both}
+.enter>*:nth-child(2){animation-delay:28ms}.enter>*:nth-child(3){animation-delay:56ms}.enter>*:nth-child(4){animation-delay:84ms}.enter>*:nth-child(5){animation-delay:112ms}.enter>*:nth-child(6){animation-delay:140ms}.enter>*:nth-child(7){animation-delay:168ms}.enter>*:nth-child(8){animation-delay:196ms}.enter>*:nth-child(9){animation-delay:224ms}.enter>*:nth-child(10){animation-delay:252ms}.enter>*:nth-child(11){animation-delay:280ms}.enter>*:nth-child(12){animation-delay:308ms}
+html.theme-anim *{transition:background-color .35s ease,color .35s ease,border-color .35s ease,fill .35s ease,stroke .35s ease!important}
+.view.fwd{animation-name:viewFwd}.view.back{animation-name:viewBack}
+@keyframes viewFwd{from{opacity:0;transform:translate3d(18px,0,0)}}
+@keyframes viewBack{from{opacity:0;transform:translate3d(-18px,0,0)}}
+
+@media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{padding-left:22px;padding-right:22px}}
+@media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.hero{padding:16px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
+@media (prefers-reduced-motion:reduce){.wallet::before,.wallet::after{animation:none}.spark{transition:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media print{body>*:not(#print-area){display:none!important}#print-area{display:block!important;padding:32px;color:#000}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="spTile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A2038"/><stop offset="1" stop-color="#070A14"/></linearGradient>
+<linearGradient id="spGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset=".5" stop-color="#F5A524"/><stop offset="1" stop-color="#F0643C"/></linearGradient>
+<radialGradient id="spGloss" cx=".2" cy=".05" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<linearGradient id="sparkG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+<symbol id="i-l" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+<symbol id="i-r" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+<symbol id="i-d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.9M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7c1.9 0 3.6-.5 5-1.3"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m21 16-5-5-9 9"/></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></symbol>
+<symbol id="i-pie" viewBox="0 0 24 24"><path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
+<symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></symbol>
+<symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+</defs></svg>
+
+<div id="sp-splash" onclick="dismissSplash()" role="presentation"><svg class="sp-tile" viewBox="0 0 64 64" role="img" aria-label="SweldoPulse"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path class="sp-a" pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path class="sp-k" pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path class="sp-b" pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg><div class="sp-word">Sweldo<span>Pulse</span></div></div>
+
+<!-- Lock screen is static markup so it paints on the very first frame -->
+<div id="sp-lock">
+  <div class="lock-logo"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div>
+  <div id="lock-title" style="font-size:19px;font-weight:700;letter-spacing:-.02em">Enter PIN</div>
+  <div id="lock-sub" style="font-size:12.5px;color:#94A3B8;min-height:18px;margin-top:-8px">SweldoPulse is locked</div>
+  <div id="pin-dots" class="pin-dots"></div>
+  <div class="pin-pad" id="pin-pad">
+    <button type="button" class="pin-key" onclick="pinKey('1')">1</button><button type="button" class="pin-key" onclick="pinKey('2')">2</button><button type="button" class="pin-key" onclick="pinKey('3')">3</button>
+    <button type="button" class="pin-key" onclick="pinKey('4')">4</button><button type="button" class="pin-key" onclick="pinKey('5')">5</button><button type="button" class="pin-key" onclick="pinKey('6')">6</button>
+    <button type="button" class="pin-key" onclick="pinKey('7')">7</button><button type="button" class="pin-key" onclick="pinKey('8')">8</button><button type="button" class="pin-key" onclick="pinKey('9')">9</button>
+    <button type="button" class="pin-key" id="pin-fp" onclick="tryFingerprint()" aria-label="Fingerprint" style="visibility:hidden"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#F5A524" stroke-width="1.7" stroke-linecap="round"><path d="M12 11v3a5 5 0 0 1-1 3"/><path d="M8 12a4 4 0 0 1 8 0v2a8 8 0 0 1-1.5 4.5"/><path d="M5 12a7 7 0 0 1 14 0v1"/><path d="M5 15c0 2 .5 3.5 1.5 5"/></svg></button>
+    <button type="button" class="pin-key" onclick="pinKey('0')">0</button>
+    <button type="button" class="pin-key" onclick="pinKey('⌫')" aria-label="Delete">⌫</button>
+  </div>
+  <button type="button" id="lock-forgot" onclick="lockForgot()" style="font-size:12px;color:#64748B;padding:8px">Forgot PIN?</button>
+  <button type="button" id="lock-cancel" onclick="lockCancel()" class="hidden" style="font-size:13px;font-weight:600;color:#94A3B8;padding:8px">Cancel</button>
+</div>
+<div id="sp-veil"></div>
+
+<div id="app">
+  <header class="hdr">
+    <div class="hdr-l">
+      <div class="hdr-logo"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div>
+      <div><p class="hdr-sub" id="hdr-sub">Cutoff overview</p><h1 class="hdr-title" id="hdr-title">Home</h1></div>
+    </div>
+    <button type="button" class="icon-btn press" id="theme-btn" onclick="toggleDark()" aria-label="Toggle dark mode"><svg class="theme-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><defs><mask id="sun-moon-mask"><rect x="0" y="0" width="24" height="24" fill="white"/><circle id="moon-cutout" class="moon-mask-circle" cx="24" cy="4" r="0" fill="black"/></mask></defs><circle class="sun-core" cx="12" cy="12" r="5" fill="currentColor" stroke="none" mask="url(#sun-moon-mask)"/><g class="sun-rays"><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></g></svg></button>
+  </header>
+
+  <main>
+    <!-- ================= HOME ================= -->
+    <section id="view-home" class="view active">
+      <div class="switcher" data-switcher>
+        <button type="button" class="icon-btn press" onclick="stepPeriod(-1)" aria-label="Previous cutoff"><svg class="ic"><use href="#i-l"/></svg></button>
+        <div class="mid"><span data-period-label>—</span><svg class="ic sm muted"><use href="#i-d"/></svg><select data-period-select onchange="selectPeriod(this.value)" aria-label="Choose cutoff"></select></div>
+        <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
+      </div>
+
+      <div class="wallet press" id="hero" onclick="go('deductions')">
+        <div class="w-top">
+          <div class="w-lbl"><span class="w-live" id="w-live"></span><span id="w-label">2nd cutoff</span></div>
+          <button type="button" class="w-eye" id="eye-btn" onclick="event.stopPropagation();toggleHide()" aria-label="Show or hide amounts"><svg class="ic" id="eye-ic"><use href="#i-eye"/></svg></button>
+        </div>
+        <div class="w-main">
+          <div style="min-width:0"><div class="w-amt" id="hero-amt"><span class="cur">₱</span><span class="int" id="amt-int">0</span><span class="dec" id="amt-dec">.00</span></div>
+          <div class="w-sub" id="w-sub"></div></div>
+          <div class="ring" id="ring" title="Cutoff progress"><svg viewBox="0 0 40 40"><circle class="tr" cx="20" cy="20" r="16"/><circle class="pg" id="ring-pg" cx="20" cy="20" r="16"/></svg><div class="tx"><b id="ring-n">0</b><small id="ring-u">days</small></div></div>
+        </div>
+        <svg class="spark" id="spark" viewBox="0 0 300 40" aria-hidden="true"></svg>
+        <div class="w-goal hidden" id="w-goal"><span id="g-txt"></span><span class="gb"><i id="g-fill"></i></span></div>
+        <div class="w-strip"><div><span>Gross</span><b class="num" id="ws-g">₱0.00</b></div><div><span>Deductions</span><b class="num" id="ws-d">₱0.00</b></div><div><span>Hours</span><b class="num" id="ws-h">0h</b></div></div>
+      </div>
+
+      <div class="qa">
+        <button type="button" class="qa-i" onclick="openShift()"><span class="qa-ic primary"><svg class="ic"><use href="#i-plus"/></svg></span>Log shift</button>
+        <button type="button" class="qa-i" id="qa-2" onclick="repeatLast()"><span class="qa-ic"><svg class="ic"><use href="#i-repeat"/></svg></span><span id="qa-2t">Repeat</span></button>
+        <button type="button" class="qa-i" onclick="go('deductions')"><span class="qa-ic"><svg class="ic"><use href="#i-receipt"/></svg></span>Payslip</button>
+        <button type="button" class="qa-i" onclick="go('budget')"><span class="qa-ic"><svg class="ic"><use href="#i-pie"/></svg></span>Budget</button>
+      </div>
+
+      <div class="sec-h"><span class="eyebrow" id="recent-h">Recent shifts</span><button type="button" class="link" onclick="go('shifts')">See all</button></div>
+      <div class="list" id="recent-list"></div>
+      <button type="button" class="note hidden" id="backup-nag" onclick="openBackup('export')" style="text-align:left;color:var(--warn);font-weight:600"></button>
+    </section>
+
+    <!-- ================= BUDGET ================= -->
+    <section id="view-budget" class="view">
+      <div class="row between"><button type="button" class="btn ghost sm press" onclick="go('home')"><svg class="ic sm"><use href="#i-back"/></svg>Home</button><span class="chip num" id="bud-net">Net: ₱0.00</span></div>
+      <div class="card">
+        <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Cutoff allocation</p><p class="card-s" id="bud-period">Splits your net pay</p></div></div>
+        <div class="stackbar" style="height:12px"><i class="c-needs" id="bs-n"></i><i class="c-wants" id="bs-w"></i><i class="c-save" id="bs-s"></i></div>
+        <div class="stack" style="margin-top:16px;gap:10px">
+          <div class="row between"><div class="row"><i class="c-needs" style="width:11px;height:11px;border-radius:9px"></i><div><p style="font-weight:600">Needs</p><p class="card-s num" id="bp-n">70%</p></div></div><b class="num" id="ba-n">₱0.00</b></div>
+          <div class="row between"><div class="row"><i class="c-wants" style="width:11px;height:11px;border-radius:9px"></i><div><p style="font-weight:600">Wants</p><p class="card-s num" id="bp-w">20%</p></div></div><b class="num" id="ba-w">₱0.00</b></div>
+          <div class="row between"><div class="row"><i class="c-save" style="width:11px;height:11px;border-radius:9px"></i><div><p style="font-weight:600">Savings</p><p class="card-s num" id="bp-s">10%</p></div></div><b class="num" id="ba-s" style="color:var(--ok)">₱0.00</b></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><p class="card-t">Customize split</p><span class="chip ok num" id="bud-total">100%</span></div>
+        <div class="presets" style="margin-bottom:14px">
+          <button type="button" class="fchip" onclick="budgetPreset(70,20,10)">70 / 20 / 10</button><button type="button" class="fchip" onclick="budgetPreset(50,30,20)">50 / 30 / 20</button><button type="button" class="fchip" onclick="budgetPreset(60,15,25)">60 / 15 / 25</button><button type="button" class="fchip" onclick="budgetPreset(80,10,10)">80 / 10 / 10</button>
+        </div>
+        <div class="grid3">
+          <div><label class="lbl" for="bi-n">Needs %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-n" oninput="budgetInput()"></div>
+          <div><label class="lbl" for="bi-w">Wants %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-w" oninput="budgetInput()"></div>
+          <div><label class="lbl" for="bi-s">Savings %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-s" oninput="budgetInput()"></div>
+        </div>
+        <button type="button" class="btn primary block press" id="bud-save" style="margin-top:16px" onclick="saveBudget()">Save split</button>
+      </div>
+    </section>
+
+    <!-- ================= SHIFTS ================= -->
+    <section id="view-shifts" class="view">
+      <div class="switcher" data-switcher>
+        <button type="button" class="icon-btn press" onclick="stepPeriod(-1)" aria-label="Previous cutoff"><svg class="ic"><use href="#i-l"/></svg></button>
+        <div class="mid"><span data-period-label>—</span><svg class="ic sm muted"><use href="#i-d"/></svg><select data-period-select onchange="selectPeriod(this.value)" aria-label="Choose cutoff"></select></div>
+        <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
+      </div>
+      <div class="row">
+        <div class="search grow"><svg class="ic sm"><use href="#i-search"/></svg><input class="field" id="shift-q" type="search" inputmode="search" placeholder="Search label or date" oninput="onSearch(this.value)" autocomplete="off"><button type="button" id="q-clear" class="hidden" onclick="clearSearch()" aria-label="Clear search"><svg class="ic sm"><use href="#i-x"/></svg></button></div>
+        <button type="button" class="icon-btn press" style="width:46px;height:46px;border-radius:14px" onclick="openSheet('menu-sheet')" aria-label="More options"><svg class="ic"><use href="#i-more"/></svg></button>
+      </div>
+      <div class="filters" id="shift-filters"></div>
+      <div class="sumline"><span id="shift-sum"></span><button type="button" class="link" id="sort-btn" onclick="toggleSort()" style="display:flex;align-items:center;gap:5px"><svg class="ic xs"><use href="#i-sort"/></svg><span>Newest</span></button></div>
+      <div class="list" id="shift-list"></div>
+    </section>
+
+    <!-- ================= PAYSLIP ================= -->
+    <section id="view-deductions" class="view">
+      <div class="switcher" data-switcher>
+        <button type="button" class="icon-btn press" onclick="stepPeriod(-1)" aria-label="Previous cutoff"><svg class="ic"><use href="#i-l"/></svg></button>
+        <div class="mid"><span data-period-label>—</span><svg class="ic sm muted"><use href="#i-d"/></svg><select data-period-select onchange="selectPeriod(this.value)" aria-label="Choose cutoff"></select></div>
+        <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
+      </div>
+
+      <div class="card">
+        <div class="card-h" style="margin-bottom:6px"><div><p class="card-t">Payslip</p><p class="card-s num" id="ps-hours">0.0h regular · 0.0h night · 0.0h overtime</p></div><span class="chip" id="ps-badge">2nd cutoff</span></div>
+        <p class="ps-group">Earnings</p>
+        <div class="ps-row"><span class="k">Basic regular pay</span><span class="v" id="ps-basic">₱0.00</span></div>
+        <div class="ps-row"><span class="k">Night differential</span><span class="v pos-nd" id="ps-nd">₱0.00</span></div>
+        <div class="ps-row"><span class="k">Overtime &amp; holiday premium</span><span class="v pos-ot" id="ps-ot">₱0.00</span></div>
+        <div class="ps-row total"><span class="k">Gross earnings</span><span class="v" id="ps-gross">₱0.00</span></div>
+        <p class="ps-group" style="margin-top:18px">Deductions</p>
+        <div class="ps-row"><span class="k">SSS</span><span class="v neg" id="ps-sss">₱0.00</span></div>
+        <div class="ps-row"><span class="k">PhilHealth</span><span class="v neg" id="ps-ph">₱0.00</span></div>
+        <div class="ps-row"><span class="k">Pag-IBIG</span><span class="v neg" id="ps-pi">₱0.00</span></div>
+        <div class="ps-row"><span class="k">Withholding tax</span><span class="v neg" id="ps-tax">₱0.00</span></div>
+        <div class="ps-row"><span class="k">Other / cash advance</span><span class="v neg" id="ps-oth">₱0.00</span></div>
+        <div class="ps-net"><div><p class="eyebrow" style="color:var(--accent-text);opacity:.8">Net take-home</p></div><span class="v num" id="ps-net">₱0.00</span></div>
+      </div>
+
+      <div class="grid2">
+        <button type="button" class="btn ghost press" onclick="copyPayslip()"><svg class="ic sm"><use href="#i-copy"/></svg>Copy</button>
+        <button type="button" class="btn soft press" onclick="viewPayslip()"><svg class="ic sm"><use href="#i-image"/></svg>Save image</button>
+      </div>
+
+      <div class="card">
+        <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Deductions</p><p class="card-s">Applied to every cutoff that has pay</p></div></div>
+        <div class="seg" id="ded-mode"><button type="button" data-m="auto" onclick="setDedMode(true)">Auto-estimate</button><button type="button" data-m="manual" onclick="setDedMode(false)">Manual</button></div>
+        <div id="ded-auto" class="stack" style="margin-top:14px">
+          <div><label class="lbl" for="stat-mode">When to deduct SSS / PhilHealth / Pag-IBIG</label>
+            <select id="stat-mode" class="field" onchange="setStatOpt()"><option value="split">Split across each cutoff</option><option value="last">On the 2nd cutoff only</option></select></div>
+          <label class="setting" style="min-height:40px;border:0;padding:0;margin:0"><span class="k" style="font-size:13.5px">Minimum wage earner (no income tax)</span><span class="switch"><input type="checkbox" id="stat-mwe" onchange="setStatOpt()"><i></i></span></label>
+          <p class="note" id="stat-note">Uses 2026 rules: SSS 5% of salary credit, PhilHealth 2.5%, Pag-IBIG 2% (max ₱200), TRAIN tax. Estimates only — your employer's payslip is the final word.</p>
+        </div>
+        <div id="ded-manual" class="stack hidden" style="margin-top:14px;gap:10px">
+          <div class="row between"><label class="k" for="in-sss" style="font-weight:600">SSS</label><label class="money-field" style="width:150px"><span>₱</span><input id="in-sss" type="number" inputmode="decimal" min="0" step="any" oninput="saveManual()"></label></div>
+          <div class="row between"><label class="k" for="in-ph" style="font-weight:600">PhilHealth</label><label class="money-field" style="width:150px"><span>₱</span><input id="in-ph" type="number" inputmode="decimal" min="0" step="any" oninput="saveManual()"></label></div>
+          <div class="row between"><label class="k" for="in-pi" style="font-weight:600">Pag-IBIG</label><label class="money-field" style="width:150px"><span>₱</span><input id="in-pi" type="number" inputmode="decimal" min="0" step="any" oninput="saveManual()"></label></div>
+          <div class="row between"><label class="k" for="in-tax" style="font-weight:600">Withholding tax</label><label class="money-field" style="width:150px"><span>₱</span><input id="in-tax" type="number" inputmode="decimal" min="0" step="any" oninput="saveManual()"></label></div>
+          <button type="button" class="btn soft sm press" onclick="fillFromEstimate()">Fill from estimate</button>
+        </div>
+        <div class="divider"></div>
+        <div class="row between"><div><label class="k" for="in-oth" style="font-weight:600;display:block">Other / cash advance</label><span class="card-s">Per cutoff</span></div><label class="money-field" style="width:150px"><span>₱</span><input id="in-oth" type="number" inputmode="decimal" min="0" step="any" oninput="saveManual()"></label></div>
+      </div>
+
+      <details class="card fold" id="t13">
+        <summary><div><p class="card-t">13th-month pay</p><p class="card-s" id="t13-sub">Earned so far this year</p></div><svg class="ic"><use href="#i-d"/></svg></summary>
+        <div class="body stack">
+          <div class="row between"><span class="sub">Earned this year (basic ÷ 12)</span><b class="num" id="t13-ytd">₱0.00</b></div>
+          <div class="divider" style="margin:2px 0"></div>
+          <p class="eyebrow">Project a full year</p>
+          <div class="grid2">
+            <div><label class="lbl" for="t13-hrs">Avg hours / week</label><select class="field" id="t13-hrs" onchange="calc13()"><option value="16">16 hrs</option><option value="20">20 hrs</option><option value="24" selected>24 hrs</option><option value="30">30 hrs</option><option value="36">36 hrs</option><option value="40">40 hrs</option></select></div>
+            <div><label class="lbl" for="t13-mo">Months worked</label><select class="field" id="t13-mo" onchange="calc13()"><option value="1">1</option><option value="3">3</option><option value="6">6</option><option value="9">9</option><option value="12" selected>12</option></select></div>
+          </div>
+          <div class="row between"><span class="sub">Projected 13th-month</span><b class="num" id="t13-res" style="color:var(--ok)">₱0.00</b></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ================= SETTINGS ================= -->
+    <section id="view-settings" class="view">
+      <div class="card">
+        <div class="card-h"><div><p class="card-t">Pay</p><p class="card-s">Everything is computed from these</p></div><span class="chip mute">Calabarzon</span></div>
+        <div class="stack">
+          <div><label class="lbl" for="set-area">Area classification</label>
+            <select id="set-area" class="field" onchange="applyArea()"><option value="73.75">1st class municipalities — ₱73.75/hr</option><option value="80.63">Extended metro / cities — ₱80.63/hr</option><option value="68.75">2nd–5th class municipalities — ₱68.75/hr</option><option value="custom">Custom rate</option></select></div>
+          <div class="grid2">
+            <div><label class="lbl" for="set-rate">Rate per hour</label><label class="money-field"><span>₱</span><input id="set-rate" type="number" inputmode="decimal" step="0.01" min="0" oninput="onRateInput()"></label></div>
+            <div><label class="lbl" for="set-sched">Cutoff cycle</label><select id="set-sched" class="field" onchange="onSchedule()"><option value="semi">1–15 / 16–end</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+          </div>
+          <div class="row between"><div><label class="k" for="set-goal" style="font-weight:600;display:block">Pay goal</label><span class="card-s">Progress shows on Home</span></div><label class="money-field" style="width:150px"><span>₱</span><input id="set-goal" type="number" inputmode="decimal" min="0" placeholder="0" onchange="saveGoal(this.value)"></label></div>
+          <div class="row between"><div><label class="k" for="set-lag" style="font-weight:600;display:block">Payday after cutoff</label><span class="card-s">Days until you get paid · 0 hides it</span></div><label class="money-field" style="width:110px"><input id="set-lag" type="number" inputmode="numeric" min="0" max="31" placeholder="0" onchange="saveLag(this.value)"><span>days</span></label></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="setting"><div><p class="k">Shift reminder</p><p class="d" id="notif-sub">Daily alert to log your shift</p></div><span class="switch"><input type="checkbox" id="notif-on" onchange="toggleNotif()"><i></i></span></div>
+        <div class="setting"><div><p class="k">Reminder time</p></div><select id="notif-time" class="field" style="width:140px" onchange="saveNotifTime()"></select></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h" style="margin-bottom:12px"><p class="card-t">Appearance</p></div>
+        <div class="seg" id="theme-seg"><button type="button" data-m="system" onclick="setThemeMode('system')">System</button><button type="button" data-m="light" onclick="setThemeMode('light')">Light</button><button type="button" data-m="dark" onclick="setThemeMode('dark')">Dark</button></div>
+        <div class="row" style="margin-top:16px;justify-content:space-between;padding:0 4px">
+          <button type="button" class="theme-sw" data-theme="indigo" onclick="setAccent('indigo')" aria-label="Indigo" style="background:#4F46E5;color:#4F46E5"></button>
+          <button type="button" class="theme-sw" data-theme="purple" onclick="setAccent('purple')" aria-label="Purple" style="background:#9333EA;color:#9333EA"></button>
+          <button type="button" class="theme-sw" data-theme="rose" onclick="setAccent('rose')" aria-label="Rose" style="background:#E11D48;color:#E11D48"></button>
+          <button type="button" class="theme-sw" data-theme="amber" onclick="setAccent('amber')" aria-label="Amber" style="background:#D97706;color:#D97706"></button>
+          <button type="button" class="theme-sw" data-theme="emerald" onclick="setAccent('emerald')" aria-label="Emerald" style="background:#059669;color:#059669"></button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Security</p><p class="card-s">Lock the app and protect your logs</p></div></div>
+        <div class="setting"><div><p class="k">PIN lock</p><p class="d" id="lock-status">Off</p></div>
+          <div class="row" style="gap:8px"><button type="button" class="btn soft sm press" id="lock-main-btn" onclick="lockSetupFlow()">Set PIN</button><button type="button" class="btn ghost sm press hidden" id="lock-remove-btn" onclick="lockRemoveFlow()">Remove</button></div></div>
+        <div class="setting hidden" id="lock-fp-row"><div><p class="k">Fingerprint</p><p class="d" id="lock-fp-status">Off</p></div><button type="button" class="btn soft sm press" id="lock-fp-btn" onclick="toggleFingerprint()">Enable</button></div>
+        <div class="setting hidden" id="lock-auto-row"><p class="k">Auto-lock after</p><select id="lock-auto" class="field" style="width:140px" onchange="lockSetAuto(this.value)"><option value="0">Immediately</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="300">5 minutes</option></select></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Backup</p><p class="card-s" id="backup-status">Never backed up</p></div></div>
+        <div class="grid2"><button type="button" class="btn primary press" onclick="openBackup('export')"><svg class="ic sm"><use href="#i-down"/></svg>Back up</button><button type="button" class="btn ghost press" onclick="openBackup('restore')"><svg class="ic sm"><use href="#i-up"/></svg>Restore</button></div>
+        <button type="button" class="btn soft sm block press" style="margin-top:8px" onclick="openBackup('csv')">Export all shifts as CSV</button>
+      </div>
+
+      <div class="card">
+        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">v1.13.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
+        <div id="upd-box" class="hidden" style="margin-top:12px"><div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div><p class="note" id="upd-notes" style="margin:4px 0 10px"></p><a id="upd-link" href="#" target="_blank" rel="noopener" class="btn primary block sm press">Download update</a></div>
+        <p id="upd-diag" class="note hidden" style="margin-top:10px"></p>
+        <div class="grid2" style="margin-top:12px"><button type="button" class="btn soft sm press" id="upd-btn" onclick="checkUpdates(true)">Check for updates</button><a id="upd-rel" href="#" target="_blank" rel="noopener" class="btn ghost sm press">Releases page</a></div>
+        <details class="fold" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)"><summary><span class="k" style="font-weight:600">Update source &amp; help</span><svg class="ic sm"><use href="#i-d"/></svg></summary>
+          <div class="body stack" style="gap:10px"><div><label class="lbl" for="upd-repo">GitHub repository (owner/name)</label><input id="upd-repo" class="field" style="font-weight:500" autocapitalize="off" autocorrect="off" spellcheck="false" onchange="saveRepo(this.value)"></div>
+          <p class="note">The repo must be public and have a published release with the APK attached. If the app says "package conflicts" on install, the APK was signed with a different key or has the same or a lower version than the one installed.</p>
+          <div class="grid2"><button type="button" class="btn ghost sm press" onclick="startTour(false)">Replay tour</button><button type="button" class="btn ghost sm press" onclick="showWhatsNew()">What's new</button></div></div></details>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="Main">
+    <div class="nav-grid">
+      <div class="nav-pill" id="nav-pill"><i></i></div>
+      <button type="button" class="nav-it on" id="nav-home" onclick="go('home')"><svg class="ic"><use href="#i-home"/></svg>Home</button>
+      <button type="button" class="nav-it" id="nav-shifts" onclick="go('shifts')"><svg class="ic"><use href="#i-clock"/></svg>Shifts</button>
+      <button type="button" class="fab" onclick="openShift()" aria-label="Log new shift"><svg class="ic"><use href="#i-plus"/></svg></button>
+      <button type="button" class="nav-it" id="nav-deductions" onclick="go('deductions')"><svg class="ic"><use href="#i-receipt"/></svg>Payslip</button>
+      <button type="button" class="nav-it" id="nav-settings" onclick="go('settings')"><svg class="ic"><use href="#i-sliders"/></svg>Settings</button>
+    </div>
+  </nav>
+</div>
+
+<!-- ================= SHEETS ================= -->
+<div id="shift-sheet" class="scrim" onclick="if(event.target===this)closeSheet('shift-sheet')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t" id="shift-title">Log shift</h2><p class="card-s num" id="shift-hint">—</p></div><button type="button" class="icon-btn press" onclick="closeSheet('shift-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:14px">
+      <div class="presets">
+        <button type="button" class="fchip" onclick="preset('14:00','18:00','4h shift')">4h</button>
+        <button type="button" class="fchip" onclick="preset('16:00','22:00','6h shift')">6h</button>
+        <button type="button" class="fchip" onclick="preset('08:00','17:00','8h + 1h break',60)">8h + break</button>
+        <button type="button" class="fchip" onclick="extendEnd(1)" style="color:var(--accent-text);border-color:var(--accent-soft-border);background:var(--accent-soft)">+1h</button>
+      </div>
+      <div class="grid2">
+        <div><label class="lbl" for="m-start">Start</label><select id="m-start" class="field" onchange="updatePreview()"></select></div>
+        <div><label class="lbl" for="m-end">End <span id="m-next" class="hidden" style="color:var(--accent-text)">· next day</span></label><select id="m-end" class="field" onchange="updatePreview()"></select></div>
+      </div>
+      <div class="grid2">
+        <div><div class="row between" style="margin-bottom:6px"><label class="lbl" for="m-date" style="margin:0">Date</label></div><input type="date" id="m-date" class="field" onchange="onDateChange()"></div>
+        <div><label class="lbl" for="m-mult">Day type</label><select id="m-mult" class="field" onchange="updatePreview()"><option value="1.00">Regular day</option><option value="1.30">Special / rest day</option><option value="1.50">Special day on rest day</option><option value="2.00">Regular holiday</option><option value="2.60">Holiday on rest day</option></select></div>
+      </div>
+      <div><label class="lbl">Unpaid break</label><div class="seg" id="m-break"><button type="button" data-b="0" onclick="setBreak(0)">None</button><button type="button" data-b="30" onclick="setBreak(30)">30 min</button><button type="button" data-b="60" onclick="setBreak(60)">1 hour</button></div></div>
+      <div id="m-holiday" class="chip ok hidden" style="height:auto;padding:7px 12px;white-space:normal"></div>
+      <div><label class="lbl" for="m-note">Label (optional)</label><input id="m-note" class="field" style="font-weight:500" placeholder="e.g. Front counter, Kitchen" autocomplete="off"></div>
+      <div class="preview"><div><p class="eyebrow" style="color:inherit;opacity:.75">Gross pay</p><p class="big num" id="m-gross">₱0.00</p></div><div style="text-align:right;font-size:12px" class="num" id="m-cut"></div></div>
+      <div class="row"><button type="button" class="btn ghost press hidden" id="m-del" onclick="deleteFromSheet()" aria-label="Delete shift"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="m-save" onclick="saveShift()">Save shift</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="menu-sheet" class="scrim" onclick="if(event.target===this)closeSheet('menu-sheet')">
+  <div class="sheet"><div class="grab"></div>
+    <button type="button" class="menu-it" onclick="closeSheet('menu-sheet');setTimeout(openIO,180)"><span class="ico"><svg class="ic"><use href="#i-swap"/></svg></span>Import / export schedule</button>
+    <button type="button" class="menu-it bad" onclick="closeSheet('menu-sheet');setTimeout(clearCutoff,180)"><span class="ico"><svg class="ic"><use href="#i-trash"/></svg></span>Clear this cutoff</button>
+  </div>
+</div>
+
+<div id="io-sheet" class="scrim" onclick="if(event.target===this)closeSheet('io-sheet')">
+  <div class="sheet"><div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">Import / export</h2><p class="card-s">Paste a schedule — it's sorted into the right cutoffs</p></div><button type="button" class="icon-btn press" onclick="closeSheet('io-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="card flat" style="padding:12px 14px;background:var(--subtle);margin-bottom:12px"><div class="row between" style="margin-bottom:6px"><b style="font-size:12px">Accepted formats</b><button type="button" class="link" style="padding:0" onclick="fillExample()">Insert example</button></div><pre class="muted num" style="font:11.5px/1.6 ui-monospace,Menlo,monospace;overflow-x:auto">Nov. 09 - 6pm to 12mn (Mon.)
+LOBBY
+2026-11-16 | 4:00 PM - 10:00 PM | Counter</pre></div>
+    <textarea id="io-text" class="field" placeholder="Paste or type your schedule…" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px"></textarea>
+    <div class="grid2" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="exportText()">Export cutoff</button><button type="button" class="btn primary press" onclick="importText()">Import shifts</button></div>
+  </div>
+</div>
+
+<div id="backup-sheet" class="scrim" onclick="if(event.target===this)closeSheet('backup-sheet')">
+  <div class="sheet"><div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t" id="bk-title">Back up</h2><p class="card-s" id="bk-sub"></p></div><button type="button" class="icon-btn press" onclick="closeSheet('backup-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <textarea id="bk-text" class="field" style="font-family:ui-monospace,Menlo,monospace;font-size:11px;min-height:130px"></textarea>
+    <div id="bk-export" class="grid2" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="copyBackup()"><svg class="ic sm"><use href="#i-copy"/></svg>Copy</button><button type="button" class="btn primary press" onclick="saveBackupFile()"><svg class="ic sm"><use href="#i-down"/></svg>Save / share file</button></div>
+    <div id="bk-restore" class="grid2 hidden" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="document.getElementById('bk-file').click()"><svg class="ic sm"><use href="#i-up"/></svg>Choose file</button><button type="button" class="btn primary press" onclick="restoreFromText()">Restore</button><input type="file" id="bk-file" accept="application/json,.json,text/plain" class="hidden" onchange="restoreFromFile(this)"></div>
+    <p class="note" id="bk-note" style="margin-top:12px"></p>
+  </div>
+</div>
+
+<div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
+  <div class="sheet"><div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">1.13</span></h2><p class="card-s">Fresh look, smarter updates</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:12px;font-size:13.5px">
+      <div class="row" style="align-items:flex-start"><span class="chip">New</span><span class="sub">Wallet-style net pay card with cutoff ring, earnings curve and one-tap actions.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip">New</span><span class="sub">Payday date and “still to come” for shifts you have scheduled.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip">New</span><span class="sub">Export all shifts as CSV.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok">Fixed</span><span class="sub">Update checker now tries several GitHub sources and tells you exactly what failed.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok">Back</span><span class="sub">Sun/moon morph, eye blink and card animations from v1.11.</span></div>
+    </div>
+    <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
+  </div>
+</div>
+
+<div id="confirm" class="scrim top" onclick="if(event.target===this)confirmAnswer(false)">
+  <div class="sheet">
+    <div class="row" style="align-items:flex-start;gap:14px"><div class="confirm-ic" id="cf-ic"><svg class="ic"><use href="#i-alert"/></svg></div><div class="grow"><h3 style="font-size:17px;font-weight:700;letter-spacing:-.01em" id="cf-title">Are you sure?</h3><p class="sub" style="font-size:13.5px;margin-top:5px;line-height:1.5" id="cf-body"></p></div></div>
+    <input id="cf-input" class="field hidden" style="margin-top:14px" autocomplete="off" autocapitalize="characters" oninput="confirmTyped()">
+    <div class="grid2" style="margin-top:18px"><button type="button" class="btn ghost press" onclick="confirmAnswer(false)" id="cf-cancel">Cancel</button><button type="button" class="btn danger press" id="cf-ok" onclick="confirmAnswer(true)">Delete</button></div>
+  </div>
+</div>
+
+<div id="toast" role="status"><span id="toast-msg"></span><button type="button" id="toast-act" class="hidden"></button></div>
+
+<div id="payslip-modal" onclick="if(event.target===this)closePayslip()">
+  <img id="payslip-img" alt="Payslip" style="max-height:72vh;max-width:100%;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+  <div class="row" style="width:100%;max-width:360px"><button type="button" onclick="savePayslipImage()" class="btn primary press grow">Save as image</button><button type="button" onclick="closePayslip()" class="btn press" style="background:rgba(255,255,255,.14);color:#fff">Close</button></div>
+</div>
+
+<div id="tour" aria-live="polite"><div id="tour-spot"></div>
+  <div id="tour-card" style="opacity:0">
+    <div class="row between" style="margin-bottom:12px"><div id="tour-dots" class="row" style="gap:6px"></div><button type="button" id="tour-skip" onclick="endTour()" class="muted" style="font-size:12px;font-weight:600;padding:4px">Skip</button></div>
+    <h3 id="tour-title" style="font-size:16px;font-weight:700;letter-spacing:-.01em"></h3>
+    <p id="tour-body" class="sub" style="font-size:13.5px;line-height:1.55;margin-top:6px"></p>
+    <div class="row" style="margin-top:16px"><button type="button" id="tour-back" onclick="tourStep(-1)" class="btn ghost sm press">Back</button><button type="button" id="tour-next" onclick="tourStep(1)" class="btn primary sm press grow">Next</button></div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = '1.13.0';
+const DEFAULT_REPO = 'kakashimoto14/suweldopulse';
+const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
+const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const root = document.documentElement;
+const p2 = n => String(n).padStart(2, '0');
+const r2 = n => Math.round((+n || 0) * 100) / 100;
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONF = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const nf = new Intl.NumberFormat('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const peso = n => (n < 0 ? '-' : '') + '₱' + nf.format(Math.abs(+n || 0));
+const MASK = '₱••••••';
+const money = n => settings.hide ? MASK : peso(n);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+const fh = n => (Math.round(n * 100) / 100) + 'h';
+const setText = (el, t) => { if (el && el.textContent !== t) el.textContent = t; };
+const setHTML = (el, h) => { if (el && el._h !== h) { el.innerHTML = h; el._h = h; } };
+
+/* ================= dates ================= */
+const dstr = d => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+const today = () => dstr(new Date());
+const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const dayNum = s => { const [y, m, d] = s.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };
+const tmin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const t12 = t => { const [h, m] = t.split(':'); const H = +h; return `${H % 12 === 0 ? 12 : H % 12}:${m} ${H >= 12 ? 'PM' : 'AM'}`; };
+const fmtDay = ds => { const d = pd(ds); return `${DOW[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`; };
+
+/* ================= state ================= */
+let shifts = [];
+let settings = {
+  hourlyRate: 73.75, calabarzonArea: '73.75', schedule: 'semi', sss: 0, philhealth: 0, pagibig: 0, tax: 0, otherDed: 0,
+  accentTheme: 'indigo', darkMode: false, themeMode: '', budgetNeeds: 70, budgetWants: 20, budgetSavings: 10,
+  notifEnabled: false, notifTime: '22:00', lastNotifDate: '', goal: 0, deductMode: 'split', mwe: false, autoDeduct: null, hide: false, payLag: 0, repo: '', lastUpd: 0,
+  last: { start: '16:00', end: '22:00', brk: 0 }
+};
+let selKey = '', periodKeys = [], curView = 'home';
+const ui = { f: 'all', q: '', sort: 'desc' };
+let editingId = null, modalBrk = 0, budNet = 0;
+
+const ACCENTS = {
+  indigo: { a: '#4F46E5', h: '#4338CA', sl: '#EEF2FF', bl: '#C7D2FE', tl: '#4338CA', sd: 'rgba(99,102,241,.18)', bd: 'rgba(99,102,241,.38)', td: '#A5B4FC', g: 'rgba(79,70,229,.30)' },
+  purple: { a: '#9333EA', h: '#7E22CE', sl: '#FAF5FF', bl: '#E9D5FF', tl: '#7E22CE', sd: 'rgba(168,85,247,.18)', bd: 'rgba(168,85,247,.38)', td: '#D8B4FE', g: 'rgba(147,51,234,.30)' },
+  rose: { a: '#E11D48', h: '#BE123C', sl: '#FFF1F2', bl: '#FECDD3', tl: '#BE123C', sd: 'rgba(244,63,94,.18)', bd: 'rgba(244,63,94,.38)', td: '#FDA4AF', g: 'rgba(225,29,72,.30)' },
+  amber: { a: '#D97706', h: '#B45309', sl: '#FFFBEB', bl: '#FDE68A', tl: '#B45309', sd: 'rgba(245,158,11,.18)', bd: 'rgba(245,158,11,.38)', td: '#FCD34D', g: 'rgba(217,119,6,.30)' },
+  emerald: { a: '#059669', h: '#047857', sl: '#ECFDF5', bl: '#A7F3D0', tl: '#047857', sd: 'rgba(16,185,129,.18)', bd: 'rgba(16,185,129,.38)', td: '#6EE7B7', g: 'rgba(5,150,105,.30)' }
+};
+
+function loadState() {
+  let raw = null;
+  try { raw = localStorage.getItem(SETTINGS_KEY); if (raw) settings = { ...settings, ...JSON.parse(raw) }; } catch (e) {}
+  if (!settings.themeMode) settings.themeMode = raw ? (settings.darkMode ? 'dark' : 'light') : 'system';
+  if (settings.autoDeduct === null || settings.autoDeduct === undefined) settings.autoDeduct = !(raw && (settings.sss + settings.philhealth + settings.pagibig + settings.tax) > 0);
+  if (!settings.last || !settings.last.start) settings.last = { start: '16:00', end: '22:00', brk: 0 };
+  try { const s = JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]'); shifts = normalizeShifts(s); } catch (e) { shifts = []; }
+}
+function normalizeShifts(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(s => s && /^\d{4}-\d{2}-\d{2}$/.test(s.date) && isFinite(s.gross)).map((s, i) => ({
+    id: s.id || (Date.now() + i), date: s.date, startTime: s.startTime || '', endTime: s.endTime || '', note: s.note || '',
+    hourlyRate: +s.hourlyRate || settings.hourlyRate, reg: +s.reg || 0, nd: +s.nd || 0, ot: +s.ot || 0, multiplier: +s.multiplier || 1,
+    gross: +s.gross || 0, ndPay: s.ndPay === undefined ? undefined : +s.ndPay, breakMin: +s.breakMin || 0
+  }));
+}
+const persistShifts = () => { try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} };
+const persistSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} };
+
+/* ================= theme ================= */
+const mq = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+const isDark = () => settings.themeMode === 'dark' || (settings.themeMode === 'system' && mq && mq.matches);
+function applyTheme() {
+  const dark = isDark(), P = ACCENTS[settings.accentTheme] || ACCENTS.indigo, st = root.style;
+  root.classList.toggle('dark', dark);
+  st.setProperty('--accent', P.a); st.setProperty('--accent-hover', P.h);
+  st.setProperty('--accent-soft', dark ? P.sd : P.sl); st.setProperty('--accent-soft-border', dark ? P.bd : P.bl);
+  st.setProperty('--accent-text', dark ? P.td : P.tl); st.setProperty('--accent-glow', P.g);
+  const m = $('meta-theme'); if (m) m.setAttribute('content', dark ? '#090D16' : '#F6F7FB');
+  const cut = $('moon-cutout'); if (cut) { cut.setAttribute('cx', dark ? '16.5' : '24'); cut.setAttribute('cy', dark ? '8.5' : '4'); cut.setAttribute('r', dark ? '5.2' : '0'); }
+  $$('#theme-seg button').forEach(b => b.classList.toggle('on', b.dataset.m === settings.themeMode));
+  $$('.theme-sw').forEach(b => b.classList.toggle('on', b.dataset.theme === settings.accentTheme));
+}
+function themeAnim() { root.classList.add('theme-anim'); clearTimeout(themeAnim.t); themeAnim.t = setTimeout(() => root.classList.remove('theme-anim'), 480); }
+function toggleDark() { themeAnim(); settings.themeMode = isDark() ? 'light' : 'dark'; persistSettings(); applyTheme(); }
+function setThemeMode(m) { themeAnim(); settings.themeMode = m; persistSettings(); applyTheme(); }
+function setAccent(k) { if (!ACCENTS[k]) return; settings.accentTheme = k; persistSettings(); applyTheme(); }
+if (mq && mq.addEventListener) mq.addEventListener('change', () => { if (settings.themeMode === 'system') applyTheme(); });
+
+/* ================= periods ================= */
+const _pm = new Map();
+function periodOf(ds, sch = settings.schedule) {
+  const ck = sch + ds; if (_pm.has(ck)) return _pm.get(ck);
+  const d = pd(ds), y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
+  let s, e, key, badge;
+  if (sch === 'monthly') { s = new Date(y, m, 1); e = new Date(y, m + 1, 0); key = `${y}-${p2(m + 1)}`; badge = 'Monthly'; }
+  else if (sch === 'weekly') { const dow = (d.getDay() + 6) % 7; s = new Date(y, m, day - dow); e = new Date(y, m, day - dow + 6); key = dstr(s); badge = 'Weekly'; }
+  else if (day <= 15) { s = new Date(y, m, 1); e = new Date(y, m, 15); key = `${y}-${p2(m + 1)}-1`; badge = '1st cutoff'; }
+  else { s = new Date(y, m, 16); e = new Date(y, m + 1, 0); key = `${y}-${p2(m + 1)}-2`; badge = '2nd cutoff'; }
+  let label;
+  if (sch === 'monthly') label = `${MONF[m]} ${y}`;
+  else if (s.getMonth() === e.getMonth()) label = `${MON[s.getMonth()]} ${s.getDate()} – ${e.getDate()}, ${e.getFullYear()}`;
+  else label = `${MON[s.getMonth()]} ${s.getDate()} – ${MON[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
+  const P = { key, badge, label, start: s, end: e, startStr: dstr(s), endStr: dstr(e), sort: dayNum(dstr(s)) };
+  _pm.set(ck, P); return P;
+}
+function periodFromKey(key) {
+  let m;
+  if ((m = key.match(/^(\d{4})-(\d{2})-([12])$/))) return periodOf(`${m[1]}-${m[2]}-${m[3] === '1' ? '01' : '16'}`);
+  if ((m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/))) return periodOf(key);
+  if ((m = key.match(/^(\d{4})-(\d{2})$/))) return periodOf(`${key}-01`);
+  return periodOf(today());
+}
+const curPeriod = () => periodOf(today());
+const shiftsIn = key => shifts.filter(s => periodOf(s.date).key === key);
+function buildPeriods() {
+  const cur = curPeriod();
+  if (!selKey) selKey = cur.key;
+  let hi = cur, lo = cur;
+  shifts.forEach(s => { const p = periodOf(s.date); if (p.sort > hi.sort) hi = p; if (p.sort < lo.sort) lo = p; });
+  const sp = periodFromKey(selKey); if (sp.sort > hi.sort) hi = sp; if (sp.sort < lo.sort) lo = sp;
+  const keys = []; let p = hi, guard = 0;
+  while (guard++ < 80) { keys.push(p.key); if (p.sort <= lo.sort) break; p = periodOf(dstr(addDays(p.start, -1))); }
+  periodKeys = keys;
+  const counts = {}; shifts.forEach(s => { const k = periodOf(s.date).key; counts[k] = (counts[k] || 0) + 1; });
+  const html = keys.map(k => { const P = periodFromKey(k), n = counts[k] || 0; return `<option value="${k}">${P.label}${k === cur.key ? ' • Current' : ''}${n ? ` • ${n}` : ''}</option>`; }).join('');
+  const P = periodFromKey(selKey);
+  $$('[data-period-select]').forEach(sel => { setHTML(sel, html); sel.value = selKey; });
+  $$('[data-period-label]').forEach(el => setText(el, P.label));
+}
+function selectPeriod(k) { selKey = k; render(); replayEnter(); }
+function stepPeriod(dir) {
+  const i = periodKeys.indexOf(selKey), j = i - dir;
+  if (j >= 0 && j < periodKeys.length) { selKey = periodKeys[j]; render(); replayEnter(); }
+  else toast(dir < 0 ? 'No earlier cutoffs yet' : "That's the latest cutoff");
+}
+
+/* ================= holidays (PH) ================= */
+const HOL_FIXED = { '01-01': ["New Year's Day", 2], '04-09': ['Araw ng Kagitingan', 2], '05-01': ['Labor Day', 2], '06-12': ['Independence Day', 2], '11-30': ['Bonifacio Day', 2], '12-25': ['Christmas Day', 2], '12-30': ['Rizal Day', 2],
+  '08-21': ['Ninoy Aquino Day', 1.3], '11-01': ["All Saints' Day", 1.3], '12-08': ['Immaculate Conception', 1.3], '12-31': ['Last Day of the Year', 1.3] };
+const HOL_YEAR = {
+  2026: { '02-17': ['Chinese New Year', 1.3], '03-20': ["Eid'l Fitr", 2], '04-02': ['Maundy Thursday', 2], '04-03': ['Good Friday', 2], '04-04': ['Black Saturday', 1.3], '11-02': ["All Souls' Day", 1.3], '12-24': ['Christmas Eve', 1.3] },
+  2027: { '03-25': ['Maundy Thursday', 2], '03-26': ['Good Friday', 2], '03-27': ['Black Saturday', 1.3] }
+};
+function holidayFor(ds) {
+  const y = +ds.slice(0, 4), md = ds.slice(5), d = pd(ds);
+  const h = (HOL_YEAR[y] && HOL_YEAR[y][md]) || HOL_FIXED[md];
+  if (h) return { name: h[0], mult: h[1] };
+  if (d.getMonth() === 7 && d.getDay() === 1 && d.getDate() + 7 > 31) return { name: 'National Heroes Day', mult: 2 }; // last Monday of August
+  return null;
+}
+
+/* ================= pay engine ================= */
+// Minute-by-minute: regular hours up to 8 paid hours/day (across all shifts that day), OT after, night diff 10pm–6am on top.
+function calcPay({ start, end, mult, rate, brk = 0, prior = 0 }) {
+  let s = tmin(start), e = tmin(end);
+  if (s === e) return null;
+  if (e < s) e += 1440;
+  const span = e - s; brk = Math.min(brk, Math.max(0, span - 1));
+  const bs = s + Math.floor((span - brk) / 2), be = bs + brk;
+  const base = rate * mult / 60, otRate = base * (mult > 1 ? 1.30 : 1.25);
+  let reg = 0, ot = 0, nd = 0, gross = 0, ndPay = 0, done = Math.round(prior * 60);
+  for (let m = s; m < e; m++) {
+    if (brk && m >= bs && m < be) continue;
+    const isOT = done >= 480, r = isOT ? otRate : base;
+    gross += r; if (isOT) ot++; else reg++;
+    const mod = m % 1440; if (mod >= 1320 || mod < 360) { nd++; ndPay += r * 0.10; }
+    done++;
+  }
+  return { reg: r2(reg / 60), ot: r2(ot / 60), nd: r2(nd / 60), ndPay: r2(ndPay), gross: r2(gross + ndPay), paid: (reg + ot) / 60 };
+}
+function recalcDay(date) {
+  const list = shifts.filter(s => s.date === date && s.startTime && s.endTime).sort((a, b) => tmin(a.startTime) - tmin(b.startTime) || a.id - b.id);
+  let prior = 0;
+  list.forEach(s => {
+    const r = calcPay({ start: s.startTime, end: s.endTime, mult: s.multiplier, rate: s.hourlyRate, brk: s.breakMin || 0, prior });
+    if (!r) return; s.reg = r.reg; s.ot = r.ot; s.nd = r.nd; s.ndPay = r.ndPay; s.gross = r.gross; prior += r.paid;
+  });
+}
+const ndPayOf = s => s.ndPay !== undefined ? s.ndPay : s.nd * s.hourlyRate * s.multiplier * 0.10;
+function totals(list) {
+  const t = { gross: 0, basic: 0, nd: 0, otp: 0, reg: 0, ndH: 0, otH: 0, n: list.length };
+  list.forEach(s => { t.gross += s.gross; t.basic += s.reg * s.hourlyRate; t.nd += ndPayOf(s); t.reg += s.reg; t.ndH += s.nd; t.otH += s.ot; });
+  t.gross = r2(t.gross); t.basic = r2(t.basic); t.nd = r2(t.nd); t.otp = r2(Math.max(0, t.gross - t.basic - t.nd)); t.hrs = t.reg + t.otH; return t;
+}
+
+/* ================= statutory & tax (2026) ================= */
+function estimateStatutory(key, gross) {
+  const sch = settings.schedule, perMonth = sch === 'monthly' ? 1 : (sch === 'weekly' ? 52 / 12 : 2);
+  const ym = dstr(periodFromKey(key).start).slice(0, 7);
+  const monthActual = shifts.filter(s => s.date.startsWith(ym)).reduce((a, s) => a + s.gross, 0);
+  const monthly = Math.max(monthActual, gross * perMonth);
+  const msc = Math.min(35000, Math.max(5000, Math.floor((monthly + 250) / 500) * 500));
+  const sssM = msc * 0.05;
+  const phM = Math.min(100000, Math.max(10000, monthly)) * 0.025;
+  const piM = monthly <= 1500 ? monthly * 0.01 : Math.min(monthly, 10000) * 0.02;
+  let taxM = 0;
+  if (!settings.mwe) {
+    const t = Math.max(0, monthly - sssM - phM - piM) * 12;
+    const a = t <= 250000 ? 0 : t <= 400000 ? (t - 250000) * .15 : t <= 800000 ? 22500 + (t - 400000) * .20 : t <= 2000000 ? 102500 + (t - 800000) * .25 : t <= 8000000 ? 402500 + (t - 2000000) * .30 : 2202500 + (t - 8000000) * .35;
+    taxM = a / 12;
+  }
+  const isLast = sch === 'semi' && /-2$/.test(key);
+  const f = (sch === 'semi' && settings.deductMode === 'last') ? (isLast ? 1 : 0) : 1 / perMonth;
+  return { sss: r2(sssM * f), ph: r2(phM * f), pi: r2(piM * f), tax: r2(taxM * f), monthly, msc, f };
+}
+function deductionsFor(key, gross) {
+  const z = { sss: 0, ph: 0, pi: 0, tax: 0, oth: 0, total: 0, est: null };
+  if (gross <= 0) return z;
+  let d;
+  if (settings.autoDeduct) { const e = estimateStatutory(key, gross); d = { sss: e.sss, ph: e.ph, pi: e.pi, tax: e.tax, est: e }; }
+  else d = { sss: settings.sss, ph: settings.philhealth, pi: settings.pagibig, tax: settings.tax, est: null };
+  d.oth = settings.otherDed; d.total = r2(d.sss + d.ph + d.pi + d.tax + d.oth); return d;
+}
+function periodData(key) {
+  const list = shiftsIn(key), t = totals(list), d = deductionsFor(key, t.gross);
+  return { list, t, d, net: r2(Math.max(0, t.gross - d.total)) };
+}
+
+/* ================= navigation ================= */
+const VIEWS = { home: ['Home', 'Cutoff overview', 0], budget: ['Budget', 'Split your pay', 0], shifts: ['Shifts', 'History & search', 1], deductions: ['Payslip', 'Breakdown & net pay', 3], settings: ['Settings', 'Pay, security & more', 4] };
+function replayEnter() { ['recent-list', 'shift-list'].forEach(id => { const el = $(id); if (!el) return; el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); }); clearTimeout(replayEnter.t); replayEnter.t = setTimeout(() => ['recent-list', 'shift-list'].forEach(id => $(id) && $(id).classList.remove('enter')), 900); }
+function go(v) {
+  const m = VIEWS[v]; if (!m) return;
+  if (v !== curView) {
+    const fwd = m[2] >= (VIEWS[curView] || VIEWS.home)[2];
+    $$('.view').forEach(x => x.classList.remove('active', 'fwd', 'back'));
+    const nv = $('view-' + v); nv.classList.add('active', fwd ? 'fwd' : 'back');
+    window.scrollTo(0, 0); replayEnter();
+  }
+  curView = v;
+  $('nav-pill').style.transform = `translate3d(${m[2] * 100}%,0,0)`;
+  const tab = v === 'budget' ? 'home' : v;
+  $$('.nav-it').forEach(b => b.classList.toggle('on', b.id === 'nav-' + tab));
+  setText($('hdr-title'), m[0]); setText($('hdr-sub'), m[1]);
+}
+
+/* ================= toast & sheets & confirm ================= */
+let toastT = 0, toastAct = null;
+function toast(msg, act) {
+  const el = $('toast'), btn = $('toast-act');
+  setText($('toast-msg'), msg);
+  toastAct = act && act.fn || null; btn.classList.toggle('hidden', !act); if (act) btn.textContent = act.label;
+  el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), act ? 6000 : 2400);
+}
+$('toast-act').addEventListener('click', () => { const f = toastAct; toastAct = null; $('toast').classList.remove('on'); if (f) f(); });
+let openCount = 0;
+function openSheet(id) { const el = $(id); if (el.classList.contains('open')) return; el.classList.add('open'); if (++openCount === 1) root.style.overflow = 'hidden'; }
+function closeSheet(id) { const el = $(id); if (!el.classList.contains('open')) return; el.classList.remove('open'); if (--openCount <= 0) { openCount = 0; root.style.overflow = ''; } }
+let cfRes = null, cfTyped = '';
+function askConfirm({ title, body, ok = 'Delete', danger = true, typed = '', cancel = 'Cancel' }) {
+  return new Promise(res => {
+    if (cfRes) cfRes(false);
+    cfRes = res; cfTyped = typed.toUpperCase();
+    setText($('cf-title'), title); $('cf-body').innerHTML = body;
+    const b = $('cf-ok'); b.textContent = ok; b.className = 'btn press ' + (danger ? 'danger' : 'primary'); b.disabled = !!typed;
+    $('cf-ic').className = 'confirm-ic' + (danger ? '' : ' neutral'); setText($('cf-cancel'), cancel);
+    const inp = $('cf-input'); inp.value = ''; inp.placeholder = typed ? `Type ${typed} to confirm` : ''; inp.classList.toggle('hidden', !typed);
+    openSheet('confirm'); if (typed) setTimeout(() => inp.focus(), 250);
+  });
+}
+function confirmTyped() { $('cf-ok').disabled = $('cf-input').value.trim().toUpperCase() !== cfTyped; }
+function confirmAnswer(v) { if (v && cfTyped && $('cf-input').value.trim().toUpperCase() !== cfTyped) return; closeSheet('confirm'); const r = cfRes; cfRes = null; if (r) r(v); }
+
+/* ================= rendering ================= */
+let shownAmt = 0, amtRaf = 0, sparkSig = '';
+function setAmt(val) {
+  const box = $('hero-amt'), I = $('amt-int'), De = $('amt-dec'); cancelAnimationFrame(amtRaf);
+  box.classList.toggle('mask', !!settings.hide);
+  if (settings.hide) { I.textContent = '••••••'; De.textContent = ''; shownAmt = val; return; }
+  const draw = v => { const s = nf.format(v), i = s.lastIndexOf('.'); I.textContent = s.slice(0, i); De.textContent = s.slice(i); };
+  const from = shownAmt, diff = val - from;
+  if (Math.abs(diff) < 0.01) { shownAmt = val; draw(val); return; }
+  const t0 = performance.now(), D = 520;
+  const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 4); shownAmt = from + diff * e; draw(shownAmt); if (k < 1) amtRaf = requestAnimationFrame(step); else { shownAmt = val; draw(val); } };
+  amtRaf = requestAnimationFrame(step);
+}
+function toggleHide() {
+  settings.hide = !settings.hide; persistSettings(); shownAmt = 0;
+  const ic = $('eye-ic'); ic.classList.remove('blink'); void ic.getBoundingClientRect(); ic.classList.add('blink'); setTimeout(() => ic.classList.remove('blink'), 360);
+  render();
+}
+function shiftLabel(s) { return s.note || (s.multiplier >= 2 ? 'Holiday shift' : s.multiplier > 1 ? 'Special day shift' : 'Shift'); }
+function shiftRow(s, del) {
+  const grouped = !!del, d = pd(s.date), range = s.startTime && s.endTime ? `${t12(s.startTime)} – ${t12(s.endTime)}` : fh(s.reg + s.ot);
+  const b = [];
+  if (s.nd > 0) b.push(`<span class="dot-b nd">${fh(s.nd)} ND</span>`);
+  if (s.ot > 0) b.push(`<span class="dot-b ot">${fh(s.ot)} OT</span>`);
+  if (s.multiplier > 1) b.push(`<span class="dot-b hl">${s.multiplier}×</span>`);
+  if (s.date > today()) b.push(`<span class="dot-b up">Upcoming</span>`);
+  return `<div class="shift press" role="button" tabindex="0" onclick="openShift(${s.id})"><div class="tag${s.multiplier > 1 ? ' hol' : ''}">${grouped ? `<b>${+(s.reg + s.ot).toFixed(1)}</b><small>hrs</small>` : `<b>${d.getDate()}</b><small>${DOW[d.getDay()]}</small>`}</div>
+  <div class="grow"><p class="t">${esc(shiftLabel(s))}</p><p class="s num"><span>${range}</span>${b.join('')}</p></div>
+  <span class="amt num">${peso(s.gross)}</span>${del ? `<button type="button" class="trash" onclick="event.stopPropagation();deleteShift(${s.id})" aria-label="Delete shift"><svg class="ic sm"><use href="#i-trash"/></svg></button>` : ''}</div>`;
+}
+const sortShifts = (a, b) => b.date.localeCompare(a.date) || (b.startTime || '').localeCompare(a.startTime || '') || b.id - a.id;
+function dayRange(P) { const out = []; for (let d = P.start; dstr(d) <= P.endStr; d = addDays(d, 1)) out.push(dstr(d)); return out; }
+function renderSpark(P, list, ti, W) {
+  const el = $('spark'), H = 40, days = dayRange(P), n = days.length, by = {};
+  list.forEach(s => { by[s.date] = (by[s.date] || 0) + s.gross; });
+  let cum = 0; const pts = days.map(d => (cum += by[d] || 0)), max = cum;
+  const x = i => n > 1 ? i / (n - 1) * W : 0, y = v => max > 0 ? H - 5 - (v / max) * (H - 13) : H - 6;
+  let html = '';
+  if (max <= 0) { const m = W / 2; html = `<path class="idle" d="M0 ${H - 8} H${m - 40} l9 0 l7 -15 l9 25 l7 -14 l6 4 H${W}"/>`; }
+  else {
+    const seg = (a, b) => pts.slice(a, b + 1).map((v, k) => `${k ? 'L' : 'M'}${x(a + k).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+    if (ti >= 1) { const d = seg(0, ti); html += `<path class="area" d="${d} L${x(ti).toFixed(1)} ${H} L0 ${H} Z"/><path class="ln" d="${d}"/>`; }
+    if (ti < n - 1) html += `<path class="fu" d="${seg(Math.max(0, ti), n - 1)}"/>`;
+    if (ti >= 0 && ti < n) html += `<circle class="hd-r" cx="${x(ti).toFixed(1)}" cy="${y(pts[ti]).toFixed(1)}" r="5"/><circle class="hd" cx="${x(ti).toFixed(1)}" cy="${y(pts[ti]).toFixed(1)}" r="2.6"/>`;
+  }
+  const sig = selKey + '|' + W + '|' + html;
+  if (sig === sparkSig) return; sparkSig = sig;
+  el.setAttribute('viewBox', `0 0 ${W} ${H}`); el.innerHTML = html;
+  el.classList.remove('in'); void el.getBoundingClientRect(); requestAnimationFrame(() => el.classList.add('in'));
+}
+function renderHome() {
+  const P = periodFromKey(selKey), D = periodData(selKey), cur = curPeriod(), isCur = P.key === cur.key, isPast = P.sort < cur.sort, td = today();
+  setText($('w-label'), P.badge + (isCur ? '' : (isPast ? ' · past' : ' · upcoming')));
+  $('w-live').style.display = isCur ? '' : 'none';
+  setAmt(D.net);
+  // sub line: payday + still-to-come
+  const up = D.list.filter(s => s.date > td), upSum = up.reduce((a, s) => a + s.gross, 0), lag = Math.max(0, +settings.payLag || 0), parts = [];
+  if (lag > 0) { const pdte = addDays(P.end, lag), diff = dayNum(dstr(pdte)) - dayNum(td); parts.push(`Payday ${MON[pdte.getMonth()]} ${pdte.getDate()}${diff >= 0 && diff <= 14 ? (diff === 0 ? ' · today' : ` · in ${diff}d`) : ''}`); }
+  if (upSum > 0) parts.push(settings.hide ? `${up.length} upcoming` : `${peso(upSum)} still to come`);
+  setText($('w-sub'), parts.join(' · ') || (D.t.n ? '' : 'No shifts in this cutoff yet'));
+  // strip
+  setText($('ws-g'), money(D.t.gross)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n > 1 ? 's' : ''}` : '0h');
+  // ring: cutoff progress
+  const left = dayNum(P.endStr) - dayNum(td), total = dayNum(P.endStr) - dayNum(P.startStr) + 1;
+  let f, n, u;
+  if (isCur) { f = Math.min(1, (dayNum(td) - dayNum(P.startStr) + 1) / total); n = left === 0 ? '0' : String(left); u = left === 1 ? 'day' : 'days'; }
+  else if (isPast) { f = 1; n = '✓'; u = 'closed'; }
+  else { const st = dayNum(P.startStr) - dayNum(td); f = 0; n = String(st); u = 'to start'; }
+  setText($('ring-n'), n); setText($('ring-u'), u); $('ring-pg').style.strokeDashoffset = String(100.5 * (1 - f));
+  $('ring').title = isCur ? `Cutoff ends ${MON[P.end.getMonth()]} ${P.end.getDate()}` : 'Cutoff status';
+  // goal
+  const goal = +settings.goal || 0; $('w-goal').classList.toggle('hidden', !(goal > 0));
+  if (goal > 0) { const pc = Math.min(100, Math.round(D.net / goal * 100)); setText($('g-txt'), settings.hide ? 'Goal' : (pc >= 100 ? 'Goal reached ✓' : `Goal ${pc}%`)); $('g-fill').style.transform = `scaleX(${pc / 100})`; }
+  // spark
+  const W = Math.round($('hero').clientWidth - 32) || 300, ti = isCur ? dayRange(P).indexOf(td) : (isPast ? dayRange(P).length - 1 : -1);
+  renderSpark(P, D.list, ti, W);
+  // quick action 2: repeat when there is history, otherwise import
+  const has = shifts.length > 0; $('qa-2').onclick = has ? repeatLast : openIO; setText($('qa-2t'), has ? 'Repeat' : 'Import');
+  $('qa-2').firstElementChild.firstElementChild.firstElementChild.setAttribute('href', has ? '#i-repeat' : '#i-swap');
+  // recent
+  const rec = [...D.list].sort(sortShifts).slice(0, 3);
+  setText($('recent-h'), D.list.length > 3 ? `Latest of ${D.list.length} shifts` : 'Shifts this cutoff');
+  setHTML($('recent-list'), rec.length ? rec.map(s => shiftRow(s, false)).join('') : `<div class="empty"><b>Nothing logged yet</b>Tap “Log shift” to see your pay build up.</div>`);
+  const lb = +localStorage.getItem(BK_KEY) || 0, nag = $('backup-nag'), need = shifts.length && (!lb || Date.now() - lb > 14 * 864e5);
+  nag.classList.toggle('hidden', !need); if (need) setText(nag, `⚠ ${lb ? 'Last backup was over 2 weeks ago' : 'You have no backup yet'} — tap to back up`);
+  renderBudget(D.net);
+}
+function renderBudget(net) {
+  budNet = net;
+  const n = +settings.budgetNeeds, w = +settings.budgetWants, s = +settings.budgetSavings;
+  $('bs-n').style.width = n + '%'; $('bs-w').style.width = w + '%'; $('bs-s').style.width = s + '%';
+  setText($('bp-n'), `${n}% share`); setText($('bp-w'), `${w}% share`); setText($('bp-s'), `${s}% share`);
+  setText($('ba-n'), money(net * n / 100)); setText($('ba-w'), money(net * w / 100)); setText($('ba-s'), money(net * s / 100));
+  setText($('bud-net'), 'Net: ' + money(net)); setText($('bud-period'), 'Splitting net pay for ' + periodFromKey(selKey).label);
+}
+function budRead() { return ['bi-n', 'bi-w', 'bi-s'].map(id => Math.max(0, parseFloat($(id).value) || 0)); }
+function budgetInput() { const [a, b, c] = budRead(), t = Math.round((a + b + c) * 10) / 10, ok = Math.abs(t - 100) < .01, el = $('bud-total'); setText(el, ok ? '100% ✓' : `${t}% — must be 100`); el.className = 'chip num ' + (ok ? 'ok' : 'bad'); $('bud-save').disabled = !ok; }
+function budgetPreset(a, b, c) { $('bi-n').value = a; $('bi-w').value = b; $('bi-s').value = c; budgetInput(); }
+function saveBudget() { const [a, b, c] = budRead(); if (Math.abs(a + b + c - 100) >= .01) return; settings.budgetNeeds = a; settings.budgetWants = b; settings.budgetSavings = c; persistSettings(); render(); toast(`Budget saved (${a}/${b}/${c})`); }
+
+const FILTERS = [['all', 'All'], ['reg', 'Regular'], ['spc', 'Special'], ['hol', 'Holiday'], ['night', 'Night'], ['ot', 'Overtime']];
+function buildFilters() { $('shift-filters').innerHTML = FILTERS.map(([k, l]) => `<button type="button" class="fchip press" data-f="${k}" onclick="setFilter('${k}')">${l}</button>`).join(''); setFilter(ui.f, true); }
+function setFilter(k, quiet) { ui.f = k; $$('#shift-filters .fchip').forEach(b => b.classList.toggle('on', b.dataset.f === k)); if (!quiet) renderShifts(); }
+function onSearch(v) { ui.q = v.trim().toLowerCase(); $('q-clear').classList.toggle('hidden', !v); renderShifts(); }
+function clearSearch() { $('shift-q').value = ''; onSearch(''); }
+function toggleSort() { ui.sort = ui.sort === 'desc' ? 'asc' : 'desc'; setText($('sort-btn').lastElementChild, ui.sort === 'desc' ? 'Newest' : 'Oldest'); renderShifts(); }
+const FMATCH = { all: () => true, reg: s => s.multiplier === 1, spc: s => s.multiplier > 1 && s.multiplier < 2, hol: s => s.multiplier >= 2, night: s => s.nd > 0, ot: s => s.ot > 0 };
+function renderShifts() {
+  const searching = !!ui.q;
+  let list = searching ? shifts : shiftsIn(selKey);
+  list = list.filter(FMATCH[ui.f]);
+  if (searching) list = list.filter(s => (`${s.note} ${s.date} ${fmtDay(s.date)} ${MONF[pd(s.date).getMonth()]}`).toLowerCase().includes(ui.q));
+  list = [...list].sort(sortShifts); if (ui.sort === 'asc') list.reverse();
+  const t = totals(list);
+  setText($('shift-sum'), list.length ? `${searching ? 'All cutoffs · ' : ''}${list.length} shift${list.length > 1 ? 's' : ''} · ${fh(t.hrs)} · ${peso(t.gross)}` : (searching ? 'Searching all cutoffs' : ''));
+  if (!list.length) {
+    const anyHere = shiftsIn(selKey).length > 0;
+    setHTML($('shift-list'), `<div class="empty"><b>${searching || ui.f !== 'all' ? 'No matching shifts' : 'No shifts in this cutoff'}</b>${searching || (ui.f !== 'all' && anyHere) ? 'Try a different search or filter.' : 'Tap + to log your first shift.'}</div>`); return;
+  }
+  const groups = []; list.forEach(s => { const g = groups[groups.length - 1]; if (g && g.d === s.date) g.l.push(s); else groups.push({ d: s.date, l: [s] }); });
+  setHTML($('shift-list'), groups.map(g => `<div class="day-h"><span>${fmtDay(g.d)}</span><span class="num">${peso(g.l.reduce((a, s) => a + s.gross, 0))}</span></div>` + g.l.map(s => shiftRow(s, true)).join('')).join(''));
+}
+function renderPayslip() {
+  const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d;
+  setText($('ps-badge'), P.badge);
+  setText($('ps-hours'), `${fh(t.reg)} regular · ${fh(t.ndH)} night · ${fh(t.otH)} overtime`);
+  setText($('ps-basic'), peso(t.basic)); setText($('ps-nd'), '+' + peso(t.nd)); setText($('ps-ot'), '+' + peso(t.otp)); setText($('ps-gross'), peso(t.gross));
+  setText($('ps-sss'), '−' + peso(d.sss)); setText($('ps-ph'), '−' + peso(d.ph)); setText($('ps-pi'), '−' + peso(d.pi)); setText($('ps-tax'), '−' + peso(d.tax)); setText($('ps-oth'), '−' + peso(d.oth));
+  setText($('ps-net'), peso(D.net));
+  const n = $('stat-note');
+  if (settings.autoDeduct && d.est) n.textContent = `Based on est. monthly pay ${peso(d.est.monthly)} · SSS credit ${peso(d.est.msc)} · ${settings.mwe ? 'tax-exempt (minimum wage)' : 'TRAIN tax'}. Estimates only — your employer's payslip is the final word.`;
+  else n.textContent = "Uses 2026 rules: SSS 5% of salary credit, PhilHealth 2.5%, Pag-IBIG 2% (max ₱200), TRAIN tax. Estimates only — your employer's payslip is the final word.";
+  const y = P.startStr.slice(0, 4), basicYear = shifts.filter(s => s.date.startsWith(y)).reduce((a, s) => a + s.reg * s.hourlyRate, 0);
+  setText($('t13-sub'), `Earned in ${y} so far`); setText($('t13-ytd'), peso(basicYear / 12));
+  calc13();
+}
+function calc13() { const h = +$('t13-hrs').value || 0, m = +$('t13-mo').value || 12; setText($('t13-res'), peso(h * (52 / 12) * m * settings.hourlyRate / 12)); }
+let _lastRender = 0;
+function render() { buildPeriods(); renderHome(); renderShifts(); renderPayslip(); }
+
+/* ---- payslip deductions controls ---- */
+function syncDedUI() {
+  $$('#ded-mode button').forEach(b => b.classList.toggle('on', (b.dataset.m === 'auto') === !!settings.autoDeduct));
+  $('ded-auto').classList.toggle('hidden', !settings.autoDeduct); $('ded-manual').classList.toggle('hidden', !!settings.autoDeduct);
+  $('stat-mode').value = settings.deductMode || 'split'; $('stat-mwe').checked = !!settings.mwe;
+  const set = (id, v) => { const el = $(id); if (document.activeElement !== el) el.value = v ? v : ''; };
+  set('in-sss', settings.sss); set('in-ph', settings.philhealth); set('in-pi', settings.pagibig); set('in-tax', settings.tax); set('in-oth', settings.otherDed);
+}
+function setDedMode(auto) {
+  if (!auto && settings.autoDeduct) { // seed manual boxes with the current estimate so nothing jumps to zero
+    const D = periodData(selKey); if (D.d.est) { settings.sss = D.d.sss; settings.philhealth = D.d.ph; settings.pagibig = D.d.pi; settings.tax = D.d.tax; }
+  }
+  settings.autoDeduct = auto; persistSettings(); syncDedUI(); render();
+}
+function saveManual() {
+  const v = id => Math.max(0, parseFloat($(id).value) || 0);
+  settings.sss = v('in-sss'); settings.philhealth = v('in-ph'); settings.pagibig = v('in-pi'); settings.tax = v('in-tax'); settings.otherDed = v('in-oth');
+  persistSettings(); render();
+}
+function fillFromEstimate() {
+  const D = periodData(selKey); if (D.t.gross <= 0) return toast('Log shifts in this cutoff first');
+  const e = estimateStatutory(selKey, D.t.gross); settings.sss = e.sss; settings.philhealth = e.ph; settings.pagibig = e.pi; settings.tax = e.tax;
+  persistSettings(); syncDedUI(); render(); toast('Filled from estimate');
+}
+function setStatOpt() { settings.deductMode = $('stat-mode').value; settings.mwe = $('stat-mwe').checked; persistSettings(); render(); }
+
+/* ================= shift sheet ================= */
+function populateTimes() {
+  let h = ''; for (let m = 0; m < 1440; m += 30) { const v = `${p2(Math.floor(m / 60))}:${p2(m % 60)}`; h += `<option value="${v}">${t12(v)}</option>`; }
+  ['m-start', 'm-end', 'notif-time'].forEach(id => { $(id).innerHTML = h; });
+}
+function setBreak(n) { modalBrk = n; $$('#m-break button').forEach(b => b.classList.toggle('on', +b.dataset.b === n)); updatePreview(); }
+function priorHours(date, startMin, excludeId) {
+  return shifts.filter(s => s.date === date && s.id !== excludeId && s.startTime && s.endTime && tmin(s.startTime) < startMin)
+    .reduce((a, s) => { const r = calcPay({ start: s.startTime, end: s.endTime, mult: s.multiplier, rate: s.hourlyRate, brk: s.breakMin || 0 }); return a + (r ? r.paid : 0); }, 0);
+}
+function readModal() {
+  const date = $('m-date').value || today(), start = $('m-start').value, end = $('m-end').value, mult = parseFloat($('m-mult').value) || 1;
+  const rate = editingId !== null ? (shifts.find(s => s.id === editingId) || {}).hourlyRate || settings.hourlyRate : settings.hourlyRate;
+  const r = calcPay({ start, end, mult, rate, brk: modalBrk, prior: priorHours(date, tmin(start), editingId) });
+  return { date, start, end, mult, rate, brk: modalBrk, r };
+}
+function updatePreview() {
+  const v = readModal();
+  $('m-next').classList.toggle('hidden', !(tmin(v.end) < tmin(v.start)));
+  setText($('m-gross'), v.r ? peso(v.r.gross) : '₱0.00');
+  setText($('shift-hint'), v.r ? `${fh(v.r.reg)} regular · ${fh(v.r.nd)} night · ${fh(v.r.ot)} overtime` : 'End time must differ from start time');
+  const P = periodOf(v.date); setText($('m-cut'), `${P.badge}\n${P.label}`); $('m-cut').style.whiteSpace = 'pre-line';
+}
+function onDateChange(keepMult) {
+  const date = $('m-date').value || today(), h = holidayFor(date), box = $('m-holiday');
+  if (h) { box.textContent = `${h.name} · ${h.mult >= 2 ? 'Regular holiday (2×)' : 'Special day (1.3×)'}`; box.classList.remove('hidden'); if (!keepMult) $('m-mult').value = h.mult.toFixed(2); }
+  else { box.classList.add('hidden'); if (!keepMult) $('m-mult').value = '1.00'; }
+  updatePreview();
+}
+function openShift(id = null) {
+  editingId = id;
+  const s = id !== null ? shifts.find(x => x.id === id) : null;
+  $('shift-title').textContent = s ? 'Edit shift' : 'Log shift'; $('m-save').textContent = s ? 'Update shift' : 'Save shift';
+  $('m-del').classList.toggle('hidden', !s);
+  if (s) {
+    $('m-date').value = s.date; $('m-start').value = s.startTime || '16:00'; $('m-end').value = s.endTime || '22:00';
+    $('m-mult').value = s.multiplier.toFixed(2); if (!$('m-mult').value) $('m-mult').value = '1.00'; $('m-note').value = s.note || ''; modalBrk = s.breakMin || 0; onDateChange(true);
+  } else {
+    const L = settings.last, cur = curPeriod(), P = periodFromKey(selKey);
+    $('m-date').value = P.key === cur.key ? today() : P.endStr; $('m-start').value = L.start; $('m-end').value = L.end; $('m-note').value = ''; modalBrk = L.brk || 0; onDateChange(false);
+  }
+  setBreak(modalBrk); openSheet('shift-sheet');
+}
+function closeShift() { closeSheet('shift-sheet'); editingId = null; }
+function preset(a, b, label, brk) { $('m-start').value = a; $('m-end').value = b; if (!$('m-note').value) $('m-note').value = label; setBreak(brk || 0); }
+function extendEnd(h) { const e = $('m-end'); const n = (tmin(e.value) + h * 60) % 1440; e.value = `${p2(Math.floor(n / 60))}:${p2(n % 60)}`; updatePreview(); toast(`End time +${h}h`); }
+function overlaps(v) {
+  const base = dayNum(v.date) * 1440, a0 = base + tmin(v.start); let a1 = base + tmin(v.end); if (tmin(v.end) <= tmin(v.start)) a1 += 1440;
+  return shifts.find(s => { if (s.id === editingId || !s.startTime || !s.endTime) return false; const b = dayNum(s.date) * 1440; const b0 = b + tmin(s.startTime); let b1 = b + tmin(s.endTime); if (tmin(s.endTime) <= tmin(s.startTime)) b1 += 1440; return a0 < b1 && b0 < a1; });
+}
+async function saveShift() {
+  const v = readModal();
+  if (!v.r) return toast('End time must differ from start time');
+  if (v.r.gross <= 0) return toast('Choose a valid time range');
+  if (v.r.paid > 16 && !await askConfirm({ title: 'Very long shift', body: `This shift is <b>${fh(v.r.paid)}</b> of paid time. Is that right?`, ok: 'Yes, save it', danger: false })) return;
+  const ov = overlaps(v);
+  if (ov && !await askConfirm({ title: 'Overlapping shift', body: `This overlaps with <b>${esc(shiftLabel(ov))}</b> on ${fmtDay(ov.date)} (${t12(ov.startTime)} – ${t12(ov.endTime)}). Save anyway?`, ok: 'Save anyway', danger: false })) return;
+  const note = $('m-note').value.trim(); let old = null;
+  if (editingId !== null) {
+    const s = shifts.find(x => x.id === editingId);
+    if (s) { old = s.date; Object.assign(s, { date: v.date, startTime: v.start, endTime: v.end, note, multiplier: v.mult, breakMin: v.brk }); }
+  } else shifts.push({ id: Date.now() + Math.floor(Math.random() * 999), date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: v.mult, gross: 0, breakMin: v.brk });
+  recalcDay(v.date); if (old && old !== v.date) recalcDay(old);
+  settings.last = { start: v.start, end: v.end, brk: v.brk }; persistSettings(); persistShifts();
+  const P = periodOf(v.date); selKey = P.key; const wasEdit = editingId !== null;
+  closeShift(); render(); toast(wasEdit ? `Updated in ${P.label}` : `Added to ${P.label}`);
+}
+async function deleteShift(id) {
+  const s = shifts.find(x => x.id === id); if (!s) return;
+  const ok = await askConfirm({ title: 'Delete this shift?', body: `<b>${esc(shiftLabel(s))}</b><br>${fmtDay(s.date)}${s.startTime ? ` · ${t12(s.startTime)} – ${t12(s.endTime)}` : ''}<br>${peso(s.gross)} gross will be removed from this cutoff.`, ok: 'Delete' });
+  if (!ok) return;
+  shifts = shifts.filter(x => x.id !== id); recalcDay(s.date); persistShifts(); render();
+  toast('Shift deleted', { label: 'Undo', fn: () => { shifts.push(s); recalcDay(s.date); persistShifts(); render(); toast('Shift restored'); } });
+}
+function deleteFromSheet() { const id = editingId; closeShift(); setTimeout(() => deleteShift(id), 200); }
+function repeatLast() {
+  const l = [...shifts].sort(sortShifts)[0]; if (!l) return;
+  openShift(); $('m-start').value = l.startTime || '16:00'; $('m-end').value = l.endTime || '22:00'; $('m-note').value = l.note || ''; setBreak(l.breakMin || 0);
+}
+async function clearCutoff() {
+  const P = periodFromKey(selKey), list = shiftsIn(selKey);
+  if (!list.length) return toast('No shifts in this cutoff');
+  const ok = await askConfirm({ title: 'Clear this cutoff?', body: `This removes all <b>${list.length}</b> shift${list.length > 1 ? 's' : ''} in <b>${P.label}</b>. Other cutoffs are not touched.`, ok: 'Delete all', typed: 'DELETE' });
+  if (!ok) return;
+  const ids = new Set(list.map(s => s.id)); shifts = shifts.filter(s => !ids.has(s.id)); persistShifts(); render();
+  toast(`${list.length} shift${list.length > 1 ? 's' : ''} deleted`, { label: 'Undo', fn: () => { shifts.push(...list); persistShifts(); render(); toast('Shifts restored'); } });
+}
+
+/* ================= import / export schedule text ================= */
+function openIO() { openSheet('io-sheet'); }
+function fillExample() { $('io-text').value = 'Nov. 09 - 6pm to 12mn (Mon.)\nLOBBY\n\nNov. 16 - 4pm to 10pm (Mon.)\nFRONT COUNTER'; }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  try { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch (e) { return false; }
+}
+async function exportText() {
+  const list = shiftsIn(selKey).sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+  if (!list.length) return toast('No shifts in this cutoff to export');
+  const lines = list.map(s => `${s.date} | ${t12(s.startTime || '16:00')} - ${t12(s.endTime || '22:00')} | ${s.note || 'Shift'}`).join('\n');
+  $('io-text').value = lines; toast((await copyText(lines)) ? `Copied ${list.length} shift${list.length > 1 ? 's' : ''}` : 'Exported below');
+}
+function parseTime(raw) {
+  if (!raw) return null; const c = raw.trim().toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
+  if (c === '12mn' || c === 'mn' || c === '24:00') return '00:00'; if (c === '12nn' || c === 'nn') return '12:00';
+  const m = c.match(/^(\d{1,2})(?::(\d{2}))?(am|pm|mn|nn)?$/); if (!m) return null;
+  let h = +m[1]; const mi = +(m[2] || 0), pr = m[3];
+  if (pr === 'mn') h = h === 12 ? 0 : h; else if (pr === 'pm') { if (h < 12) h += 12; } else if (pr === 'am') { if (h === 12) h = 0; }
+  if (h > 23 || mi > 59) return null; return `${p2(h)}:${p2(mi)}`;
+}
+function parseDate(line, fb) {
+  let m = line.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${p2(m[2])}-${p2(m[3])}`;
+  const MM = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+  m = line.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:,?\s*(\d{4}))?\b/i);
+  if (m) return `${m[3] || new Date().getFullYear()}-${p2(MM[m[1].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[1].toLowerCase().slice(0, 3)])}-${p2(m[2])}`;
+  m = line.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/); if (m) { let y = m[3] || String(new Date().getFullYear()); if (y.length === 2) y = '20' + y; return `${y}-${p2(m[1])}-${p2(m[2])}`; }
+  return fb;
+}
+function importText() {
+  const raw = $('io-text').value.trim(); if (!raw) return toast('Paste your schedule first');
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const re12 = /(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn)\.?|\b12mn\b|\b12nn\b)\s*(?:-|–|—|to)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn)\.?|\b12mn\b|\b12nn\b)/i;
+  const re24 = /\b(\d{1,2}:\d{2})\s*(?:-|–|—|to)\s*(\d{1,2}:\d{2})\b/;
+  const out = [];
+  lines.forEach(line => {
+    const tm = line.match(re12) || line.match(re24);
+    if (!tm) { const l = out[out.length - 1]; if (l && !l.labeled) { l.note = line; l.labeled = true; } return; }
+    const st = parseTime(tm[1]), en = parseTime(tm[2]); if (!st || !en) return;
+    const fb = dstr(addDays(new Date(), out.length)), date = parseDate(line, fb);
+    let note = '', labeled = false; const parts = line.split('|').map(x => x.trim());
+    if (parts.length >= 3 && parts[2]) { note = parts[2]; labeled = true; }
+    else { const after = line.slice(tm.index + tm[0].length).trim().replace(/^\([a-zA-Z.]+\)\s*/, '').replace(/^[-|•:]+\s*/, '').trim(); if (after) { note = after; labeled = true; } }
+    out.push({ date, start: st, end: en, note, labeled });
+  });
+  if (!out.length) return toast('No valid shifts found — check the time format');
+  let added = 0, skipped = 0; const days = new Set();
+  out.forEach(o => {
+    if (shifts.some(s => s.date === o.date && s.startTime === o.start && s.endTime === o.end)) { skipped++; return; }
+    const h = holidayFor(o.date);
+    shifts.push({ id: Date.now() + added + Math.floor(Math.random() * 999), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: h ? h.mult : 1, gross: 0, breakMin: 0 });
+    days.add(o.date); added++;
+  });
+  days.forEach(recalcDay);
+  if (added) selKey = periodOf([...days].sort().pop()).key;
+  $('io-text').value = ''; persistShifts(); render(); closeSheet('io-sheet');
+  toast(added ? `Imported ${added} shift${added > 1 ? 's' : ''}${skipped ? ` · ${skipped} duplicate${skipped > 1 ? 's' : ''} skipped` : ''}` : 'Those shifts are already logged');
+}
+
+/* ================= settings screen ================= */
+function syncSettingsUI() {
+  $('set-rate').value = settings.hourlyRate; $('set-area').value = settings.calabarzonArea || '73.75'; $('set-sched').value = settings.schedule;
+  $('set-goal').value = settings.goal || ''; $('set-lag').value = settings.payLag || ''; $('upd-repo').value = repoName(); $('upd-rel').href = `https://github.com/${repoName()}/releases`; $('notif-on').checked = !!settings.notifEnabled; $('notif-time').value = settings.notifTime || '22:00';
+  $('bi-n').value = settings.budgetNeeds; $('bi-w').value = settings.budgetWants; $('bi-s').value = settings.budgetSavings; budgetInput();
+  $('ver-label').textContent = `Version ${APP_VERSION}`; notifSub(); syncDedUI(); applyTheme(); renderSecurity();
+}
+function applyArea() { const v = $('set-area').value; settings.calabarzonArea = v; if (v !== 'custom') { $('set-rate').value = v; settings.hourlyRate = parseFloat(v); } persistSettings(); render(); toast(`Rate set to ${peso(settings.hourlyRate)}/hr · applies to new shifts`); }
+function onRateInput() {
+  const v = Math.max(0, parseFloat($('set-rate').value) || 0); settings.hourlyRate = v;
+  const m = ['73.75', '80.63', '68.75'].find(p => Math.abs(parseFloat(p) - v) < .005); $('set-area').value = m || 'custom'; settings.calabarzonArea = m || 'custom';
+  persistSettings(); render();
+}
+function onSchedule() { settings.schedule = $('set-sched').value; _pm.clear(); selKey = curPeriod().key; persistSettings(); render(); toast('Cutoff cycle updated'); }
+function saveLag(v) { settings.payLag = Math.max(0, Math.min(31, parseInt(v, 10) || 0)); persistSettings(); render(); toast(settings.payLag ? `Payday: ${settings.payLag} days after cutoff` : 'Payday hidden'); }
+function saveGoal(v) { settings.goal = Math.max(0, parseFloat(v) || 0); persistSettings(); render(); toast(settings.goal ? 'Pay goal saved' : 'Pay goal removed'); }
+
+/* ---- reminders ---- */
+function notifSub() {
+  const el = $('notif-sub'); if (!('Notification' in window)) { el.textContent = 'Not supported here'; return; }
+  el.textContent = Notification.permission === 'denied' ? 'Blocked in Android settings' : (settings.notifEnabled ? `Daily at ${t12(settings.notifTime || '22:00')}` : 'Daily alert to log your shift');
+}
+async function toggleNotif() {
+  const cb = $('notif-on');
+  if (cb.checked) {
+    if (!('Notification' in window)) { cb.checked = false; return toast('Notifications not supported here'); }
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { cb.checked = false; settings.notifEnabled = false; persistSettings(); notifSub(); return toast('Allow notifications in Android settings'); }
+    settings.notifEnabled = true; toast(`Reminder set for ${t12(settings.notifTime)}`);
+  } else { settings.notifEnabled = false; toast('Reminders off'); }
+  persistSettings(); notifSub();
+}
+function saveNotifTime() { settings.notifTime = $('notif-time').value; persistSettings(); notifSub(); toast(`Reminder time: ${t12(settings.notifTime)}`); }
+async function showSystemNotification(title, options) {
+  if (window.AndroidBridge) { AndroidBridge.notify(title, (options && options.body) || ''); return true; }
+  try { const reg = await navigator.serviceWorker.ready; if (reg && reg.showNotification) { await reg.showNotification(title, options); return true; } } catch (e) {}
+  try { new Notification(title, options); return true; } catch (e) { return false; }
+}
+async function triggerReminder() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') await Notification.requestPermission();
+  if (Notification.permission === 'granted') await showSystemNotification('SweldoPulse — log your shift', { body: 'Finished your shift? Tap to record your hours.', icon: './icon-192.png', tag: 'sweldo-shift-reminder' });
+}
+function checkReminder() {
+  if (!settings.notifEnabled) return; const now = new Date(), k = today(); if (settings.lastNotifDate === k) return;
+  const [h, m] = (settings.notifTime || '22:00').split(':').map(Number), n = now.getHours() * 60 + now.getMinutes(), r = h * 60 + m;
+  if (n >= r && n <= r + 90) { settings.lastNotifDate = k; persistSettings(); triggerReminder(); }
+}
+
+/* ---- updates ---- */
+const semver = (a, b) => { const x = String(a).replace(/^v/i, '').split('.').map(n => +n || 0), y = String(b).replace(/^v/i, '').split('.').map(n => +n || 0); for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d > 0 ? 1 : -1; } return 0; };
+const repoName = () => (settings.repo || DEFAULT_REPO).trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '').replace(/^\/+|\/+$/g, '');
+function saveRepo(v) { v = String(v).trim(); settings.repo = (v && v !== DEFAULT_REPO) ? v : ''; persistSettings(); $('upd-repo').value = repoName(); $('upd-rel').href = `https://github.com/${repoName()}/releases`; toast('Update source saved'); }
+async function ghGet(url, ms = 9000) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
+  try { const r = await fetch(url, { cache: 'no-store', signal: c.signal }); return { ok: r.ok, status: r.status, r }; }
+  catch (e) { return { ok: false, status: 0, why: e.name === 'AbortError' ? 'timed out' : 'blocked / no connection' }; }
+  finally { clearTimeout(t); }
+}
+const parseRelease = j => { const apk = (j.assets || []).find(a => /\.apk$/i.test(a.name || '')); return { v: j.tag_name || j.name || '', notes: j.body || '', url: apk ? apk.browser_download_url : j.html_url, size: apk ? (apk.size / 1048576).toFixed(1) + ' MB' : '', pre: !!j.prerelease }; };
+// Tries 3 sources so one failure doesn't mean "can't connect": releases/latest -> releases list (also finds pre-releases) -> version.json in the repo.
+async function findLatestRelease() {
+  const repo = repoName(), log = []; let rel = null;
+  let r = await ghGet(`https://api.github.com/repos/${repo}/releases/latest`); log.push(`latest ${r.status || r.why}`);
+  if (r.ok) { try { rel = parseRelease(await r.r.json()); } catch (e) {} }
+  if (!rel) { r = await ghGet(`https://api.github.com/repos/${repo}/releases?per_page=8`); log.push(`list ${r.status || r.why}`);
+    if (r.ok) { try { const a = (await r.r.json()).filter(x => !x.draft); if (a.length) rel = parseRelease(a.sort((p, q) => semver(q.tag_name, p.tag_name))[0]); } catch (e) {} } }
+  if (!rel) { r = await ghGet(`https://raw.githubusercontent.com/${repo}/HEAD/version.json`); log.push(`file ${r.status || r.why}`);
+    if (r.ok) { try { const j = await r.r.json(); if (j.version) rel = { v: j.version, notes: j.notes || '', url: `https://github.com/${repo}/releases/latest`, size: '', fromFile: true }; } catch (e) {} } }
+  return { rel, log };
+}
+function updFailText(log) {
+  const st = log.map(l => l.split(' ')[1]);
+  if (st.every(s => s === 'blocked' || s === 'timed')) return "Can't reach GitHub — check your connection (mobile data / Wi-Fi, VPN or private DNS can block it).";
+  if (st.some(s => s === '403')) return 'GitHub is rate-limiting this network. Try again in a few minutes, or use the Releases page.';
+  return `GitHub answered, but found no release for “${repoName()}”. Make sure the repo name is right and public, and that a release (not just a tag) is published. Edit it under “Update source”.`;
+}
+async function checkUpdates(manual) {
+  const btn = $('upd-btn'), badge = $('upd-badge'), box = $('upd-box'), diag = $('upd-diag');
+  if (manual) { btn.disabled = true; btn.textContent = 'Checking…'; badge.textContent = 'Checking'; badge.className = 'chip mute'; diag.classList.add('hidden'); }
+  const { rel, log } = await findLatestRelease();
+  settings.lastUpd = Date.now(); persistSettings();
+  let newer = false;
+  if (rel) newer = semver(rel.v, APP_VERSION) > 0;
+  if (!manual) { if (newer) { badge.textContent = 'Update ready'; badge.className = 'chip warn'; toast(`Update ${rel.v} is available`, { label: 'View', fn: () => go('settings') }); fillUpdate(rel, newer); } return; }
+  if (!rel) { badge.textContent = 'Unavailable'; badge.className = 'chip bad'; diag.textContent = updFailText(log) + `  [${log.join(' · ')}]`; diag.classList.remove('hidden'); box.classList.add('hidden'); toast("Couldn't check for updates"); }
+  else { fillUpdate(rel, newer); badge.textContent = newer ? 'Update ready' : 'Up to date'; badge.className = 'chip ' + (newer ? 'warn' : 'ok'); toast(newer ? `Version ${rel.v} is available` : "You're on the latest version"); }
+  btn.disabled = false; btn.textContent = 'Check for updates';
+}
+function fillUpdate(rel, newer) {
+  $('upd-box').classList.remove('hidden'); $('upd-title').textContent = newer ? `Update available · ${rel.v}` : `You're up to date · ${rel.v}`;
+  $('upd-size').textContent = rel.size; $('upd-notes').textContent = String(rel.notes).replace(/[#*`>]/g, '').slice(0, 150);
+  $('upd-link').href = rel.url; $('upd-link').textContent = newer ? 'Download update' : 'Open release page'; $('upd-link').classList.toggle('primary', newer); $('upd-link').classList.toggle('ghost', !newer);
+}
+
+/* ================= backup / restore ================= */
+let bkMode = 'export';
+const backupJSON = () => JSON.stringify({ app: 'SweldoPulse', version: APP_VERSION, exportedAt: new Date().toISOString(), settings, shifts }, null, 1);
+function csvText() {
+  const q = v => `"${String(v).replace(/"/g, '""')}"`, rows = ['date,start,end,label,break_min,day_multiplier,regular_h,night_h,overtime_h,gross_php,cutoff'];
+  [...shifts].sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || '')).forEach(s => rows.push([s.date, s.startTime, s.endTime, q(s.note || ''), s.breakMin || 0, s.multiplier, s.reg, s.nd, s.ot, s.gross.toFixed(2), q(periodOf(s.date).label)].join(',')));
+  return rows.join('\n');
+}
+function openBackup(mode) {
+  bkMode = mode; const ta = $('bk-text'), ex = mode !== 'restore', csv = mode === 'csv';
+  $('bk-title').textContent = csv ? 'Export as CSV' : (ex ? 'Back up your data' : 'Restore from backup');
+  $('bk-sub').textContent = csv ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'} · opens in Excel / Sheets` : (ex ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'} + settings` : 'Replaces everything on this device');
+  ta.value = csv ? csvText() : (ex ? backupJSON() : ''); ta.readOnly = ex; ta.placeholder = ex ? '' : 'Paste your backup text here…';
+  $('bk-export').classList.toggle('hidden', !ex); $('bk-restore').classList.toggle('hidden', ex);
+  $('bk-note').textContent = csv ? 'Copy it into a spreadsheet, or tap Save / share to send the .csv file.' : ex ? 'Tip: tap Copy, then paste it into Notes, Drive or a Messenger chat to yourself.' : 'Pick the backup file, or open it in any app, copy all the text and paste it above.';
+  openSheet('backup-sheet');
+}
+const markBackup = () => { if (bkMode === 'csv') return render(); try { localStorage.setItem(BK_KEY, Date.now()); } catch (e) {} render(); syncBackupStatus(); };
+async function copyBackup() { if (await copyText($('bk-text').value)) { markBackup(); toast('Backup copied — paste it somewhere safe'); } else toast("Couldn't copy — select the text and copy manually"); }
+async function saveBackupFile() {
+  const csv = bkMode === 'csv', name = csv ? `SweldoPulse-shifts-${today()}.csv` : `SweldoPulse-backup-${today()}.json`, text = $('bk-text').value, mime = csv ? 'text/csv' : 'application/json';
+  try { const f = new File([text], name, { type: mime }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); markBackup(); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  if (window.AndroidBridge) { if (await copyText(text)) { markBackup(); toast('Saved to clipboard — paste it into Notes or Drive'); } return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); markBackup(); toast('Backup file saved');
+}
+function restoreFromFile(inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const r = new FileReader(); r.onload = () => { $('bk-text').value = r.result; restoreFromText(); }; r.readAsText(f); }
+async function restoreFromText() {
+  let d; try { d = JSON.parse($('bk-text').value.trim()); } catch (e) { return toast('That is not valid backup text'); }
+  const list = normalizeShifts(d && d.shifts);
+  if (!d || d.app !== 'SweldoPulse' || !Array.isArray(d.shifts) || (d.shifts.length && !list.length)) return toast('Not a SweldoPulse backup');
+  if (!await askConfirm({ title: 'Replace all data?', body: `This replaces everything on this device with the backup (<b>${list.length}</b> shifts). This cannot be undone.`, ok: 'Restore', danger: true })) return;
+  settings = { ...settings, ...(d.settings || {}) }; shifts = list; _pm.clear(); selKey = '';
+  persistSettings(); persistShifts(); closeSheet('backup-sheet'); syncSettingsUI(); render(); toast(`Restored ${list.length} shifts`);
+}
+function syncBackupStatus() { const lb = +localStorage.getItem(BK_KEY) || 0; $('backup-status').textContent = lb ? 'Last backup: ' + new Date(lb).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never backed up'; }
+
+/* ================= payslip copy / image ================= */
+function payslipText() {
+  const P = periodFromKey(selKey), D = periodData(selKey);
+  return [`SweldoPulse payslip — ${P.label}`, `${D.t.n} shift${D.t.n === 1 ? '' : 's'} · ${fh(D.t.hrs)}`, `Gross: ${peso(D.t.gross)}`, `SSS: -${peso(D.d.sss)}`, `PhilHealth: -${peso(D.d.ph)}`, `Pag-IBIG: -${peso(D.d.pi)}`, `Tax: -${peso(D.d.tax)}`, `Other: -${peso(D.d.oth)}`, `Net take-home: ${peso(D.net)}`].join('\n');
+}
+async function copyPayslip() { toast((await copyText(payslipText())) ? 'Payslip copied' : "Couldn't copy"); }
+async function viewPayslip() {
+  try { await document.fonts.load('700 40px Inter'); await document.fonts.load('500 40px Inter'); } catch (e) {}
+  const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d, W = 1080;
+  const rows = [['Basic pay', t.basic], ['Night differential', t.nd], ['Overtime & holiday', t.otp], ['Gross pay', t.gross, 1], ['SSS', -d.sss], ['PhilHealth', -d.ph], ['Pag-IBIG', -d.pi], ['Withholding tax', -d.tax], ['Other deductions', -d.oth]];
+  const H = 560 + rows.length * 78 + 250, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#161B33'); g.addColorStop(1, '#07090F'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const gold = x.createLinearGradient(0, 0, W, 0); gold.addColorStop(0, '#FFE08A'); gold.addColorStop(.5, '#F5A524'); gold.addColorStop(1, '#F0643C');
+  x.save(); x.translate(72, 72); x.scale(2.6, 2.6); x.fillStyle = '#0B0F1E'; x.beginPath(); x.roundRect(0, 0, 64, 64, 16); x.fill();
+  x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = gold; x.lineWidth = 4.4; x.beginPath(); x.arc(32, 32, 19, 0, 7); x.stroke();
+  const pl = () => { x.beginPath(); x.moveTo(7, 34); x.lineTo(22, 34); x.lineTo(27, 22); x.lineTo(33, 46); x.lineTo(38, 34); x.lineTo(57, 34); };
+  x.strokeStyle = '#0B0F1E'; x.lineWidth = 10; pl(); x.stroke(); x.strokeStyle = '#fff'; x.lineWidth = 4; pl(); x.stroke(); x.fillStyle = '#F5A524'; x.beginPath(); x.arc(57, 34, 2.8, 0, 7); x.fill(); x.restore();
+  x.fillStyle = '#fff'; x.font = '700 54px Inter, sans-serif'; x.fillText('SweldoPulse', 270, 124);
+  x.fillStyle = '#8A8AA8'; x.font = '500 30px Inter, sans-serif'; x.fillText('Payslip estimate', 270, 168);
+  x.fillStyle = '#fff'; x.font = '600 40px Inter, sans-serif'; x.fillText(P.label, 72, 300);
+  x.fillStyle = '#8A8AA8'; x.font = '500 28px Inter, sans-serif'; x.fillText(`${t.n} shift${t.n === 1 ? '' : 's'} · ${fh(t.hrs)} · ${peso(settings.hourlyRate)}/hr`, 72, 350);
+  let y = 440; x.strokeStyle = 'rgba(255,255,255,.12)'; x.lineWidth = 2;
+  rows.forEach(r => { x.beginPath(); x.moveTo(72, y - 50); x.lineTo(W - 72, y - 50); x.stroke(); x.font = (r[2] ? '700 ' : '500 ') + '32px Inter, sans-serif'; x.fillStyle = r[2] ? '#fff' : '#C9CBE0'; x.textAlign = 'left'; x.fillText(r[0], 72, y);
+    x.textAlign = 'right'; x.fillStyle = r[1] < 0 ? '#FB7185' : (r[2] ? '#fff' : '#C9CBE0'); x.fillText((r[1] < 0 ? '-' : '') + peso(Math.abs(r[1])), W - 72, y); y += 78; });
+  x.textAlign = 'left'; x.fillStyle = '#8A8AA8'; x.font = '600 28px Inter, sans-serif'; x.fillText('NET TAKE-HOME', 72, y + 50);
+  x.fillStyle = gold; x.font = '700 92px Inter, sans-serif'; x.fillText(peso(D.net), 72, y + 150);
+  x.fillStyle = '#5E6180'; x.font = '500 22px Inter, sans-serif'; x.fillText('Estimate by SweldoPulse · ' + new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }) + ' · not an official payslip', 72, H - 44);
+  window.__payslipCanvas = c; $('payslip-img').src = c.toDataURL('image/png'); $('payslip-modal').classList.add('on');
+}
+function closePayslip() { $('payslip-modal').classList.remove('on'); }
+async function savePayslipImage() {
+  const c = window.__payslipCanvas; if (!c) return; const name = `SweldoPulse-payslip-${today()}.png`;
+  if (window.AndroidBridge) { toast(AndroidBridge.saveImage(c.toDataURL('image/png'), name) ? 'Saved to Pictures' : 'Allow storage permission, then tap Save again'); return; }
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  try { const f = new File([blob], name, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast('Payslip image saved');
+}
+
+/* ================= app lock (lock-first) ================= */
+const lockCfg = () => { try { return JSON.parse(localStorage.getItem(LOCK_KEY) || 'null'); } catch (e) { return null; } };
+let pinBuf = '', pinMode = '', pinTmp = '', hiddenAt = 0, fpPurpose = '';
+async function hashPin(p, salt) {
+  const s = salt + ':' + p;
+  if (window.crypto && crypto.subtle) { const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join(''); }
+  let x = 5381; for (const ch of s) x = ((x << 5) + x + ch.charCodeAt(0)) >>> 0; return 'f' + x;
+}
+const hasFp = () => { const c = lockCfg(); try { return !!(window.AndroidBridge && c && c.fp && AndroidBridge.fpAvailable()); } catch (e) { return false; } };
+const lockVisible = () => root.classList.contains('locked') || root.classList.contains('pin-open');
+function drawDots() { setHTML($('pin-dots'), [0, 1, 2, 3].map(i => `<span class="pin-dot${i < pinBuf.length ? ' f' : ''}"></span>`).join('')); }
+function lockUI(title, sub, open) {
+  setText($('lock-title'), title); setText($('lock-sub'), sub || ''); pinBuf = ''; drawDots();
+  $('lock-forgot').classList.toggle('hidden', pinMode !== 'unlock'); $('lock-cancel').classList.toggle('hidden', pinMode === 'unlock');
+  const fp = pinMode === 'unlock' && hasFp(); $('pin-fp').style.visibility = fp ? 'visible' : 'hidden';
+  if (open) { if (pinMode === 'unlock') root.classList.add('locked'); else root.classList.add('pin-open'); }
+  if (fp && open) setTimeout(tryFingerprint, 300);
+}
+function lockNow(sub) { pinMode = 'unlock'; lockUI('Enter PIN', sub || 'SweldoPulse is locked', true); }
+function unlockDone() { root.classList.remove('locked', 'pin-open', 'veil'); if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} fpPurpose = ''; }
+const fails = () => +localStorage.getItem('sp_pin_fails') || 0;
+async function pinKey(k) {
+  const until = +localStorage.getItem('sp_lock_until') || 0;
+  if (pinMode === 'unlock' && Date.now() < until) { setText($('lock-sub'), `Too many tries — wait ${Math.ceil((until - Date.now()) / 1000)}s`); return; }
+  if (k === '⌫') pinBuf = pinBuf.slice(0, -1); else if (pinBuf.length < 4) pinBuf += k;
+  drawDots(); if (pinBuf.length < 4) return;
+  const cfg = lockCfg(), p = pinBuf;
+  if (pinMode === 'set1') { pinTmp = p; pinMode = 'set2'; return setTimeout(() => lockUI('Confirm PIN', 'Enter it once more'), 150); }
+  if (pinMode === 'set2') {
+    if (p !== pinTmp) { pinMode = 'set1'; return failPin('PINs did not match — start again', 'Create PIN'); }
+    const salt = Math.random().toString(36).slice(2), old = cfg || {};
+    localStorage.setItem(LOCK_KEY, JSON.stringify({ salt, hash: await hashPin(p, salt), auto: old.auto ?? 30, fp: old.fp }));
+    unlockDone(); renderSecurity(); toast('PIN lock enabled'); return;
+  }
+  if (!cfg) { unlockDone(); return; }
+  const ok = (await hashPin(p, cfg.salt)) === cfg.hash;
+  if (!ok) { const n = fails() + 1; localStorage.setItem('sp_pin_fails', n); if (n >= 5) localStorage.setItem('sp_lock_until', Date.now() + 30000 * Math.min(8, n - 4)); return failPin(n >= 5 ? 'Too many tries — locked briefly' : 'Wrong PIN'); }
+  localStorage.removeItem('sp_pin_fails'); localStorage.removeItem('sp_lock_until');
+  if (pinMode === 'unlock') unlockDone();
+  else if (pinMode === 'verify-change') { pinMode = 'set1'; lockUI('Create new PIN', '4 digits'); }
+  else if (pinMode === 'verify-remove') { localStorage.removeItem(LOCK_KEY); unlockDone(); renderSecurity(); toast('PIN lock removed'); }
+}
+function failPin(msg, retitle) { const d = $('pin-dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); if (navigator.vibrate) navigator.vibrate(60); setTimeout(() => lockUI(retitle || $('lock-title').textContent, msg), 350); }
+function lockSetupFlow() { if (lockCfg()) { pinMode = 'verify-change'; lockUI('Enter current PIN', '', true); } else { pinMode = 'set1'; lockUI('Create PIN', '4 digits to protect your pay data', true); } }
+function lockRemoveFlow() { pinMode = 'verify-remove'; lockUI('Enter PIN to remove', '', true); }
+function lockCancel() { if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} root.classList.remove('pin-open'); }
+function lockSetAuto(v) { const c = lockCfg(); if (c) { c.auto = +v; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); } }
+async function lockForgot() {
+  if (!await askConfirm({ title: 'Reset PIN?', body: 'Resetting the PIN <b>erases all shifts and settings</b> on this device — your PIN is what guards your data. You can restore from a backup afterwards.', ok: 'Erase & reset' })) return;
+  [SHIFTS_KEY, SETTINGS_KEY, LOCK_KEY, 'sp_lock_until', 'sp_pin_fails', TOUR_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
+}
+function tryFingerprint() { if (!window.AndroidBridge || !lockVisible()) return; fpPurpose = 'unlock'; setText($('lock-sub'), 'Touch the fingerprint sensor'); AndroidBridge.fpAuth(); }
+window.onFingerprint = function (ok) {
+  if (ok === null) { setText($('lock-sub'), 'Not recognized — try again'); return; }
+  if (!ok) { if (lockVisible()) setText($('lock-sub'), 'Use your PIN'); fpPurpose = ''; return; }
+  if (fpPurpose === 'enable') { const c = lockCfg(); c.fp = true; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); renderSecurity(); toast('Fingerprint unlock enabled'); }
+  else if (fpPurpose === 'unlock') { localStorage.removeItem('sp_pin_fails'); localStorage.removeItem('sp_lock_until'); unlockDone(); }
+  fpPurpose = '';
+};
+function toggleFingerprint() { const c = lockCfg(); if (!c) return; if (c.fp) { c.fp = false; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); renderSecurity(); toast('Fingerprint unlock off'); return; } fpPurpose = 'enable'; toast('Touch the fingerprint sensor to confirm'); AndroidBridge.fpAuth(); }
+function renderSecurity() {
+  const c = lockCfg();
+  $('lock-status').textContent = c ? 'On — locks when you leave the app' : 'Off — anyone with your phone can open the app';
+  $('lock-main-btn').textContent = c ? 'Change' : 'Set PIN'; $('lock-remove-btn').classList.toggle('hidden', !c); $('lock-auto-row').classList.toggle('hidden', !c);
+  if (c) $('lock-auto').value = String(c.auto ?? 30);
+  let fpOk = false; try { fpOk = !!(window.AndroidBridge && AndroidBridge.fpAvailable()); } catch (e) {}
+  $('lock-fp-row').classList.toggle('hidden', !(c && fpOk)); if (c) { $('lock-fp-status').textContent = c.fp ? 'On — scan to unlock' : 'Off'; $('lock-fp-btn').textContent = c.fp ? 'Turn off' : 'Enable'; }
+  if (window.AndroidBridge) try { AndroidBridge.setSecure(!!c); } catch (e) {}
+  syncBackupStatus();
+}
+document.addEventListener('visibilitychange', () => {
+  const c = lockCfg(); if (!c) return;
+  if (document.hidden) { hiddenAt = Date.now(); root.classList.add('veil'); }
+  else { if (hiddenAt && Date.now() - hiddenAt >= (c.auto ?? 30) * 1000 && !lockVisible()) lockNow('Welcome back'); root.classList.remove('veil'); }
+});
+
+/* ================= splash + tour ================= */
+let splashDone = false, tourIdx = 0, tourBusy = false;
+function dismissSplash() { const el = $('sp-splash'); if (!el || splashDone) return; splashDone = true; try { sessionStorage.setItem('sp_splash_seen', '1'); } catch (e) {} el.classList.add('out'); setTimeout(() => { el.remove(); afterSplash(); }, 380); }
+function afterSplash() { let first = false; try { first = !localStorage.getItem(TOUR_KEY) && !shifts.length; } catch (e) {} if (first && !lockVisible()) startTour(true); }
+function initBrand() {
+  const sp = $('sp-splash'); let seen = false; try { seen = sessionStorage.getItem('sp_splash_seen') === '1'; } catch (e) {}
+  if (root.classList.contains('locked') || seen) { sp.remove(); splashDone = true; setTimeout(afterSplash, 300); return; }
+  setTimeout(dismissSplash, matchMedia('(prefers-reduced-motion: reduce)').matches ? 500 : 1300);
+}
+const TOUR = [
+  { view: 'home', t: 'Welcome to SweldoPulse', b: 'Log your shifts and see your take-home pay for every cutoff. A quick tour of the 5 things to know.' },
+  { view: 'settings', sel: '#set-rate', t: '1 · Set your hourly rate', b: 'Pick your Calabarzon area or type your own rate. Every peso you see is computed from it.' },
+  { view: 'home', sel: '.fab', t: '2 · Log a shift', b: 'Tap + after each shift. Regular, night-differential and overtime hours are split for you, and holiday rates apply automatically.' },
+  { view: 'home', sel: '#hero', t: '3 · Your net pay', b: 'Your estimated take-home for the cutoff, with the countdown to cutoff end. Tap the eye to hide amounts. Use the arrows to browse past cutoffs.' },
+  { view: 'deductions', sel: '#nav-deductions', t: '4 · Payslip', b: 'SSS, PhilHealth, Pag-IBIG and tax are estimated for you automatically. Save the payslip as an image any time.' },
+  { view: 'settings', sel: '#lock-main-btn', t: '5 · Lock & back up', b: 'Set a PIN, then back up your shifts so a lost phone never means lost logs.' },
+  { final: true, view: 'home', t: "You're all set", b: 'Replay this tour anytime from Settings.' }
+];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function startTour() { tourIdx = 0; $('tour').classList.add('on'); showTour(0); }
+function tourStep(d) { if (tourBusy) return; const n = tourIdx + d; if (n >= TOUR.length) return endTour(); if (n >= 0) showTour(n); }
+function endTour() { try { localStorage.setItem(TOUR_KEY, '1'); } catch (e) {} $('tour').classList.remove('on'); $('tour-card').style.opacity = 0; go('home'); }
+async function showTour(i) {
+  tourBusy = true; tourIdx = i; const s = TOUR[i], card = $('tour-card'), spot = $('tour-spot'); card.style.opacity = 0;
+  if (s.view) { go(s.view); await sleep(380); }
+  const el = s.sel ? document.querySelector(s.sel) : null; let r = null;
+  if (el) { el.scrollIntoView({ block: 'center', behavior: 'auto' }); await sleep(80); r = el.getBoundingClientRect(); const pad = 6; Object.assign(spot.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' }); }
+  else Object.assign(spot.style, { left: innerWidth / 2 + 'px', top: innerHeight / 2 + 'px', width: '0px', height: '0px' });
+  $('tour-title').textContent = s.t; $('tour-body').textContent = s.b;
+  $('tour-dots').innerHTML = TOUR.map((_, k) => `<span class="tour-dot${k === i ? ' on' : ''}"></span>`).join('');
+  const last = i === TOUR.length - 1; $('tour-next').textContent = i === 0 ? 'Start tour' : (last ? 'Done' : 'Next'); $('tour-back').style.display = i === 0 ? 'none' : ''; $('tour-skip').style.display = last ? 'none' : '';
+  const h = card.offsetHeight, w = card.offsetWidth; let top;
+  if (r) { top = r.bottom + 20; if (top + h > innerHeight - 16) top = r.top - 20 - h; top = Math.max(16, Math.min(top, innerHeight - h - 16)); } else top = (innerHeight - h) / 2;
+  card.style.left = Math.max(16, (innerWidth - w) / 2) + 'px'; card.style.top = top + 'px'; card.style.opacity = 1; tourBusy = false;
+}
+
+/* ================= boot ================= */
+// snapshot logs before a new version touches them
+(function () { try { const prev = localStorage.getItem('sp_data_version'); if (prev !== APP_VERSION) { const sh = localStorage.getItem(SHIFTS_KEY), se = localStorage.getItem(SETTINGS_KEY);
+  if (sh) { localStorage.setItem('sp_snapshot_' + (prev || 'legacy'), JSON.stringify({ at: Date.now(), shifts: sh, settings: se })); Object.keys(localStorage).filter(k => k.startsWith('sp_snapshot_')).sort((a, b) => JSON.parse(localStorage[b]).at - JSON.parse(localStorage[a]).at).slice(2).forEach(k => localStorage.removeItem(k)); }
+  localStorage.setItem('sp_data_version', APP_VERSION); } } catch (e) {} })();
+function showWhatsNew() { $('wn-ver').textContent = APP_VERSION.replace(/\.0$/, ''); openSheet('whatsnew-sheet'); }
+function boot() {
+  populateTimes(); loadState(); buildFilters(); applyTheme();
+    syncSettingsUI(); go('home'); render(); initBrand();
+  if (lockCfg() && !root.classList.contains('locked') && !root.classList.contains('pin-open')) lockNow();
+  else if (root.classList.contains('locked')) { pinMode = 'unlock'; lockUI('Enter PIN', 'SweldoPulse is locked'); }
+  setInterval(checkReminder, 20000);
+  // after an update: show what's new once (not on a fresh install); then quietly look for newer releases once a day
+  try { const seen = localStorage.getItem('sp_seen_version'); if (seen !== APP_VERSION) { localStorage.setItem('sp_seen_version', APP_VERSION); if (seen && !lockVisible()) setTimeout(showWhatsNew, 900); } } catch (e) {}
+  setTimeout(() => { if (!lockVisible() && navigator.onLine !== false && Date.now() - (settings.lastUpd || 0) > 864e5) checkUpdates(false); }, 6000);
+  if (location.hash === '#log-shift') setTimeout(() => openShift(), 300);
+  // roll the cutoff over automatically if the app stays open past midnight
+  let dayKey = today(); document.addEventListener('visibilitychange', () => { if (!document.hidden && today() !== dayKey) { dayKey = today(); if (selKey === curPeriod().key || !selKey) { /* stay */ } render(); } });
+}
+if ('serviceWorker' in navigator && !window.AndroidBridge) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+document.addEventListener('click', e => { if (navigator.vibrate && e.target.closest('button,.shift,.fab')) navigator.vibrate(6); }, true);
+boot();
+
+</script>
+</body>
+</html>

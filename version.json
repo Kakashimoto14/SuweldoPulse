@@ -1,0 +1,7 @@
+{
+  "version": "1.13.0",
+  "apkUrl": "https://github.com/kakashimoto14/suweldopulse/releases/latest",
+  "apkName": "SweldoPulse-v1.13.0.apk",
+  "apkSize": "Latest Build",
+  "notes": "Wallet-style net pay card, payday date, CSV export, resilient GitHub update checker."
+}
