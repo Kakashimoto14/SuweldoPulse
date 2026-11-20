@@ -7,7 +7,6 @@ const ASSETS = [
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
-  './tailwind.css',
   './fonts/inter-latin-400-normal.woff2',
   './fonts/inter-latin-500-normal.woff2',
   './fonts/inter-latin-600-normal.woff2',
