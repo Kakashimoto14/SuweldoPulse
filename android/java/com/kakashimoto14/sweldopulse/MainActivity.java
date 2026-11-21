@@ -554,7 +554,7 @@ public class MainActivity extends Activity {
                 o.put("canInstall", canInstallPackages());
                 return o.toString();
             } catch (Throwable t) {
-                return "{"state":"idle"}";
+                return "{\"state\":\"idle\"}";
             }
         }
 
