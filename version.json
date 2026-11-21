@@ -1,7 +1,7 @@
 {
-  "version": "1.14.0",
-  "apkUrl": "https://github.com/kakashimoto14/suweldopulse/releases/latest",
-  "apkName": "SweldoPulse-v1.14.0.apk",
+  "version": "1.16.0",
+  "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
+  "apkName": "SweldoPulse-v1.16.0.apk",
   "apkSize": "Latest Build",
-  "notes": "Deep color themes, Black mode, Budget plan on Home, animated theme icon, performance and QA fixes."
+  "notes": "Payslip reconciliation, per-cutoff allowances & deductions, smart station presets, calendar view, 6-cutoff trend, native back button & background shift reminders."
 }

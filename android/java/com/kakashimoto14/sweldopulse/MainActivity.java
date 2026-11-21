@@ -19,6 +19,7 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -65,7 +66,17 @@ public class MainActivity extends Activity {
                 return external(Uri.parse(url));
             }
         });
-        web.loadUrl("https://" + HOST + "/index.html");
+        boolean openLog = getIntent() != null && getIntent().getBooleanExtra("open_log_shift", false);
+        web.loadUrl("https://" + HOST + "/index.html" + (openLog ? "#log-shift" : ""));
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent != null && intent.getBooleanExtra("open_log_shift", false)) {
+            js("window.onReminderTap&&onReminderTap()");
+        }
     }
 
     boolean external(Uri u) {
@@ -86,11 +97,24 @@ public class MainActivity extends Activity {
     }
 
     void js(final String code) {
-        runOnUiThread(new Runnable() { public void run() { web.evaluateJavascript(code, null); } });
+        runOnUiThread(new Runnable() { public void run() { if (web != null) web.evaluateJavascript(code, null); } });
     }
 
     @Override
-    public void onBackPressed() { moveTaskToBack(true); }
+    public void onBackPressed() {
+        if (web == null) { moveTaskToBack(true); return; }
+        web.evaluateJavascript(
+            "(function(){try{return window.handleAndroidBack?window.handleAndroidBack():false;}catch(e){return false;}})()",
+            new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String val) {
+                    if (!"true".equals(val)) {
+                        moveTaskToBack(true);
+                    }
+                }
+            }
+        );
+    }
 
     @Override
     protected void onDestroy() {
@@ -146,6 +170,11 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void scheduleReminder(final boolean enabled, final int hour, final int min) {
+            ReminderReceiver.schedule(MainActivity.this, enabled, hour, min);
+        }
+
+        @JavascriptInterface
         public boolean saveImage(String dataUrl, String name) {
             try {
                 if (Build.VERSION.SDK_INT < 29 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -170,7 +199,11 @@ public class MainActivity extends Activity {
                     nm.getClass().getMethod("createNotificationChannel", cc).invoke(nm, ch);
                     nb.getClass().getMethod("setChannelId", String.class).invoke(nb, "shifts");
                 }
-                PendingIntent pi = PendingIntent.getActivity(MainActivity.this, 0, new Intent(MainActivity.this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+                Intent launch = new Intent(MainActivity.this, MainActivity.class);
+                launch.putExtra("open_log_shift", true);
+                launch.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                int flags = PendingIntent.FLAG_UPDATE_CURRENT | 0x04000000;
+                PendingIntent pi = PendingIntent.getActivity(MainActivity.this, 0, launch, flags);
                 nb.setSmallIcon(R.mipmap.ic_launcher).setContentTitle(title).setContentText(body).setContentIntent(pi).setAutoCancel(true);
                 nm.notify(notifId++, nb.build());
             } catch (Throwable t) { }

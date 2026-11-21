@@ -48,7 +48,7 @@ input,select,textarea{outline:none}
 .num{font-variant-numeric:tabular-nums}
 .ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;pointer-events:none}
 .ic.sm{width:16px;height:16px}.ic.xs{width:14px;height:14px}
-.press{transition:transform .12s var(--ease),opacity .12s linear,background-color .2s ease}
+.press{transition:transform .12s var(--ease),opacity .12s linear}
 .press:active{transform:scale(.97)}
 
 /* ---------- lock-first: nothing of the app is visible while locked ---------- */
@@ -60,10 +60,10 @@ html.locked #sp-lock,html.pin-open #sp-lock{display:flex}
 html.veil #sp-veil{display:block}
 .lock-logo{width:64px;height:64px;border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(245,165,36,.25)}
 .pin-dots{display:flex;gap:16px;margin:6px 0}
-.pin-dot{width:13px;height:13px;border-radius:99px;border:1.5px solid #F5A524;transition:background-color .12s,transform .12s}
+.pin-dot{width:13px;height:13px;border-radius:99px;border:1.5px solid #F5A524;transition:transform .12s}
 .pin-dot.f{background:#F5A524;transform:scale(1.15)}
 .pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px}
-.pin-key{width:72px;height:72px;border-radius:99px;background:rgba(255,255,255,.08);font-size:25px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;transition:transform .1s,background-color .1s}
+.pin-key{width:72px;height:72px;border-radius:99px;background:rgba(255,255,255,.08);font-size:25px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;transition:transform .1s}
 .pin-key:active{transform:scale(.9);background:rgba(245,165,36,.32)}
 @keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
 .shake{animation:shake .4s}
@@ -90,7 +90,7 @@ html.veil #sp-veil{display:block}
 .hdr-title{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
 .icon-btn{width:40px;height:40px;border-radius:99px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--t2);flex:none}
 main{flex:1;padding:6px 16px calc(112px + var(--safe-b))}
-.view{display:none}
+.view{display:none;contain:layout style}
 .view.active{display:flex;flex-direction:column;gap:14px;animation:viewIn .26s var(--ease) both}
 @keyframes viewIn{from{opacity:0;transform:translate3d(0,10px,0)}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow)}
@@ -115,7 +115,7 @@ main{flex:1;padding:6px 16px calc(112px + var(--safe-b))}
 .btn.sm{min-height:38px;padding:0 14px;font-size:13px;border-radius:12px}
 .btn.block{width:100%}
 .btn:disabled{opacity:.4;pointer-events:none}
-.field{width:100%;min-height:46px;padding:0 14px;border-radius:14px;background:var(--subtle);border:1px solid var(--line);font-size:14px;font-weight:600;transition:border-color .15s}
+.field{width:100%;min-height:46px;padding:0 14px;border-radius:14px;background:var(--subtle);border:1px solid var(--line);font-size:14px;font-weight:600}
 .field:focus{border-color:var(--accent)}
 textarea.field{padding:12px 14px;min-height:96px;font-weight:500;line-height:1.5;resize:none}
 select.field{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238190A5' stroke-width='2.4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;text-overflow:ellipsis}
@@ -124,11 +124,11 @@ select.field{appearance:none;-webkit-appearance:none;padding-right:38px;backgrou
 .money-field span{color:var(--t3);font-weight:600}
 .money-field input{flex:1;min-width:0;width:100%;background:none;border:0;font-weight:700;font-size:15px;text-align:right}
 .seg{display:flex;padding:3px;border-radius:14px;background:var(--subtle);border:1px solid var(--line);gap:2px}
-.seg button{flex:1;min-height:36px;border-radius:11px;font-size:13px;font-weight:600;color:var(--t2);transition:background-color .2s,color .2s}
+.seg button{flex:1;min-height:36px;border-radius:11px;font-size:13px;font-weight:600;color:var(--t2)}
 .seg button.on{background:var(--card);color:var(--t1);box-shadow:0 1px 4px rgba(15,23,42,.12)}
 .switch{position:relative;width:46px;height:28px;flex:none}
 .switch input{position:absolute;inset:0;opacity:0;width:100%;height:100%;z-index:1;cursor:pointer}
-.switch i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:background-color .2s}
+.switch i{position:absolute;inset:0;border-radius:99px;background:var(--line)}
 .switch i::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .22s var(--ease)}
 .switch input:checked+i{background:var(--ok)}.switch input:checked+i::after{transform:translateX(18px)}
 .setting{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:48px}
@@ -146,8 +146,8 @@ select.field{appearance:none;-webkit-appearance:none;padding-right:38px;backgrou
 .wallet{position:relative;overflow:hidden;border-radius:24px;padding:14px 16px;color:#fff;isolation:isolate;background:var(--accent);background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 86%,#fff) 0%,var(--accent) 38%,color-mix(in srgb,var(--accent) 50%,#04060f) 100%);box-shadow:0 16px 32px -16px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.2)}
 .wallet::before{content:'';position:absolute;inset:-35%;z-index:-1;background:radial-gradient(38% 38% at 80% 18%,rgba(255,255,255,.24),transparent 70%),radial-gradient(42% 42% at 12% 100%,rgba(255,255,255,.13),transparent 70%);animation:drift 9s ease-in-out 2 alternate both;will-change:transform}
 @keyframes drift{to{transform:translate3d(5%,3%,0) rotate(7deg)}}
-.wallet::after{content:'';position:absolute;top:0;bottom:0;width:55%;left:-70%;z-index:-1;background:linear-gradient(100deg,transparent,rgba(255,255,255,.2),transparent);transform:skewX(-18deg);animation:shine 1.3s .3s var(--ease) 1 both}
-@keyframes shine{to{left:135%}}
+.wallet::after{content:'';position:absolute;top:0;bottom:0;width:55%;left:0;z-index:-1;background:linear-gradient(100deg,transparent,rgba(255,255,255,.2),transparent);transform:translate3d(-130%,0,0) skewX(-18deg);animation:shine 1.3s .3s var(--ease) 1 both}
+@keyframes shine{to{transform:translate3d(260%,0,0) skewX(-18deg)}}
 .w-top{display:flex;align-items:center;justify-content:space-between;min-height:28px}
 .w-lbl{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:rgba(255,255,255,.88)}
 .w-live{position:relative;width:7px;height:7px;border-radius:9px;background:#4ADE80}
@@ -210,7 +210,7 @@ select.field{appearance:none;-webkit-appearance:none;padding-right:38px;backgrou
 .empty b{display:block;color:var(--t1);font-size:15px;margin-bottom:4px}
 .filters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(var(--pad,14px) * -1);padding:0 var(--pad,14px)}
 .filters::-webkit-scrollbar{display:none}
-.fchip{height:34px;padding:0 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--t2);white-space:nowrap;flex:none;transition:background-color .15s,color .15s,border-color .15s}
+.fchip{height:34px;padding:0 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--t2);white-space:nowrap;flex:none}
 .fchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .search{position:relative}
 .search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--t3)}
@@ -222,7 +222,9 @@ select.field{appearance:none;-webkit-appearance:none;padding-right:38px;backgrou
 /* ---------- budget (compact on home) ---------- */
 .mini-budget{display:block;width:100%;text-align:left}
 .stackbar{display:flex;gap:3px;height:8px;border-radius:99px;overflow:hidden;background:var(--subtle)}
-.stackbar i{display:block;height:100%;transition:width .5s var(--ease)}
+.stackbar i{display:block;height:100%}
+.stackbar{transform-origin:left center;animation:barIn .7s var(--ease) both}
+@keyframes barIn{from{transform:scaleX(.02);opacity:.4}}
 .c-needs{background:#6366F1}.c-wants{background:#F59E0B}.c-save{background:#10B981}
 
 /* ---------- payslip ---------- */
@@ -246,7 +248,7 @@ details.fold>.body{padding-top:14px}
 .nav-grid{position:relative;display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
 .nav-pill{position:absolute;top:0;bottom:0;left:0;width:20%;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:transform .38s var(--ease);will-change:transform}
 .nav-pill i{display:block;width:62px;height:50px;border-radius:17px;background:var(--accent-soft)}
-.nav-it{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:54px;color:var(--t3);font-size:11px;font-weight:600;transition:color .2s}
+.nav-it{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:54px;color:var(--t3);font-size:11px;font-weight:600}
 .nav-it.on{color:var(--accent-text)}
 .fab{position:relative;z-index:2;justify-self:center;width:56px;height:56px;margin-top:-26px;border-radius:19px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 24px -8px var(--accent-glow);transition:transform .15s var(--ease)}
 .fab:active{transform:scale(.92)}
@@ -287,9 +289,9 @@ details.fold>.body{padding-top:14px}
 #print-area{display:none}
 #tour{position:fixed;inset:0;z-index:120;display:none;touch-action:none}
 #tour.on{display:block}
-#tour-spot{position:fixed;border-radius:18px;pointer-events:none;box-shadow:0 0 0 2px rgba(129,140,248,.95),0 0 0 9999px rgba(6,9,20,.78);transition:left .4s var(--ease),top .4s var(--ease),width .4s var(--ease),height .4s var(--ease)}
-#tour-card{position:fixed;width:min(340px,calc(100% - 32px));background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.4);transition:top .4s var(--ease),opacity .18s ease}
-.tour-dot{height:5px;width:5px;border-radius:9px;background:var(--line);transition:width .3s,background-color .3s}.tour-dot.on{width:18px;background:var(--accent)}
+#tour-spot{position:fixed;border-radius:18px;pointer-events:none;box-shadow:0 0 0 2px rgba(129,140,248,.95),0 0 0 9999px rgba(6,9,20,.78);transition:opacity .16s ease}
+#tour-card{position:fixed;width:min(340px,calc(100% - 32px));background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.4);transition:opacity .18s ease}
+.tour-dot{height:5px;width:5px;border-radius:9px;background:var(--line)}.tour-dot.on{width:18px;background:var(--accent)}
 
 
 /* ---------- v1.13: compact scale + motion ---------- */
@@ -318,12 +320,14 @@ html.dark .sun-core{transform:scale(1.42)}
 @keyframes cardIn{from{opacity:0;transform:translate3d(0,12px,0)}}
 .enter>*{animation:cardIn .32s var(--ease) both}
 .enter>*:nth-child(2){animation-delay:28ms}.enter>*:nth-child(3){animation-delay:56ms}.enter>*:nth-child(4){animation-delay:84ms}.enter>*:nth-child(5){animation-delay:112ms}.enter>*:nth-child(6){animation-delay:140ms}.enter>*:nth-child(7){animation-delay:168ms}.enter>*:nth-child(8){animation-delay:196ms}.enter>*:nth-child(9){animation-delay:224ms}.enter>*:nth-child(10){animation-delay:252ms}.enter>*:nth-child(11){animation-delay:280ms}.enter>*:nth-child(12){animation-delay:308ms}
-html.theme-anim *:not(#theme-btn):not(#theme-btn *){transition:background-color .35s ease,color .35s ease,border-color .35s ease,fill .35s ease,stroke .35s ease!important}
 .view.fwd{animation-name:viewFwd}.view.back{animation-name:viewBack}
 @keyframes viewFwd{from{opacity:0;transform:translate3d(18px,0,0)}}
 @keyframes viewBack{from{opacity:0;transform:translate3d(-18px,0,0)}}
 
 
+/* ---------- v1.15: circular theme reveal (View Transitions API) ---------- */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
 /* ---------- v1.14 ---------- */
 a.btn{text-decoration:none}
 .presets.wrap{flex-wrap:wrap;overflow:visible;margin:0;padding:0}.presets.wrap .fchip{height:32px;padding:0 12px;font-size:12.5px}
@@ -351,6 +355,45 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .d-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 26px}
 .d-c b{font-size:21px;font-weight:700;letter-spacing:-.02em;margin:2px 0}
 .d-c small{font-size:10.5px;color:var(--t3);line-height:1.25}
+
+/* ---------- v1.16: reconciliation, calendar, 6-cutoff trend, smart chips ---------- */
+.pos-ok{color:var(--ok)}
+.ps-net-sub{font-size:11px;font-weight:600;margin-top:2px;color:var(--accent-text);opacity:.88}
+.recon-msg{font-size:12px;font-weight:600;padding:9px 12px;border-radius:12px;margin-top:10px;line-height:1.4}
+.recon-msg.ok{background:var(--ok-soft);color:var(--ok)}
+.recon-msg.bad{background:var(--bad-soft);color:var(--bad)}
+.recon-msg.warn{background:var(--warn-soft);color:var(--warn)}
+.icon-btn.on{background:var(--accent-soft);border-color:var(--accent-soft-border);color:var(--accent-text)}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-cell{height:40px;border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12.5px;font-weight:600;color:var(--t1);background:var(--subtle);border:1px solid transparent;position:relative}
+.cal-cell.out{opacity:.28;background:transparent;pointer-events:none}
+.cal-cell.td{border-color:var(--accent)}
+.cal-cell.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cal-cell.sel .cal-dot{background:#fff!important}
+.cal-dots{display:flex;gap:3px;height:4px;align-items:center}
+.cal-dot{width:4px;height:4px;border-radius:9px}
+.cal-dot.reg{background:var(--accent)}.cal-dot.nd{background:#6366F1}.cal-dot.ot{background:var(--warn)}.cal-dot.hl{background:var(--ok)}
+.cal-leg{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:10.5px;font-weight:600;color:var(--t3);flex-wrap:wrap}
+.cal-leg span{display:inline-flex;align-items:center;gap:4px}
+.cal-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:12px;background:var(--accent-soft);color:var(--accent-text);font-size:12px;font-weight:600}
+.trend-bars{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;align-items:end;padding-top:4px}
+.trend-col{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;padding:4px 2px;border-radius:11px}
+.trend-val{font-size:10px;font-weight:700;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.trend-col.cur .trend-val{color:var(--accent-text)}
+.trend-track{width:100%;height:58px;display:flex;align-items:flex-end;justify-content:center}
+.trend-bar{width:100%;max-width:30px;height:100%;border-radius:8px 8px 4px 4px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);transform-origin:bottom;transition:transform .32s var(--ease)}
+.trend-col.zero .trend-bar{background:var(--subtle);border-color:var(--line)}
+.trend-col.cur .trend-bar{background:var(--accent);border-color:var(--accent);box-shadow:0 6px 14px -6px var(--accent-glow)}
+.trend-lbl{font-size:10px;font-weight:600;color:var(--t3);white-space:nowrap}
+.trend-col.cur .trend-lbl{color:var(--t1);font-weight:700}
+.st-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px calc(var(--pad,16px) * -1) 0;padding:0 var(--pad,16px)}
+.st-chips::-webkit-scrollbar{display:none}
+.schip{height:30px;padding:0 11px;border-radius:99px;background:var(--subtle);border:1px solid var(--line);font-size:12px;font-weight:600;color:var(--t2);white-space:nowrap;flex:none}
+.schip.on{background:var(--accent-soft);border-color:var(--accent-soft-border);color:var(--accent-text)}
+.pin-chip{display:inline-flex;align-items:center;gap:5px}
+.pin-x{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:99px;font-size:13px;line-height:1;opacity:.7;margin-right:-4px}
+.pin-x:active{background:var(--bad-soft);color:var(--bad);opacity:1}
 
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
 @media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.hero{padding:16px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
@@ -392,6 +435,8 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5M9 10.8a2 2 0 0 1-1.1 1.8L6 13.5V15h12v-1.5l-1.9-.9a2 2 0 0 1-1.1-1.8V6h1V4H8v2h1z"/></symbol>
 </defs></svg>
 
 <div id="sp-splash" onclick="dismissSplash()" role="presentation"><svg class="sp-tile" viewBox="0 0 64 64" role="img" aria-label="SweldoPulse"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path class="sp-a" pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path class="sp-k" pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path class="sp-b" pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg><div class="sp-word">Sweldo<span>Pulse</span></div></div>
@@ -421,7 +466,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="hdr-logo"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div>
       <div><p class="hdr-sub" id="hdr-sub">Cutoff overview</p><h1 class="hdr-title" id="hdr-title">Home</h1></div>
     </div>
-    <button type="button" class="icon-btn press" id="theme-btn" onclick="toggleDark()" aria-label="Toggle dark mode"><svg class="theme-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><defs><mask id="sun-moon-mask"><rect x="0" y="0" width="24" height="24" fill="white"/><circle id="moon-cutout" class="moon-mask-circle" cx="24" cy="4" r="0" fill="black"/></mask></defs><circle class="sun-core" cx="12" cy="12" r="5" fill="currentColor" stroke="none" mask="url(#sun-moon-mask)"/><g class="sun-rays"><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></g></svg></button>
+    <button type="button" class="icon-btn press" id="theme-btn" onclick="toggleDark(this)" aria-label="Toggle dark mode"><svg class="theme-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><defs><mask id="sun-moon-mask"><rect x="0" y="0" width="24" height="24" fill="white"/><circle id="moon-cutout" class="moon-mask-circle" cx="24" cy="4" r="0" fill="black"/></mask></defs><circle class="sun-core" cx="12" cy="12" r="5" fill="currentColor" stroke="none" mask="url(#sun-moon-mask)"/><g class="sun-rays"><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></g></svg></button>
   </header>
 
   <main>
@@ -467,6 +512,10 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
       <div class="sec-h"><span class="eyebrow" id="recent-h">Recent shifts</span><button type="button" class="link" onclick="go('shifts')">See all</button></div>
       <div class="list" id="recent-list"></div>
+      <div class="card hidden" id="trend-card">
+        <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Cutoff trend</p><p class="card-s" id="trend-sub">Last 6 cutoffs · tap a bar to open</p></div><span class="chip mute num" id="trend-delta">—</span></div>
+        <div class="trend-bars" id="trend-bars"></div>
+      </div>
       <button type="button" class="note hidden" id="backup-nag" onclick="openBackup('export')" style="text-align:left;color:var(--warn);font-weight:600"></button>
     </section>
 
@@ -503,11 +552,14 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="mid"><span data-period-label>—</span><svg class="ic sm muted"><use href="#i-d"/></svg><select data-period-select onchange="selectPeriod(this.value)" aria-label="Choose cutoff"></select></div>
         <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
       </div>
-      <div class="row">
+      <div class="row" style="gap:8px">
         <div class="search grow"><svg class="ic sm"><use href="#i-search"/></svg><input class="field" id="shift-q" type="search" inputmode="search" placeholder="Search label or date" oninput="onSearch(this.value)" autocomplete="off"><button type="button" id="q-clear" class="hidden" onclick="clearSearch()" aria-label="Clear search"><svg class="ic sm"><use href="#i-x"/></svg></button></div>
-        <button type="button" class="icon-btn press" style="width:46px;height:46px;border-radius:14px" onclick="openSheet('menu-sheet')" aria-label="More options"><svg class="ic"><use href="#i-more"/></svg></button>
+        <button type="button" class="icon-btn press" id="cal-toggle" style="width:42px;height:42px;border-radius:13px" onclick="toggleCal()" aria-label="Toggle calendar view" aria-pressed="false"><svg class="ic sm"><use href="#i-cal"/></svg></button>
+        <button type="button" class="icon-btn press" style="width:42px;height:42px;border-radius:13px" onclick="openSheet('menu-sheet')" aria-label="More options"><svg class="ic"><use href="#i-more"/></svg></button>
       </div>
       <div class="filters" id="shift-filters"></div>
+      <div class="card hidden" id="shift-cal" style="padding:12px"></div>
+      <div class="cal-bar hidden" id="cal-day-bar"><span id="cal-day-txt"></span><button type="button" class="link" style="padding:2px 4px" onclick="pickCalDay('')">Show all</button></div>
       <div class="sumline"><span id="shift-sum"></span><button type="button" class="link" id="sort-btn" onclick="toggleSort()" style="display:flex;align-items:center;gap:5px"><svg class="ic xs"><use href="#i-sort"/></svg><span>Newest</span></button></div>
       <div class="list" id="shift-list"></div>
     </section>
@@ -526,6 +578,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="ps-row"><span class="k">Basic regular pay</span><span class="v" id="ps-basic">₱0.00</span></div>
         <div class="ps-row"><span class="k">Night differential</span><span class="v pos-nd" id="ps-nd">₱0.00</span></div>
         <div class="ps-row"><span class="k">Overtime &amp; holiday premium</span><span class="v pos-ot" id="ps-ot">₱0.00</span></div>
+        <div class="ps-row hidden" id="ps-allow-row"><span class="k">Allowances &amp; add-ons</span><span class="v pos-ok" id="ps-allow">+₱0.00</span></div>
         <div class="ps-row total"><span class="k">Gross earnings</span><span class="v" id="ps-gross">₱0.00</span></div>
         <p class="ps-group" style="margin-top:18px">Deductions</p>
         <div class="ps-row"><span class="k">SSS</span><span class="v neg" id="ps-sss">₱0.00</span></div>
@@ -533,7 +586,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="ps-row"><span class="k">Pag-IBIG</span><span class="v neg" id="ps-pi">₱0.00</span></div>
         <div class="ps-row"><span class="k">Withholding tax</span><span class="v neg" id="ps-tax">₱0.00</span></div>
         <div class="ps-row"><span class="k">Other / cash advance</span><span class="v neg" id="ps-oth">₱0.00</span></div>
-        <div class="ps-net"><div><p class="eyebrow" style="color:var(--accent-text);opacity:.8">Net take-home</p></div><span class="v num" id="ps-net">₱0.00</span></div>
+        <div class="ps-net"><div><p class="eyebrow" style="color:var(--accent-text);opacity:.8">Net take-home</p><p class="ps-net-sub num hidden" id="ps-net-recon"></p></div><span class="v num" id="ps-net">₱0.00</span></div>
       </div>
 
       <div class="grid2">
@@ -541,8 +594,14 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <button type="button" class="btn soft press" onclick="viewPayslip()"><svg class="ic sm"><use href="#i-image"/></svg>Save image</button>
       </div>
 
+      <div class="card" id="recon-card">
+        <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Actual pay received</p><p class="card-s">Compare employer payout vs. estimate</p></div><span class="chip mute num" id="recon-badge">Not checked</span></div>
+        <div class="row between"><label class="k" for="in-actual" style="font-weight:600">Amount received</label><div class="row" style="gap:6px"><label class="money-field" style="width:144px"><span>₱</span><input id="in-actual" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00" oninput="saveCutoffExtras()"></label><button type="button" class="icon-btn press hidden" id="actual-clear" onclick="clearActualPay()" aria-label="Clear actual pay" style="width:36px;height:36px;border-radius:11px"><svg class="ic xs"><use href="#i-x"/></svg></button></div></div>
+        <div id="recon-msg" class="recon-msg hidden"></div>
+      </div>
+
       <div class="card">
-        <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Deductions</p><p class="card-s">Applied to every cutoff that has pay</p></div></div>
+        <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Adjustments &amp; deductions</p><p class="card-s">Saved for this cutoff — past cutoffs stay locked</p></div></div>
         <div class="seg" id="ded-mode"><button type="button" data-m="auto" onclick="setDedMode(true)">Auto-estimate</button><button type="button" data-m="manual" onclick="setDedMode(false)">Manual</button></div>
         <div id="ded-auto" class="stack" style="margin-top:14px">
           <div><label class="lbl" for="stat-mode">When to deduct SSS / PhilHealth / Pag-IBIG</label>
@@ -558,7 +617,10 @@ input[type=search]::-webkit-search-cancel-button{display:none}
           <button type="button" class="btn soft sm press" onclick="fillFromEstimate()">Fill from estimate</button>
         </div>
         <div class="divider"></div>
-        <div class="row between"><div><label class="k" for="in-oth" style="font-weight:600;display:block">Other / cash advance</label><span class="card-s">Per cutoff</span></div><label class="money-field" style="width:150px"><span>₱</span><input id="in-oth" type="number" inputmode="decimal" min="0" step="any" oninput="saveManual()"></label></div>
+        <div class="stack" style="gap:10px">
+          <div class="row between"><div><label class="k" for="in-allow" style="font-weight:600;display:block">Allowances / add-ons</label><span class="card-s">This cutoff · meal, transpo, bonus</span></div><label class="money-field" style="width:150px"><span class="pos-ok">+₱</span><input id="in-allow" type="number" inputmode="decimal" min="0" step="any" placeholder="0" oninput="saveCutoffExtras()"></label></div>
+          <div class="row between"><div><label class="k" for="in-oth" style="font-weight:600;display:block">Other / cash advance</label><span class="card-s">This cutoff · deducted</span></div><label class="money-field" style="width:150px"><span>₱</span><input id="in-oth" type="number" inputmode="decimal" min="0" step="any" placeholder="0" oninput="saveCutoffExtras()"></label></div>
+        </div>
       </div>
 
       <details class="card fold" id="t13">
@@ -599,12 +661,11 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
       <div class="card">
         <div class="card-h" style="margin-bottom:12px"><p class="card-t">Appearance</p></div>
-        <div class="seg" id="theme-seg"><button type="button" data-m="system" onclick="setThemeMode('system')">System</button><button type="button" data-m="light" onclick="setThemeMode('light')">Light</button><button type="button" data-m="dark" onclick="setThemeMode('dark')">Dark</button><button type="button" data-m="amoled" onclick="setThemeMode('amoled')">Black</button></div>
+        <div class="seg" id="theme-seg"><button type="button" data-m="system" onclick="setThemeMode('system',this)">System</button><button type="button" data-m="light" onclick="setThemeMode('light',this)">Light</button><button type="button" data-m="dark" onclick="setThemeMode('dark',this)">Dark</button><button type="button" data-m="amoled" onclick="setThemeMode('amoled',this)">Black</button></div>
         <p class="lbl" style="margin:16px 0 8px">Deep colors</p>
         <div class="sw-row"><button type="button" class="theme-sw" data-theme="midnight" onclick="setAccent('midnight')" aria-label="Midnight" title="Midnight" style="background:#1E3A8A;color:#1E3A8A"></button><button type="button" class="theme-sw" data-theme="forest" onclick="setAccent('forest')" aria-label="Forest" title="Forest" style="background:#166534;color:#166534"></button><button type="button" class="theme-sw" data-theme="graphite" onclick="setAccent('graphite')" aria-label="Graphite" title="Graphite" style="background:#1F2937;color:#1F2937"></button><button type="button" class="theme-sw" data-theme="wine" onclick="setAccent('wine')" aria-label="Wine" title="Wine" style="background:#881337;color:#881337"></button><button type="button" class="theme-sw" data-theme="teal" onclick="setAccent('teal')" aria-label="Deep teal" title="Deep teal" style="background:#115E59;color:#115E59"></button><button type="button" class="theme-sw" data-theme="plum" onclick="setAccent('plum')" aria-label="Plum" title="Plum" style="background:#581C87;color:#581C87"></button></div>
         <p class="lbl" style="margin:14px 0 8px">Vibrant colors</p>
         <div class="sw-row"><button type="button" class="theme-sw" data-theme="indigo" onclick="setAccent('indigo')" aria-label="Indigo" title="Indigo" style="background:#4F46E5;color:#4F46E5"></button><button type="button" class="theme-sw" data-theme="purple" onclick="setAccent('purple')" aria-label="Purple" title="Purple" style="background:#9333EA;color:#9333EA"></button><button type="button" class="theme-sw" data-theme="rose" onclick="setAccent('rose')" aria-label="Rose" title="Rose" style="background:#E11D48;color:#E11D48"></button><button type="button" class="theme-sw" data-theme="amber" onclick="setAccent('amber')" aria-label="Amber" title="Amber" style="background:#D97706;color:#D97706"></button><button type="button" class="theme-sw" data-theme="emerald" onclick="setAccent('emerald')" aria-label="Emerald" title="Emerald" style="background:#059669;color:#059669"></button></div>
-      </div>
       </div>
 
       <div class="card">
@@ -652,12 +713,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
     <div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t" id="shift-title">Log shift</h2><p class="card-s num" id="shift-hint">—</p></div><button type="button" class="icon-btn press" onclick="closeSheet('shift-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:14px">
-      <div class="presets">
-        <button type="button" class="fchip" onclick="preset('14:00','18:00','4h shift')">4h</button>
-        <button type="button" class="fchip" onclick="preset('16:00','22:00','6h shift')">6h</button>
-        <button type="button" class="fchip" onclick="preset('08:00','17:00','8h + 1h break',60)">8h + break</button>
-        <button type="button" class="fchip" onclick="extendEnd(1)" style="color:var(--accent-text);border-color:var(--accent-soft-border);background:var(--accent-soft)">+1h</button>
-      </div>
+      <div class="presets" id="m-presets"></div>
       <div class="grid2">
         <div><label class="lbl" for="m-start">Start</label><select id="m-start" class="field" onchange="updatePreview()"></select></div>
         <div><label class="lbl" for="m-end">End <span id="m-next" class="hidden" style="color:var(--accent-text)">· next day</span></label><select id="m-end" class="field" onchange="updatePreview()"></select></div>
@@ -668,7 +724,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       </div>
       <div><label class="lbl">Unpaid break</label><div class="seg" id="m-break"><button type="button" data-b="0" onclick="setBreak(0)">None</button><button type="button" data-b="30" onclick="setBreak(30)">30 min</button><button type="button" data-b="60" onclick="setBreak(60)">1 hour</button></div></div>
       <div id="m-holiday" class="chip ok hidden" style="height:auto;padding:7px 12px;white-space:normal"></div>
-      <div><label class="lbl" for="m-note">Label (optional)</label><input id="m-note" class="field" style="font-weight:500" placeholder="e.g. Front counter, Kitchen" autocomplete="off"></div>
+      <div><div class="row between" style="margin-bottom:6px"><label class="lbl" for="m-note" style="margin:0">Station / label (optional)</label><button type="button" class="link" style="padding:0;font-size:12px" onclick="pinCurrentPreset()">+ Pin preset</button></div><input id="m-note" class="field" style="font-weight:500" placeholder="e.g. Lobby, Grill, Prepping" autocomplete="off" oninput="syncStationHighlight()"><div class="st-chips" id="m-stations"></div></div>
       <div class="preview"><div><p class="eyebrow" style="color:inherit;opacity:.75">Gross pay</p><p class="big num" id="m-gross">₱0.00</p></div><div style="text-align:right;font-size:12px" class="num" id="m-cut"></div></div>
       <div class="row"><button type="button" class="btn ghost press hidden" id="m-del" onclick="deleteFromSheet()" aria-label="Delete shift"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="m-save" onclick="saveShift()">Save shift</button></div>
     </div>
@@ -705,13 +761,13 @@ LOBBY
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">1.13</span></h2><p class="card-s">Deeper colors, richer dashboard</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">1.16</span></h2><p class="card-s">Smarter payslips, presets &amp; native Android upgrades</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:12px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Deep color themes (Midnight, Forest, Graphite, Wine, Teal, Plum) and a pure Black mode.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Budget plan is back on Home — see what goes to needs, wants and savings at a glance. The Budget screen now has an animated chart.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Fixed</span><span class="sub">Sun ↔ moon icon animates again when you switch theme.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Faster</span><span class="sub">Smoother screens and quicker updates when you add or edit shifts.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Fixed</span><span class="sub">Many small fixes found in a full QA pass.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Actual Pay Check on Payslip — compare what you received against SweldoPulse's estimate to spot short pay immediately.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Per-cutoff Allowances &amp; Deductions — cash advances, allowances, and manual deductions stay locked to each cutoff.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Smart Station Chips &amp; Pinned Presets inside Log Shift for 1-tap logging.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Calendar View on Shifts (with shift-type dots) and a 6-Cutoff Trend chart on Home.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Android</span><span class="sub">Hardware Back closes sheets/tabs cleanly, and daily reminders now fire in the background even when the app is closed.</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
   </div>
@@ -742,8 +798,8 @@ LOBBY
 </div>
 
 <script>
-const APP_VERSION = '1.14.0';
-const DEFAULT_REPO = 'kakashimoto14/suweldopulse';
+const APP_VERSION = '1.16.0';
+const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const root = document.documentElement;
@@ -777,10 +833,11 @@ let settings = {
   hourlyRate: 73.75, calabarzonArea: '73.75', schedule: 'semi', sss: 0, philhealth: 0, pagibig: 0, tax: 0, otherDed: 0,
   accentTheme: 'indigo', darkMode: false, themeMode: '', budgetNeeds: 70, budgetWants: 20, budgetSavings: 10,
   notifEnabled: false, notifTime: '22:00', lastNotifDate: '', goal: 0, deductMode: 'split', mwe: false, autoDeduct: null, hide: false, payLag: 0, repo: '', lastUpd: 0,
-  last: { start: '16:00', end: '22:00', brk: 0 }
+  last: { start: '16:00', end: '22:00', brk: 0 },
+  cutoffData: {}, customPresets: []
 };
 let selKey = '', periodKeys = [], curView = 'home';
-const ui = { f: 'all', q: '', sort: 'desc' };
+const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '' };
 let editingId = null, modalBrk = 0, budNet = 0;
 
 const ACCENTS = {
@@ -803,6 +860,10 @@ function loadState() {
   if (!settings.themeMode) settings.themeMode = raw ? (settings.darkMode ? 'dark' : 'light') : 'system';
   if (settings.autoDeduct === null || settings.autoDeduct === undefined) settings.autoDeduct = !(raw && (settings.sss + settings.philhealth + settings.pagibig + settings.tax) > 0);
   if (!settings.last || !settings.last.start) settings.last = { start: '16:00', end: '22:00', brk: 0 };
+  const hadCutoffData = raw && JSON.parse(raw || '{}').cutoffData !== undefined;
+  if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {};
+  if (!Array.isArray(settings.customPresets)) settings.customPresets = [];
+  if (!hadCutoffData && +settings.otherDed > 0) { const ck = curPeriod().key; settings.cutoffData[ck] = { ...(settings.cutoffData[ck] || {}), otherDed: +settings.otherDed }; settings.otherDed = 0; }
   try { const s = JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]'); shifts = normalizeShifts(s); } catch (e) { shifts = []; }
 }
 function normalizeShifts(arr) {
@@ -833,9 +894,25 @@ function applyTheme(first) {
   $$('#theme-seg button').forEach(b => b.classList.toggle('on', b.dataset.m === settings.themeMode));
   $$('.theme-sw').forEach(b => b.classList.toggle('on', b.dataset.theme === settings.accentTheme));
 }
-function themeAnim() { root.classList.add('theme-anim'); clearTimeout(themeAnim.t); themeAnim.t = setTimeout(() => root.classList.remove('theme-anim'), 480); }
-function toggleDark() { themeAnim(); settings.themeMode = isDark() ? 'light' : 'dark'; persistSettings(); applyTheme(); }
-function setThemeMode(m) { themeAnim(); settings.themeMode = m; persistSettings(); applyTheme(); }
+// Circular reveal from the toggle (View Transitions API): the browser snapshots old/new and we only animate a clip-path on the GPU.
+// Falls back to an instant switch where unsupported (older WebViews) or when reduced motion is on.
+let themeBusy = false;
+function switchTheme(apply, origin) {
+  const vt = document.startViewTransition;
+  if (!vt || themeBusy || (matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) { apply(); return; }
+  const r = origin && origin.getBoundingClientRect ? origin.getBoundingClientRect() : null;
+  const x = r ? r.left + r.width / 2 : innerWidth - 36, y = r ? r.top + r.height / 2 : 36;
+  const maxR = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  const done = () => { themeBusy = false; };
+  themeBusy = true; setTimeout(done, 900);
+  try {
+    const t = vt.call(document, () => { apply(); });
+    t.ready.then(() => document.documentElement.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${maxR}px at ${x}px ${y}px)`] }, { duration: 230, easing: 'cubic-bezier(.3,0,.2,1)', pseudoElement: '::view-transition-new(root)' })).catch(() => {});
+    t.finished.then(done, done);
+  } catch (e) { done(); apply(); }
+}
+function toggleDark(el) { switchTheme(() => { settings.themeMode = isDark() ? 'light' : 'dark'; persistSettings(); applyTheme(); }, el); }
+function setThemeMode(m, el) { if (settings.themeMode === m) return; switchTheme(() => { settings.themeMode = m; persistSettings(); applyTheme(); }, el); }
 function setAccent(k) { if (!ACCENTS[k]) return; settings.accentTheme = k; persistSettings(); applyTheme(); }
 if (mq && mq.addEventListener) mq.addEventListener('change', () => { if (settings.themeMode === 'system') applyTheme(); });
 
@@ -883,10 +960,10 @@ function buildPeriods() {
   $$('[data-period-select]').forEach(sel => { setHTML(sel, html); sel.value = selKey; });
   $$('[data-period-label]').forEach(el => setText(el, P.label));
 }
-function selectPeriod(k) { selKey = k; render(); replayEnter(); }
+function selectPeriod(k) { selKey = k; ui.limit = 60; ui.calDay = ''; render(); replayEnter(); }
 function stepPeriod(dir) {
   const i = periodKeys.indexOf(selKey), j = i - dir;
-  if (j >= 0 && j < periodKeys.length) { selKey = periodKeys[j]; render(); replayEnter(); }
+  if (j >= 0 && j < periodKeys.length) { selKey = periodKeys[j]; ui.limit = 60; ui.calDay = ''; render(); replayEnter(); }
   else toast(dir < 0 ? 'No earlier cutoffs yet' : "That's the latest cutoff");
 }
 
@@ -959,22 +1036,34 @@ function estimateStatutory(key, gross) {
   const f = (sch === 'semi' && settings.deductMode === 'last') ? (isLast ? 1 : 0) : 1 / perMonth;
   return { sss: r2(sssM * f), ph: r2(phM * f), pi: r2(piM * f), tax: r2(taxM * f), monthly, msc, f };
 }
-function deductionsFor(key, gross) {
+const getCutoffExtra = key => (settings.cutoffData && settings.cutoffData[key]) || {};
+function ensureCutoffExtra(key) { if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!settings.cutoffData[key]) settings.cutoffData[key] = {}; return settings.cutoffData[key]; }
+const getAllowance = key => r2(Math.max(0, +getCutoffExtra(key).allowance || 0));
+const getOtherDed = key => r2(Math.max(0, +(getCutoffExtra(key).otherDed !== undefined ? getCutoffExtra(key).otherDed : 0) || 0));
+const getManualDed = key => { const m = getCutoffExtra(key).manual; return m ? { sss: +m.sss || 0, ph: +m.ph || 0, pi: +m.pi || 0, tax: +m.tax || 0 } : { sss: +settings.sss || 0, ph: +settings.philhealth || 0, pi: +settings.pagibig || 0, tax: +settings.tax || 0 }; };
+const getActualNet = key => { const v = getCutoffExtra(key).actualNet; return (v === null || v === undefined || v === '') ? null : r2(Math.max(0, +v)); };
+function deductionsFor(key, gross, allow = 0) {
   const z = { sss: 0, ph: 0, pi: 0, tax: 0, oth: 0, total: 0, est: null };
-  if (gross <= 0) return z;
+  const grossAll = r2(gross + allow);
+  if (grossAll <= 0) return z;
   let d;
-  if (settings.autoDeduct) { const e = estimateStatutory(key, gross); d = { sss: e.sss, ph: e.ph, pi: e.pi, tax: e.tax, est: e }; }
-  else d = { sss: settings.sss, ph: settings.philhealth, pi: settings.pagibig, tax: settings.tax, est: null };
-  d.oth = settings.otherDed;
+  if (settings.autoDeduct) {
+    if (gross > 0) { const e = estimateStatutory(key, gross); d = { sss: e.sss, ph: e.ph, pi: e.pi, tax: e.tax, est: e }; }
+    else d = { sss: 0, ph: 0, pi: 0, tax: 0, est: null };
+  } else {
+    const m = getManualDed(key); d = { sss: m.sss, ph: m.ph, pi: m.pi, tax: m.tax, est: null };
+  }
+  d.oth = getOtherDed(key);
   let tot = d.sss + d.ph + d.pi + d.tax + d.oth;
-  if (tot > gross) { // deductions can never exceed what was earned in the cutoff
-    const f = gross / tot; ['sss', 'ph', 'pi', 'tax', 'oth'].forEach(k => { d[k] = Math.floor(d[k] * f * 100) / 100; }); d.capped = true;
+  if (tot > grossAll) { // deductions can never exceed total earnings in the cutoff
+    const f = grossAll / tot; ['sss', 'ph', 'pi', 'tax', 'oth'].forEach(k => { d[k] = Math.floor(d[k] * f * 100) / 100; }); d.capped = true;
   }
   d.total = r2(d.sss + d.ph + d.pi + d.tax + d.oth); return d;
 }
 function periodData(key) {
   const list = shiftsIn(key); if (_pdc.has(key)) return _pdc.get(key);
-  const t = totals(list), d = deductionsFor(key, t.gross), r = { list, t, d, net: r2(Math.max(0, t.gross - d.total)) };
+  const t = totals(list), allow = getAllowance(key), grossAll = r2(t.gross + allow), d = deductionsFor(key, t.gross, allow), actual = getActualNet(key);
+  const r = { list, t, allow, grossAll, d, net: r2(Math.max(0, grossAll - d.total)), actual };
   _pdc.set(key, r); return r;
 }
 
@@ -990,7 +1079,7 @@ function go(v) {
     const nv = $('view-' + v); nv.classList.add('active', fwd ? 'fwd' : 'back');
     window.scrollTo(0, 0); replayEnter();
   }
-  curView = v;
+  curView = v; renderView(v);
   $('nav-pill').style.transform = `translate3d(${m[2] * 100}%,0,0)`;
   const tab = v === 'budget' ? 'home' : v;
   $$('.nav-it').forEach(b => b.classList.toggle('on', b.id === 'nav-' + tab));
@@ -1085,7 +1174,7 @@ function renderHome() {
   if (upSum > 0) parts.push(settings.hide ? `${up.length} upcoming` : `${peso(upSum)} still to come`);
   setText($('w-sub'), parts.join(' · ') || (D.t.n ? '' : 'No shifts in this cutoff yet'));
   // strip
-  setText($('ws-g'), money(D.t.gross)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n > 1 ? 's' : ''}` : '0h');
+  setText($('ws-g'), money(D.grossAll)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n > 1 ? 's' : ''}` : '0h');
   // ring: cutoff progress
   const left = dayNum(P.endStr) - dayNum(td), total = dayNum(P.endStr) - dayNum(P.startStr) + 1;
   let f, n, u;
@@ -1110,6 +1199,40 @@ function renderHome() {
   const lb = +localStorage.getItem(BK_KEY) || 0, nag = $('backup-nag'), need = shifts.length && (!lb || Date.now() - lb > 14 * 864e5);
   nag.classList.toggle('hidden', !need); if (need) setText(nag, `⚠ ${lb ? 'Last backup was over 2 weeks ago' : 'You have no backup yet'} — tap to back up`);
   renderBudget(D.net);
+  renderTrend();
+}
+function shortPeso(v) {
+  if (settings.hide) return '•••';
+  if (!v) return '₱0';
+  if (v >= 1000) return '₱' + (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k';
+  return '₱' + Math.round(v);
+}
+function shortPeriodLbl(P) {
+  if (settings.schedule === 'monthly') return MON[P.start.getMonth()];
+  return `${MON[P.start.getMonth()]} ${P.start.getDate()}`;
+}
+function renderTrend() {
+  const card = $('trend-card'); if (!card) return;
+  if (!shifts.length) { card.classList.add('hidden'); return; }
+  card.classList.remove('hidden');
+  const cols = []; let p = periodFromKey(selKey);
+  for (let i = 0; i < 6; i++) { cols.unshift({ P: p, D: periodData(p.key) }); p = periodOf(dstr(addDays(p.start, -1))); }
+  const max = Math.max(0, ...cols.map(c => c.D.net));
+  const curNet = cols[5].D.net, prevNet = cols[4].D.net, delta = $('trend-delta');
+  if (prevNet > 0) {
+    const pc = Math.round((curNet - prevNet) / prevNet * 100);
+    setText(delta, settings.hide ? 'vs prev' : `${pc >= 0 ? '▲ +' : '▼ '}${pc}% vs prev`);
+    delta.className = 'chip num ' + (pc >= 0 ? 'ok' : 'bad');
+  } else {
+    setText(delta, 'Last 6 cutoffs'); delta.className = 'chip mute num';
+  }
+  setHTML($('trend-bars'), cols.map(c => {
+    const isSel = c.P.key === selKey, v = c.D.net, sc = max > 0 ? Math.max(0.08, v / max) : 0.08;
+    return `<button type="button" class="trend-col press${isSel ? ' cur' : ''}${v <= 0 ? ' zero' : ''}" onclick="selectPeriod('${c.P.key}')" title="${esc(c.P.label)}: ${peso(v)}">` +
+      `<span class="trend-val num">${shortPeso(v)}</span>` +
+      `<div class="trend-track"><div class="trend-bar" style="transform:scaleY(${sc.toFixed(3)})"></div></div>` +
+      `<span class="trend-lbl">${shortPeriodLbl(c.P)}</span></button>`;
+  }).join(''));
 }
 const DONUT_C = 2 * Math.PI * 46;
 function renderBudget(net) {
@@ -1130,69 +1253,160 @@ function saveBudget() { const [a, b, c] = budRead(); if (Math.abs(a + b + c - 10
 
 const FILTERS = [['all', 'All'], ['reg', 'Regular'], ['spc', 'Special'], ['hol', 'Holiday'], ['night', 'Night'], ['ot', 'Overtime']];
 function buildFilters() { $('shift-filters').innerHTML = FILTERS.map(([k, l]) => `<button type="button" class="fchip press" data-f="${k}" onclick="setFilter('${k}')">${l}</button>`).join(''); setFilter(ui.f, true); }
-function setFilter(k, quiet) { ui.f = k; $$('#shift-filters .fchip').forEach(b => b.classList.toggle('on', b.dataset.f === k)); if (!quiet) renderShifts(); }
-function onSearch(v) { ui.q = v.trim().toLowerCase(); $('q-clear').classList.toggle('hidden', !v); renderShifts(); }
+function setFilter(k, quiet) { ui.f = k; ui.limit = 60; $$('#shift-filters .fchip').forEach(b => b.classList.toggle('on', b.dataset.f === k)); if (!quiet) renderShifts(); }
+function onSearch(v) { ui.q = v.trim().toLowerCase(); ui.limit = 60; $('q-clear').classList.toggle('hidden', !v); renderShifts(); }
 function clearSearch() { $('shift-q').value = ''; onSearch(''); }
-function toggleSort() { ui.sort = ui.sort === 'desc' ? 'asc' : 'desc'; setText($('sort-btn').lastElementChild, ui.sort === 'desc' ? 'Newest' : 'Oldest'); renderShifts(); }
+function moreShifts() { ui.limit += 60; renderShifts(); }
+function toggleSort() { ui.limit = 60; ui.sort = ui.sort === 'desc' ? 'asc' : 'desc'; setText($('sort-btn').lastElementChild, ui.sort === 'desc' ? 'Newest' : 'Oldest'); renderShifts(); }
 const FMATCH = { all: () => true, reg: s => s.multiplier === 1, spc: s => s.multiplier > 1 && s.multiplier < 2, hol: s => s.multiplier >= 2, night: s => s.nd > 0, ot: s => s.ot > 0 };
+function toggleCal() {
+  ui.cal = !ui.cal; if (!ui.cal) ui.calDay = '';
+  const btn = $('cal-toggle'); if (btn) { btn.classList.toggle('on', ui.cal); btn.setAttribute('aria-pressed', String(ui.cal)); }
+  renderShifts();
+}
+function pickCalDay(ds) { ui.calDay = (ui.calDay === ds) ? '' : ds; ui.limit = 60; renderShifts(); }
+function openShiftOnDate(ds) { openShift(); $('m-date').value = ds; onDateChange(false); }
+function renderCalendar() {
+  const box = $('shift-cal'); if (!box) return;
+  box.classList.toggle('hidden', !ui.cal);
+  if (!ui.cal) return;
+  const P = periodFromKey(selKey), list = shiftsIn(selKey), td = today();
+  const by = {};
+  list.forEach(s => { const m = by[s.date] || (by[s.date] = { reg: false, nd: false, ot: false, hl: false }); if (s.multiplier > 1) m.hl = true; if (s.ot > 0) m.ot = true; if (s.nd > 0) m.nd = true; if (s.multiplier === 1 && s.ot === 0 && s.nd === 0) m.reg = true; });
+  const startGrid = addDays(P.start, -P.start.getDay());
+  const endGrid = addDays(P.end, 6 - P.end.getDay());
+  let cells = '';
+  for (let d = startGrid; dstr(d) <= dstr(endGrid); d = addDays(d, 1)) {
+    const ds = dstr(d), inP = ds >= P.startStr && ds <= P.endStr, info = by[ds];
+    const dots = [];
+    if (info) {
+      if (info.reg) dots.push('<i class="cal-dot reg"></i>');
+      if (info.nd) dots.push('<i class="cal-dot nd"></i>');
+      if (info.ot) dots.push('<i class="cal-dot ot"></i>');
+      if (info.hl) dots.push('<i class="cal-dot hl"></i>');
+    }
+    const cls = `cal-cell${inP ? ' press' : ' out'}${ds === td && inP ? ' td' : ''}${ui.calDay === ds ? ' sel' : ''}`;
+    cells += `<button type="button" class="${cls}" ${inP ? `onclick="pickCalDay('${ds}')"` : 'disabled tabindex="-1"'}><span class="num">${d.getDate()}</span><span class="cal-dots">${dots.slice(0, 3).join('')}</span></button>`;
+  }
+  const h = `<div class="cal-dow">${DOW.map(w => `<span>${w[0]}</span>`).join('')}</div><div class="cal-grid">${cells}</div>` +
+    `<div class="cal-leg"><span><i class="cal-dot reg"></i>Regular</span><span><i class="cal-dot nd"></i>Night</span><span><i class="cal-dot ot"></i>OT</span><span><i class="cal-dot hl"></i>Holiday</span></div>`;
+  setHTML(box, h);
+}
 function renderShifts() {
+  renderCalendar();
   const searching = !!ui.q;
+  const dayBar = $('cal-day-bar');
+  if (dayBar) { dayBar.classList.toggle('hidden', !ui.calDay || searching); if (ui.calDay) setText($('cal-day-txt'), `Showing ${fmtDay(ui.calDay)}`); }
   let list = searching ? shifts : shiftsIn(selKey);
+  if (!searching && ui.calDay) list = list.filter(s => s.date === ui.calDay);
   list = list.filter(FMATCH[ui.f]);
   if (searching) list = list.filter(s => (`${s.note} ${s.date} ${fmtDay(s.date)} ${MONF[pd(s.date).getMonth()]}`).toLowerCase().includes(ui.q));
   list = [...list].sort(sortShifts); if (ui.sort === 'asc') list.reverse();
   const t = totals(list);
   setText($('shift-sum'), list.length ? `${searching ? 'All cutoffs · ' : ''}${list.length} shift${list.length > 1 ? 's' : ''} · ${fh(t.hrs)} · ${peso(t.gross)}` : (searching ? 'Searching all cutoffs' : ''));
   if (!list.length) {
+    if (!searching && ui.calDay) {
+      setHTML($('shift-list'), `<div class="empty"><b>No shift on ${fmtDay(ui.calDay)}</b>Forgot to log this day?<div style="margin-top:12px"><button type="button" class="btn soft sm press" onclick="openShiftOnDate('${ui.calDay}')">+ Log shift for ${fmtDay(ui.calDay)}</button></div></div>`); return;
+    }
     const anyHere = shiftsIn(selKey).length > 0;
     setHTML($('shift-list'), `<div class="empty"><b>${searching || ui.f !== 'all' ? 'No matching shifts' : 'No shifts in this cutoff'}</b>${searching || (ui.f !== 'all' && anyHere) ? 'Try a different search or filter.' : 'Tap + to log your first shift.'}</div>`); return;
   }
-  const groups = []; list.forEach(s => { const g = groups[groups.length - 1]; if (g && g.d === s.date) g.l.push(s); else groups.push({ d: s.date, l: [s] }); });
-  setHTML($('shift-list'), groups.map(g => `<div class="day-h"><span>${fmtDay(g.d)}</span><span class="num">${peso(g.l.reduce((a, s) => a + s.gross, 0))}</span></div>` + g.l.map(s => shiftRow(s, true)).join('')).join(''));
+  const total = list.length, shown = list.slice(0, ui.limit);
+  const groups = []; shown.forEach(s => { const g = groups[groups.length - 1]; if (g && g.d === s.date) g.l.push(s); else groups.push({ d: s.date, l: [s] }); });
+  setHTML($('shift-list'), groups.map(g => `<div class="day-h"><span>${fmtDay(g.d)}</span><span class="num">${peso(g.l.reduce((a, s) => a + s.gross, 0))}</span></div>` + g.l.map(s => shiftRow(s, true)).join('')).join('') + (total > shown.length ? `<button type="button" class="btn ghost block press" onclick="moreShifts()">Show ${Math.min(60, total - shown.length)} more · ${total - shown.length} left</button>` : ''));
 }
 function renderPayslip() {
   const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d;
   setText($('ps-badge'), P.badge);
   setText($('ps-hours'), `${fh(t.reg)} regular · ${fh(t.ndH)} night · ${fh(t.otH)} overtime`);
-  setText($('ps-basic'), peso(t.basic)); setText($('ps-nd'), '+' + peso(t.nd)); setText($('ps-ot'), '+' + peso(t.otp)); setText($('ps-gross'), peso(t.gross));
+  setText($('ps-basic'), peso(t.basic)); setText($('ps-nd'), '+' + peso(t.nd)); setText($('ps-ot'), '+' + peso(t.otp));
+  $('ps-allow-row').classList.toggle('hidden', !(D.allow > 0));
+  if (D.allow > 0) setText($('ps-allow'), '+' + peso(D.allow));
+  setText($('ps-gross'), peso(D.grossAll));
   setText($('ps-sss'), '−' + peso(d.sss)); setText($('ps-ph'), '−' + peso(d.ph)); setText($('ps-pi'), '−' + peso(d.pi)); setText($('ps-tax'), '−' + peso(d.tax)); setText($('ps-oth'), '−' + peso(d.oth));
   setText($('ps-net'), peso(D.net));
-  const n = $('stat-note'), capNote = d.capped ? ' Deductions are limited to your gross pay for this cutoff.' : '';
+  // Actual pay reconciliation
+  const badge = $('recon-badge'), msg = $('recon-msg'), sub = $('ps-net-recon'), clr = $('actual-clear');
+  if (D.actual === null) {
+    setText(badge, 'Not checked'); badge.className = 'chip mute num';
+    msg.classList.add('hidden'); sub.classList.add('hidden'); clr.classList.add('hidden');
+  } else {
+    const diff = r2(D.actual - D.net);
+    clr.classList.remove('hidden'); msg.classList.remove('hidden'); sub.classList.remove('hidden');
+    if (Math.abs(diff) < 0.01) {
+      setText(badge, 'Matched ✓'); badge.className = 'chip ok num';
+      setText(msg, 'Matches SweldoPulse estimate exactly ✓'); msg.className = 'recon-msg ok';
+      setText(sub, 'Actual payout matched ✓');
+    } else if (diff < 0) {
+      const s = peso(Math.abs(diff));
+      setText(badge, settings.hide ? 'Short' : `−${s} short`); badge.className = 'chip bad num';
+      setText(msg, settings.hide ? 'Lower than estimate — check your employer payslip.' : `Short by ${s} — check night diff, OT, holiday pay, or extra deductions.`); msg.className = 'recon-msg bad';
+      setText(sub, settings.hide ? 'Actual: short' : `Actual: ${peso(D.actual)} · −${s} short`);
+    } else {
+      const s = peso(diff);
+      setText(badge, settings.hide ? 'Over' : `+${s} over`); badge.className = 'chip ok num';
+      setText(msg, settings.hide ? 'Higher than estimate.' : `${s} higher than estimate — may include extra allowances, incentives, or rounding.`); msg.className = 'recon-msg ok';
+      setText(sub, settings.hide ? 'Actual: over' : `Actual: ${peso(D.actual)} · +${s} over`);
+    }
+  }
+  const n = $('stat-note'), capNote = d.capped ? ' Deductions are limited to your total earnings for this cutoff.' : '';
   if (settings.autoDeduct && d.est) n.textContent = `Based on est. monthly pay ${peso(d.est.monthly)} · SSS credit ${peso(d.est.msc)} · ${settings.mwe ? 'tax-exempt (minimum wage)' : 'TRAIN tax'}. Estimates only — your employer's payslip is the final word.${capNote}`;
   else n.textContent = "Uses 2026 rules: SSS 5% of salary credit, PhilHealth 2.5%, Pag-IBIG 2% (max ₱200), TRAIN tax. Estimates only — your employer's payslip is the final word." + capNote;
   const y = P.startStr.slice(0, 4), basicYear = shifts.filter(s => s.date.startsWith(y)).reduce((a, s) => a + s.reg * s.hourlyRate, 0);
   setText($('t13-sub'), `Earned in ${y} so far`); setText($('t13-ytd'), peso(basicYear / 12));
+  syncDedUI();
   calc13();
 }
 function calc13() { const h = +$('t13-hrs').value || 0, m = +$('t13-mo').value || 12; setText($('t13-res'), peso(h * (52 / 12) * m * settings.hourlyRate / 12)); }
 let _lastRender = 0;
 let _rq = 0;
-function doRender() { _rq = 0; buildPeriods(); renderHome(); renderShifts(); renderPayslip(); }
+const dirty = { home: true, shifts: true, deductions: true };
+const RENDERERS = { home: () => renderHome(), budget: () => renderHome(), shifts: () => renderShifts(), deductions: () => renderPayslip() };
+function renderView(v) { const k = v === 'budget' ? 'home' : v; if (!RENDERERS[v] || !dirty[k]) return; dirty[k] = false; RENDERERS[v](); }
+function doRender() { _rq = 0; buildPeriods(); dirty.home = dirty.shifts = dirty.deductions = true; renderView(curView); }
 function render() { if (!_rq) _rq = requestAnimationFrame(doRender); }
 function renderNow() { cancelAnimationFrame(_rq); doRender(); }
 
-/* ---- payslip deductions controls ---- */
+/* ---- payslip deductions & per-cutoff extras controls ---- */
 function syncDedUI() {
   $$('#ded-mode button').forEach(b => b.classList.toggle('on', (b.dataset.m === 'auto') === !!settings.autoDeduct));
   $('ded-auto').classList.toggle('hidden', !settings.autoDeduct); $('ded-manual').classList.toggle('hidden', !!settings.autoDeduct);
   $('stat-mode').value = settings.deductMode || 'split'; $('stat-mwe').checked = !!settings.mwe;
-  const set = (id, v) => { const el = $(id); if (document.activeElement !== el) el.value = v ? v : ''; };
-  set('in-sss', settings.sss); set('in-ph', settings.philhealth); set('in-pi', settings.pagibig); set('in-tax', settings.tax); set('in-oth', settings.otherDed);
+  const k = selKey || curPeriod().key, m = getManualDed(k), allow = getAllowance(k), oth = getOtherDed(k), act = getActualNet(k);
+  const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = (v !== null && v !== undefined && v !== 0 && v !== '') ? v : ''; };
+  set('in-sss', m.sss); set('in-ph', m.ph); set('in-pi', m.pi); set('in-tax', m.tax); set('in-allow', allow); set('in-oth', oth);
+  const aEl = $('in-actual'); if (aEl && document.activeElement !== aEl) aEl.value = act !== null ? act : '';
 }
 function setDedMode(auto) {
-  if (!auto && settings.autoDeduct) { // seed manual boxes with the current estimate so nothing jumps to zero
-    const D = periodData(selKey); if (D.d.est) { settings.sss = D.d.sss; settings.philhealth = D.d.ph; settings.pagibig = D.d.pi; settings.tax = D.d.tax; }
+  const k = selKey || curPeriod().key;
+  if (!auto && settings.autoDeduct && !getCutoffExtra(k).manual) {
+    const D = periodData(k); if (D.d.est) { ensureCutoffExtra(k).manual = { sss: D.d.sss, ph: D.d.ph, pi: D.d.pi, tax: D.d.tax }; }
   }
   settings.autoDeduct = auto; persistSettings(); syncDedUI(); render();
 }
 function saveManual() {
-  const v = id => Math.max(0, parseFloat($(id).value) || 0);
-  settings.sss = v('in-sss'); settings.philhealth = v('in-ph'); settings.pagibig = v('in-pi'); settings.tax = v('in-tax'); settings.otherDed = v('in-oth');
+  const k = selKey || curPeriod().key, v = id => Math.max(0, parseFloat($(id).value) || 0);
+  ensureCutoffExtra(k).manual = { sss: v('in-sss'), ph: v('in-ph'), pi: v('in-pi'), tax: v('in-tax') };
   persistSettings(); render();
 }
+function saveCutoffExtras() {
+  const k = selKey || curPeriod().key, rec = ensureCutoffExtra(k);
+  const v = id => Math.max(0, parseFloat($(id).value) || 0);
+  rec.allowance = v('in-allow');
+  rec.otherDed = v('in-oth');
+  const rawAct = $('in-actual') ? $('in-actual').value.trim() : '';
+  rec.actualNet = rawAct === '' ? null : Math.max(0, parseFloat(rawAct) || 0);
+  persistSettings(); render();
+}
+function clearActualPay() {
+  const k = selKey || curPeriod().key;
+  if (settings.cutoffData && settings.cutoffData[k]) settings.cutoffData[k].actualNet = null;
+  const aEl = $('in-actual'); if (aEl) aEl.value = '';
+  persistSettings(); render(); toast('Actual pay cleared');
+}
 function fillFromEstimate() {
-  const D = periodData(selKey); if (D.t.gross <= 0) return toast('Log shifts in this cutoff first');
-  const e = estimateStatutory(selKey, D.t.gross); settings.sss = e.sss; settings.philhealth = e.ph; settings.pagibig = e.pi; settings.tax = e.tax;
+  const k = selKey || curPeriod().key, D = periodData(k); if (D.t.gross <= 0) return toast('Log shifts in this cutoff first');
+  const e = estimateStatutory(k, D.t.gross); ensureCutoffExtra(k).manual = { sss: e.sss, ph: e.ph, pi: e.pi, tax: e.tax };
   persistSettings(); syncDedUI(); render(); toast('Filled from estimate');
 }
 function setStatOpt() { settings.deductMode = $('stat-mode').value; settings.mwe = $('stat-mwe').checked; persistSettings(); render(); }
@@ -1238,10 +1452,71 @@ function openShift(id = null) {
     const L = settings.last, cur = curPeriod(), P = periodFromKey(selKey);
     $('m-date').value = P.key === cur.key ? today() : P.endStr; $('m-start').value = L.start; $('m-end').value = L.end; $('m-note').value = ''; modalBrk = L.brk || 0; onDateChange(false);
   }
-  setBreak(modalBrk); openSheet('shift-sheet');
+  renderPresets(); renderStationChips(); setBreak(modalBrk); openSheet('shift-sheet');
 }
 function closeShift() { closeSheet('shift-sheet'); editingId = null; }
-function preset(a, b, label, brk) { $('m-start').value = a; $('m-end').value = b; if (!$('m-note').value) $('m-note').value = label; setBreak(brk || 0); }
+function shortT(t) { const [h, m] = t.split(':').map(Number); const H = h % 12 === 0 ? 12 : h % 12; return `${H}${m ? ':' + p2(m) : ''}${h >= 12 ? 'p' : 'a'}`; }
+let _presetItems = [], _stationItems = [];
+function applyPresetItem(i) { const p = _presetItems[i]; if (p) preset(p.start, p.end, p.label, p.brk, true); }
+function pickStationIdx(i) { const n = _stationItems[i]; if (n !== undefined) { $('m-note').value = n; syncStationHighlight(); } }
+function renderPresets() {
+  const box = $('m-presets'); if (!box) return;
+  const pinned = Array.isArray(settings.customPresets) ? settings.customPresets : [];
+  const seen = new Set(pinned.map(p => `${p.start}|${p.end}|${p.brk || 0}|${(p.label || '').toLowerCase()}`));
+  const freq = new Map();
+  shifts.forEach(s => {
+    if (!s.startTime || !s.endTime) return;
+    const lbl = (s.note || '').trim(), k = `${s.startTime}|${s.endTime}|${s.breakMin || 0}|${lbl.toLowerCase()}`;
+    if (seen.has(k)) return;
+    const cur = freq.get(k) || { start: s.startTime, end: s.endTime, brk: s.breakMin || 0, label: lbl, c: 0 };
+    cur.c++; if (lbl) cur.label = lbl; freq.set(k, cur);
+  });
+  const learned = [...freq.values()].sort((a, b) => b.c - a.c).slice(0, 3);
+  _presetItems = [];
+  let h = '';
+  pinned.forEach((p, idx) => {
+    const pi = _presetItems.push({ start: p.start, end: p.end, brk: p.brk || 0, label: p.label || '' }) - 1;
+    const txt = p.label ? `${p.label} · ${shortT(p.start)}–${shortT(p.end)}` : `${shortT(p.start)}–${shortT(p.end)}`;
+    h += `<button type="button" class="fchip on pin-chip" onclick="applyPresetItem(${pi})"><span>${esc(txt)}</span><span class="pin-x" role="button" aria-label="Remove preset" onclick="event.stopPropagation();removePreset(${idx})">×</span></button>`;
+  });
+  learned.forEach(p => {
+    const pi = _presetItems.push({ start: p.start, end: p.end, brk: p.brk || 0, label: p.label || '' }) - 1;
+    const txt = p.label ? `${p.label} · ${shortT(p.start)}–${shortT(p.end)}` : `${shortT(p.start)}–${shortT(p.end)}`;
+    h += `<button type="button" class="fchip" onclick="applyPresetItem(${pi})">${esc(txt)}</button>`;
+  });
+  h += `<button type="button" class="fchip" onclick="preset('14:00','18:00','4h shift',0,false)">4h</button>` +
+       `<button type="button" class="fchip" onclick="preset('16:00','22:00','6h shift',0,false)">6h</button>` +
+       `<button type="button" class="fchip" onclick="preset('08:00','17:00','8h + 1h break',60,false)">8h + break</button>` +
+       `<button type="button" class="fchip" onclick="extendEnd(1)" style="color:var(--accent-text);border-color:var(--accent-soft-border);background:var(--accent-soft)">+1h</button>`;
+  setHTML(box, h);
+}
+function pinCurrentPreset() {
+  const start = $('m-start').value, end = $('m-end').value;
+  if (start === end) return toast('Pick valid start and end times first');
+  const label = $('m-note').value.trim(), brk = modalBrk || 0;
+  if (!Array.isArray(settings.customPresets)) settings.customPresets = [];
+  const sig = `${start}|${end}|${brk}|${label.toLowerCase()}`;
+  if (settings.customPresets.some(p => `${p.start}|${p.end}|${p.brk || 0}|${(p.label || '').toLowerCase()}` === sig)) return toast('Already pinned');
+  settings.customPresets.unshift({ start, end, brk, label });
+  if (settings.customPresets.length > 6) settings.customPresets.pop();
+  persistSettings(); renderPresets(); toast('Preset pinned');
+}
+function removePreset(idx) {
+  if (!Array.isArray(settings.customPresets)) return;
+  settings.customPresets.splice(idx, 1); persistSettings(); renderPresets(); toast('Preset removed');
+}
+function renderStationChips() {
+  const box = $('m-stations'); if (!box) return;
+  const map = new Map();
+  shifts.forEach(s => { const n = (s.note || '').trim(); if (!n) return; const k = n.toLowerCase(); const cur = map.get(k) || { n, c: 0 }; cur.c++; cur.n = n; map.set(k, cur); });
+  const list = [...map.values()].sort((a, b) => b.c - a.c).map(x => x.n).slice(0, 8);
+  ['Lobby', 'Grill', 'Prepping', 'Front Counter'].forEach(d => { if (list.length < 4 && !list.some(x => x.toLowerCase() === d.toLowerCase())) list.push(d); });
+  _stationItems = list;
+  setHTML(box, list.map((n, i) => `<button type="button" class="schip press" data-st="${esc(n.toLowerCase())}" onclick="pickStationIdx(${i})">${esc(n)}</button>`).join(''));
+  syncStationHighlight();
+}
+function syncStationHighlight() { const v = ($('m-note').value || '').trim().toLowerCase(); $$('#m-stations .schip').forEach(b => b.classList.toggle('on', b.dataset.st === v)); }
+function preset(a, b, label, brk, forceLabel) { $('m-start').value = a; $('m-end').value = b; if (forceLabel || !$('m-note').value) $('m-note').value = label || ''; syncStationHighlight(); setBreak(brk || 0); }
 function extendEnd(h) { const e = $('m-end'); const n = (tmin(e.value) + h * 60) % 1440; e.value = `${p2(Math.floor(n / 60))}:${p2(n % 60)}`; updatePreview(); toast(`End time +${h}h`); }
 function overlaps(v) {
   const base = dayNum(v.date) * 1440, a0 = base + tmin(v.start); let a1 = base + tmin(v.end); if (tmin(v.end) <= tmin(v.start)) a1 += 1440;
@@ -1362,21 +1637,30 @@ function saveLag(v) { settings.payLag = Math.max(0, Math.min(31, parseInt(v, 10)
 function saveGoal(v) { settings.goal = Math.max(0, parseFloat(v) || 0); persistSettings(); render(); toast(settings.goal ? 'Pay goal saved' : 'Pay goal removed'); }
 
 /* ---- reminders ---- */
+const hasNativeAlarm = () => !!(window.AndroidBridge && typeof AndroidBridge.scheduleReminder === 'function');
+function syncNativeReminder() {
+  if (!hasNativeAlarm()) return;
+  try {
+    const [h, m] = (settings.notifTime || '22:00').split(':').map(Number);
+    AndroidBridge.scheduleReminder(!!settings.notifEnabled, isFinite(h) ? h : 22, isFinite(m) ? m : 0);
+  } catch (e) {}
+}
+window.onReminderTap = function () { if (!lockVisible()) openShift(); };
 function notifSub() {
   const el = $('notif-sub'); if (!('Notification' in window)) { el.textContent = 'Not supported here'; return; }
-  el.textContent = Notification.permission === 'denied' ? 'Blocked in Android settings' : (settings.notifEnabled ? `Daily at ${t12(settings.notifTime || '22:00')}` : 'Daily alert to log your shift');
+  el.textContent = Notification.permission === 'denied' ? 'Blocked in Android settings' : (settings.notifEnabled ? `Daily at ${t12(settings.notifTime || '22:00')}${hasNativeAlarm() ? ' · works in background' : ''}` : 'Daily alert to log your shift');
 }
 async function toggleNotif() {
   const cb = $('notif-on');
   if (cb.checked) {
     if (!('Notification' in window)) { cb.checked = false; return toast('Notifications not supported here'); }
     const perm = await Notification.requestPermission();
-    if (perm !== 'granted') { cb.checked = false; settings.notifEnabled = false; persistSettings(); notifSub(); return toast('Allow notifications in Android settings'); }
+    if (perm !== 'granted') { cb.checked = false; settings.notifEnabled = false; persistSettings(); syncNativeReminder(); notifSub(); return toast('Allow notifications in Android settings'); }
     settings.notifEnabled = true; toast(`Reminder set for ${t12(settings.notifTime)}`);
   } else { settings.notifEnabled = false; toast('Reminders off'); }
-  persistSettings(); notifSub();
+  persistSettings(); syncNativeReminder(); notifSub();
 }
-function saveNotifTime() { settings.notifTime = $('notif-time').value; persistSettings(); notifSub(); toast(`Reminder time: ${t12(settings.notifTime)}`); }
+function saveNotifTime() { settings.notifTime = $('notif-time').value; persistSettings(); syncNativeReminder(); notifSub(); toast(`Reminder time: ${t12(settings.notifTime)}`); }
 async function showSystemNotification(title, options) {
   if (window.AndroidBridge) { AndroidBridge.notify(title, (options && options.body) || ''); return true; }
   try { const reg = await navigator.serviceWorker.ready; if (reg && reg.showNotification) { await reg.showNotification(title, options); return true; } } catch (e) {}
@@ -1388,7 +1672,7 @@ async function triggerReminder() {
   if (Notification.permission === 'granted') await showSystemNotification('SweldoPulse — log your shift', { body: 'Finished your shift? Tap to record your hours.', icon: './icon-192.png', tag: 'sweldo-shift-reminder' });
 }
 function checkReminder() {
-  if (!settings.notifEnabled) return; const now = new Date(), k = today(); if (settings.lastNotifDate === k) return;
+  if (!settings.notifEnabled || hasNativeAlarm()) return; const now = new Date(), k = today(); if (settings.lastNotifDate === k) return;
   const [h, m] = (settings.notifTime || '22:00').split(':').map(Number), n = now.getHours() * 60 + now.getMinutes(), r = h * 60 + m;
   if (n >= r && n <= r + 90) { settings.lastNotifDate = k; persistSettings(); triggerReminder(); }
 }
@@ -1470,21 +1754,28 @@ async function restoreFromText() {
   const list = normalizeShifts(d && d.shifts);
   if (!d || d.app !== 'SweldoPulse' || !Array.isArray(d.shifts) || (d.shifts.length && !list.length)) return toast('Not a SweldoPulse backup');
   if (!await askConfirm({ title: 'Replace all data?', body: `This replaces everything on this device with the backup (<b>${list.length}</b> shifts). This cannot be undone.`, ok: 'Restore', danger: true })) return;
-  settings = { ...settings, ...(d.settings || {}) }; shifts = list; _pm.clear(); selKey = '';
-  persistSettings(); persistShifts(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts`);
+  settings = { ...settings, ...(d.settings || {}) }; if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!Array.isArray(settings.customPresets)) settings.customPresets = []; shifts = list; _pm.clear(); selKey = ''; ui.calDay = '';
+  persistSettings(); persistShifts(); syncNativeReminder(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts`);
 }
 function syncBackupStatus() { const lb = +localStorage.getItem(BK_KEY) || 0; $('backup-status').textContent = lb ? 'Last backup: ' + new Date(lb).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never backed up'; }
 
 /* ================= payslip copy / image ================= */
 function payslipText() {
   const P = periodFromKey(selKey), D = periodData(selKey);
-  return [`SweldoPulse payslip — ${P.label}`, `${D.t.n} shift${D.t.n === 1 ? '' : 's'} · ${fh(D.t.hrs)}`, `Gross: ${peso(D.t.gross)}`, `SSS: -${peso(D.d.sss)}`, `PhilHealth: -${peso(D.d.ph)}`, `Pag-IBIG: -${peso(D.d.pi)}`, `Tax: -${peso(D.d.tax)}`, `Other: -${peso(D.d.oth)}`, `Net take-home: ${peso(D.net)}`].join('\n');
+  const lines = [`SweldoPulse payslip — ${P.label}`, `${D.t.n} shift${D.t.n === 1 ? '' : 's'} · ${fh(D.t.hrs)}`];
+  if (D.allow > 0) lines.push(`Allowances: +${peso(D.allow)}`);
+  lines.push(`Gross: ${peso(D.grossAll)}`, `SSS: -${peso(D.d.sss)}`, `PhilHealth: -${peso(D.d.ph)}`, `Pag-IBIG: -${peso(D.d.pi)}`, `Tax: -${peso(D.d.tax)}`, `Other: -${peso(D.d.oth)}`, `Net take-home: ${peso(D.net)}`);
+  if (D.actual !== null) { const diff = r2(D.actual - D.net); lines.push(`Actual received: ${peso(D.actual)} (${Math.abs(diff) < 0.01 ? 'Matched' : (diff < 0 ? '-' + peso(Math.abs(diff)) + ' short' : '+' + peso(diff) + ' over')})`); }
+  return lines.join('\n');
 }
 async function copyPayslip() { toast((await copyText(payslipText())) ? 'Payslip copied' : "Couldn't copy"); }
 async function viewPayslip() {
   try { await document.fonts.load('700 40px Inter'); await document.fonts.load('500 40px Inter'); } catch (e) {}
   const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d, W = 1080;
-  const rows = [['Basic pay', t.basic], ['Night differential', t.nd], ['Overtime & holiday', t.otp], ['Gross pay', t.gross, 1], ['SSS', -d.sss], ['PhilHealth', -d.ph], ['Pag-IBIG', -d.pi], ['Withholding tax', -d.tax], ['Other deductions', -d.oth]];
+  const rows = [['Basic pay', t.basic], ['Night differential', t.nd], ['Overtime & holiday', t.otp]];
+  if (D.allow > 0) rows.push(['Allowances & add-ons', D.allow]);
+  rows.push(['Gross pay', D.grossAll, 1], ['SSS', -d.sss], ['PhilHealth', -d.ph], ['Pag-IBIG', -d.pi], ['Withholding tax', -d.tax], ['Other deductions', -d.oth]);
+  if (D.actual !== null) rows.push(['Actual received', D.actual, 1]);
   const H = 560 + rows.length * 78 + 250, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#161B33'); g.addColorStop(1, '#07090F'); x.fillStyle = g; x.fillRect(0, 0, W, H);
   const gold = x.createLinearGradient(0, 0, W, 0); gold.addColorStop(0, '#FFE08A'); gold.addColorStop(.5, '#F5A524'); gold.addColorStop(1, '#F0643C');
@@ -1615,6 +1906,7 @@ async function showTour(i) {
   tourBusy = true; tourIdx = i; const s = TOUR[i], card = $('tour-card'), spot = $('tour-spot'); card.style.opacity = 0;
   if (s.view) { go(s.view); await sleep(380); }
   const el = s.sel ? document.querySelector(s.sel) : null; let r = null;
+  spot.style.opacity = 0; await sleep(110);
   if (el) { el.scrollIntoView({ block: 'center', behavior: 'auto' }); await sleep(80); r = el.getBoundingClientRect(); const pad = 6; Object.assign(spot.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' }); }
   else Object.assign(spot.style, { left: innerWidth / 2 + 'px', top: innerHeight / 2 + 'px', width: '0px', height: '0px' });
   $('tour-title').textContent = s.t; $('tour-body').textContent = s.b;
@@ -1622,7 +1914,7 @@ async function showTour(i) {
   const last = i === TOUR.length - 1; $('tour-next').textContent = i === 0 ? 'Start tour' : (last ? 'Done' : 'Next'); $('tour-back').style.display = i === 0 ? 'none' : ''; $('tour-skip').style.display = last ? 'none' : '';
   const h = card.offsetHeight, w = card.offsetWidth; let top;
   if (r) { top = r.bottom + 20; if (top + h > innerHeight - 16) top = r.top - 20 - h; top = Math.max(16, Math.min(top, innerHeight - h - 16)); } else top = (innerHeight - h) / 2;
-  card.style.left = Math.max(16, (innerWidth - w) / 2) + 'px'; card.style.top = top + 'px'; card.style.opacity = 1; tourBusy = false;
+  card.style.left = Math.max(16, (innerWidth - w) / 2) + 'px'; card.style.top = top + 'px'; card.style.opacity = 1; spot.style.opacity = 1; tourBusy = false;
 }
 
 /* ================= boot ================= */
@@ -1631,9 +1923,24 @@ async function showTour(i) {
   if (sh) { localStorage.setItem('sp_snapshot_' + (prev || 'legacy'), JSON.stringify({ at: Date.now(), shifts: sh, settings: se })); Object.keys(localStorage).filter(k => k.startsWith('sp_snapshot_')).sort((a, b) => JSON.parse(localStorage[b]).at - JSON.parse(localStorage[a]).at).slice(2).forEach(k => localStorage.removeItem(k)); }
   localStorage.setItem('sp_data_version', APP_VERSION); } } catch (e) {} })();
 function showWhatsNew() { $('wn-ver').textContent = APP_VERSION.replace(/\.0$/, ''); openSheet('whatsnew-sheet'); }
+window.handleAndroidBack = function () {
+  if (root.classList.contains('locked')) return false;
+  if (root.classList.contains('pin-open')) { lockCancel(); return true; }
+  if ($('confirm').classList.contains('open')) { confirmAnswer(false); return true; }
+  if ($('payslip-modal').classList.contains('on')) { closePayslip(); return true; }
+  if ($('tour').classList.contains('on')) { endTour(); return true; }
+  const openSheets = $$('.scrim.open');
+  if (openSheets.length) {
+    const top = openSheets[openSheets.length - 1];
+    if (top.id === 'shift-sheet') closeShift(); else closeSheet(top.id);
+    return true;
+  }
+  if (curView !== 'home') { go('home'); return true; }
+  return false;
+};
 function boot() {
   populateTimes(); loadState(); buildFilters(); applyTheme(true);
-    syncSettingsUI(); go('home'); renderNow(); initBrand();
+  syncSettingsUI(); syncNativeReminder(); go('home'); renderNow(); initBrand();
   if (lockCfg() && !root.classList.contains('locked') && !root.classList.contains('pin-open')) lockNow();
   else if (root.classList.contains('locked')) { pinMode = 'unlock'; lockUI('Enter PIN', 'SweldoPulse is locked'); }
   setInterval(checkReminder, 20000);

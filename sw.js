@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sweldopulse-v11';
+const CACHE_NAME = 'sweldopulse-v16';
 const ASSETS = [
   './',
   './index.html',

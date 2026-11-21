@@ -1,29 +1,24 @@
-# SweldoPulse v1.14.0 — build, install, update
+# SweldoPulse v1.16.0 — build, install, update
 
-## Your files
-- `SweldoPulse-v1.14.0.apk` — ready to install (already signed).
-- `signing/sweldopulse.jks` — YOUR signing key (password `sweldopulse`). Every future update must be signed with this same file or Android refuses to install it over the old one. Back it up. **Never put it in a public GitHub repo** (`.gitignore` already excludes it).
+## Building & Publishing via GitHub Actions (Recommended)
+Repo: `https://github.com/Kakashimoto14/SuweldoPulse`
 
-## Keep your shifts when updating (IMPORTANT)
-Your current phone app is the PWABuilder/TWA build (`app.vercel.suweldopulse.twa`). Its data lives in Chrome's storage for your Vercel site, not inside the APK. A different APK cannot read it, so do this in order:
-1. Upload this folder's web files (everything except `android/`, `scripts/`, `signing/`, `*.apk`) to your GitHub repo so Vercel redeploys. Your installed TWA app updates itself to v1.11 and **keeps all shifts** (same storage keys; a snapshot is also saved automatically).
-2. Open the app > Settings > Backup & Restore > **Export Backup**. Save the file somewhere safe.
-3. Install `SweldoPulse-v1.14.0.apk`. It installs as a separate app (new package name), so nothing is overwritten.
-4. Open it > Settings > **Restore** > pick the backup file. Done. Then you can remove the old TWA app.
-From then on, new APK versions signed with the same key update in place and keep their data.
+1. Extract this folder over your local `SuweldoPulse` repo (your private `signing/sweldopulse.jks` stays untouched and excluded by `.gitignore`).
+2. Commit, push, and tag `v1.16.0`:
+   ```cmd
+   git add -A
+   git commit -m "v1.16.0: reconciliation, per-cutoff adjustments, smart presets, calendar, trend, native back & reminders"
+   git push origin main
+   git tag v1.16.0
+   git push origin v1.16.0
+   ```
+3. GitHub Actions (`Build APK`) compiles `SweldoPulse-v1.16.0.apk`, signs it using your `KEYSTORE_B64` and `KEYSTORE_PASS` secrets, uploads the artifact, and attaches it to the `v1.16.0` GitHub Release automatically.
 
-## Rebuild the APK yourself
-Linux/WSL/Ubuntu: `sudo apt install default-jdk-headless aapt apksigner zipalign dalvik-exchange libandroid-23-java` then `./scripts/build_apk.sh`.
-Or GitHub: add secrets `KEYSTORE_B64` (`base64 -w0 signing/sweldopulse.jks`) and `KEYSTORE_PASS`, then Actions > Build APK > Run workflow. Tag builds (`v1.11.1`) attach the APK to a GitHub Release, which is what the in-app "Check for Updates" reads.
+## Rebuilding Locally (Linux/WSL/Ubuntu)
+`sudo apt install default-jdk-headless aapt apksigner zipalign dalvik-exchange libandroid-23-java` then `./scripts/build_apk.sh`.
 
 ## Notes
-- Fully offline: Tailwind CSS and the Inter font are bundled. Only "Check for Updates" needs internet.
-- Fingerprint uses the phone's fingerprint sensor (not face unlock). PIN always works as a fallback.
-- When the PIN lock is on, Android hides the app in the recent-apps list and blocks screenshots (payslips save via "Save as Image").
-
-## Updating from GitHub / "package conflicts with an existing package"
-Android only installs an APK over the installed app when ALL of these are true:
-1. Same package name (`com.kakashimoto14.sweldopulse`).
-2. Signed with the SAME key (`signing/sweldopulse.jks`). The CI workflow fails if the key is missing or different.
-3. `versionCode` is HIGHER than the installed one (1.14.0 = 11400). Re-installing the same or an older version fails on many phones. Bump `version.json` and tag a new version for every release.
-If a release was built with another key: back up in-app (Settings > Back up), uninstall, install, then Restore.
+- Fully offline: Inter font and all styles are bundled inside the APK. Only "Check for updates" needs internet.
+- Background daily reminders use Android's `AlarmManager` (Doze-safe, survives app close and reboot).
+- Hardware back button closes open sheets/modals and returns to Home before minimizing.
+- To install over an existing APK without losing data, sign with the exact same `.jks` keystore.
