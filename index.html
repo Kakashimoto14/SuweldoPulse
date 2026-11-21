@@ -303,7 +303,6 @@ details.fold>.body{padding-top:14px}
 .theme-sw.on{box-shadow:0 0 0 3px var(--card),0 0 0 5px currentColor}
 #payslip-modal{position:fixed;inset:0;z-index:150;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;background:rgba(6,9,20,.9)}
 #payslip-modal.on{display:flex}
-#print-area{display:none}
 #tour{position:fixed;inset:0;z-index:120;display:none;touch-action:none}
 #tour.on{display:block}
 #tour-spot{position:fixed;border-radius:18px;pointer-events:none;box-shadow:0 0 0 2px rgba(129,140,248,.95),0 0 0 9999px rgba(6,9,20,.78);transition:opacity .16s ease}
@@ -495,9 +494,8 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .io-note-in:focus{border-color:var(--accent)}
 
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
-@media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.hero{padding:16px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
+@media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
 @media (prefers-reduced-motion:reduce){.wallet::before,.wallet::after{animation:none}.spark{transition:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-@media print{body>*:not(#print-area){display:none!important}#print-area{display:block!important;padding:32px;color:#000}}
 </style>
 </head>
 <body>
@@ -923,6 +921,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
           <div class="row" style="gap:8px"><button type="button" class="btn soft sm press" id="lock-main-btn" onclick="lockSetupFlow()">Set PIN</button><button type="button" class="btn ghost sm press hidden" id="lock-remove-btn" onclick="lockRemoveFlow()">Remove</button></div></div>
         <div class="setting hidden" id="lock-fp-row"><div><p class="k">Fingerprint</p><p class="d" id="lock-fp-status">Off</p></div><button type="button" class="btn soft sm press" id="lock-fp-btn" onclick="toggleFingerprint()">Enable</button></div>
         <div class="setting hidden" id="lock-auto-row"><p class="k">Auto-lock after</p><select id="lock-auto" class="field" style="width:140px" onchange="lockSetAuto(this.value)"><option value="0">Immediately</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="300">5 minutes</option></select></div>
+        <div class="setting hidden" id="lock-widget-row"><div><p class="k">Mask home widgets</p><p class="d">Hide amounts &amp; dues on widgets while PIN is on</p></div><span class="switch"><input type="checkbox" id="lock-widget-mask" onchange="toggleWidgetLockMask()"><i></i></span></div>
       </div>
 
       <div class="card">
@@ -939,7 +938,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
       <p class="sec-lbl">App &amp; Updates</p>
       <div class="card">
-        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.3.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
+        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.4.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
         <div id="upd-box" class="hidden" style="margin-top:12px">
           <div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div>
           <p class="note" id="upd-notes" style="margin:4px 0 10px"></p>
@@ -1133,6 +1132,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div><label class="lbl" for="db-total">Total terms (mos)</label><input id="db-total" class="field num" type="number" inputmode="numeric" min="1" value="3"></div>
       </div>
       <div><label class="lbl" for="db-note">Item / note (optional)</label><input id="db-note" class="field" style="font-weight:500" placeholder="e.g. Phone case, Groceries, Cash" autocomplete="off"></div>
+      <div class="setting hidden" id="db-settled-row" style="min-height:40px;border:0;padding:0;margin:0"><div><p class="k" style="font-size:13.5px">Marked as settled</p><p class="d">Turn off to move back to active dues</p></div><span class="switch"><input type="checkbox" id="db-settled"><i></i></span></div>
       <div class="row"><button type="button" class="btn ghost press hidden" id="db-del" onclick="deleteDebtFromSheet()" aria-label="Delete item"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="db-save" onclick="saveDebt()">Save</button></div>
     </div>
   </div>
@@ -1165,19 +1165,19 @@ input[type=search]::-webkit-search-cancel-button{display:none}
     <div class="sheet-h"><div><h2 class="sheet-t" id="bk-title">Back up</h2><p class="card-s" id="bk-sub"></p></div><button type="button" class="icon-btn press" onclick="closeSheet('backup-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <textarea id="bk-text" class="field" style="font-family:ui-monospace,Menlo,monospace;font-size:11px;min-height:130px"></textarea>
     <div id="bk-export" class="grid2" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="copyBackup()"><svg class="ic sm"><use href="#i-copy"/></svg>Copy</button><button type="button" class="btn primary press" onclick="saveBackupFile()"><svg class="ic sm"><use href="#i-down"/></svg>Save / share file</button></div>
-    <div id="bk-restore" class="grid2 hidden" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="document.getElementById('bk-file').click()"><svg class="ic sm"><use href="#i-up"/></svg>Choose file</button><button type="button" class="btn primary press" onclick="restoreFromText()">Restore</button><input type="file" id="bk-file" accept="application/json,.json,text/plain" class="hidden" onchange="restoreFromFile(this)"></div>
+    <div id="bk-restore" class="grid2 hidden" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="chooseBackupFile()"><svg class="ic sm"><use href="#i-up"/></svg>Choose file</button><button type="button" class="btn primary press" onclick="restoreFromText()">Restore</button><input type="file" id="bk-file" accept="application/json,.json,text/plain" class="hidden" onchange="restoreFromFile(this)"></div>
     <p class="note" id="bk-note" style="margin-top:12px"></p>
   </div>
 </div>
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.3</span></h2><p class="card-s">Exact PH crew deductions, smarter import &amp; rock-solid fixes</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.4</span></h2><p class="card-s">Security hardening, native file picker &amp; autonomous alerts</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:11px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Payslip</span><span class="sub">Exact PH crew deductions: 1st-cutoff SSS &amp; PhilHealth, 2% Basic Pay Pag-IBIG, ₱2,000 minimum cutoff threshold (auto-defers on low cutoffs), plus a clear Total Deductions row.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Fixed</span><span class="sub">Resolved the imported-shift edit bug (guaranteed unique IDs + auto-repair on boot), custom-minute edit dropdowns, and morning-to-noon (8–12) time parsing.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Import</span><span class="sub">Smarter roster importer with a built-in standard template, Copy/Paste buttons, OFF/RD auto-skip, next-week anchoring, and inline editable station tags.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Check-in</span><span class="sub">Confirmation-based planned shifts (including overnight shifts): tap Worked ✓, Edit, or Remove if you didn't work that shift.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Security</span><span class="sub">Hardened PIN lock (PBKDF2-SHA256, clock-tamper-proof lockout, fixed #log-shift deep-link bypass), PIN-masked widgets, GitHub update host &amp; APK cert verification.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Restore</span><span class="sub">Fixed Backup → Restore → Choose file inside the Android APK using native document picker, plus strict settings sanitization on restore.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Alerts</span><span class="sub">Autonomous background notifications: live due-date countdowns even when the app stays closed, auto-chained planned-shift nudges &amp; crisp monochrome status-bar icon.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Accuracy</span><span class="sub">Fixed 1st-cutoff retroactive SSS drift, 2nd-cutoff catch-up, settled IOU edits, Bulk Week custom minutes, Dec→Jan import rollover, weekly Insights &amp; 2027–2028 PH holidays.</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
   </div>
@@ -1208,7 +1208,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 </div>
 
 <script>
-const APP_VERSION = '2.3.0';
+const APP_VERSION = '2.4.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', DEBTS_KEY = 'sweldo_pulse_debts_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -1248,7 +1248,7 @@ let settings = {
   last: { start: '16:00', end: '22:00', brk: 0 },
   cutoffData: {}, customPresets: [], vaults: [], bills: [], incomeScope: 'all',
   autoDownloadUpd: true, updWifiOnly: true, autoBackup: true, lastAutoBk: 0,
-  dueNotifEnabled: true, dueNotifTime: '09:00', planNudgeEnabled: true
+  dueNotifEnabled: true, dueNotifTime: '09:00', planNudgeEnabled: true, maskWidgetWhenLocked: true
 };
 let selKey = '', periodKeys = [], curView = 'home';
 const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '', budTab: 'overview', dueF: 'all', insTab: 'overview', insYear: new Date().getFullYear(), insMonth: new Date().getMonth() };
@@ -1462,8 +1462,9 @@ function stepPeriod(dir) {
 const HOL_FIXED = { '01-01': ["New Year's Day", 2], '04-09': ['Araw ng Kagitingan', 2], '05-01': ['Labor Day', 2], '06-12': ['Independence Day', 2], '11-30': ['Bonifacio Day', 2], '12-25': ['Christmas Day', 2], '12-30': ['Rizal Day', 2],
   '08-21': ['Ninoy Aquino Day', 1.3], '11-01': ["All Saints' Day", 1.3], '12-08': ['Immaculate Conception', 1.3], '12-31': ['Last Day of the Year', 1.3] };
 const HOL_YEAR = {
-  2026: { '02-17': ['Chinese New Year', 1.3], '03-20': ["Eid'l Fitr", 2], '04-02': ['Maundy Thursday', 2], '04-03': ['Good Friday', 2], '04-04': ['Black Saturday', 1.3], '11-02': ["All Souls' Day", 1.3], '12-24': ['Christmas Eve', 1.3] },
-  2027: { '03-25': ['Maundy Thursday', 2], '03-26': ['Good Friday', 2], '03-27': ['Black Saturday', 1.3] }
+  2026: { '02-17': ['Chinese New Year', 1.3], '03-20': ["Eid'l Fitr", 2], '04-02': ['Maundy Thursday', 2], '04-03': ['Good Friday', 2], '04-04': ['Black Saturday', 1.3], '05-27': ["Eid'l Adha", 2], '11-02': ["All Souls' Day", 1.3], '12-24': ['Christmas Eve', 1.3] },
+  2027: { '02-06': ['Chinese New Year', 1.3], '03-10': ["Eid'l Fitr", 2], '03-25': ['Maundy Thursday', 2], '03-26': ['Good Friday', 2], '03-27': ['Black Saturday', 1.3], '05-17': ["Eid'l Adha", 2], '11-02': ["All Souls' Day", 1.3], '12-24': ['Christmas Eve', 1.3] },
+  2028: { '01-26': ['Chinese New Year', 1.3], '02-27': ["Eid'l Fitr", 2], '04-13': ['Maundy Thursday', 2], '04-14': ['Good Friday', 2], '04-15': ['Black Saturday', 1.3], '05-05': ["Eid'l Adha", 2], '11-02': ["All Souls' Day", 1.3], '12-24': ['Christmas Eve', 1.3] }
 };
 function holidayFor(ds) {
   const y = +ds.slice(0, 4), md = ds.slice(5), d = pd(ds);
@@ -1514,10 +1515,20 @@ function totals(list) {
 function estimateStatutory(key, gross, basic) {
   const sch = settings.schedule, perMonth = sch === 'monthly' ? 1 : (sch === 'weekly' ? 52 / 12 : 2);
   const basePay = (basic !== undefined && basic > 0) ? basic : gross;
+  const isFirst = sch === 'semi' && /-1$/.test(key);
+  const isSecond = sch === 'semi' && /-2$/.test(key);
   const ym = dstr(periodFromKey(key).start).slice(0, 7);
-  const monthActual = shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.gross, 0);
-  const monthly = Math.max(monthActual, gross * perMonth);
-  const monthlyBasic = Math.max(basePay * perMonth, shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.reg * s.hourlyRate, 0));
+  // For 1st semi-monthly cutoff, never pull in 2nd-cutoff shifts retroactively
+  let monthly, monthlyBasic;
+  if (isFirst) {
+    monthly = gross * 2;
+    monthlyBasic = basePay * 2;
+  } else {
+    const monthActual = shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.gross, 0);
+    const monthBasicActual = shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.reg * s.hourlyRate, 0);
+    monthly = Math.max(monthActual, gross * perMonth);
+    monthlyBasic = Math.max(monthBasicActual, basePay * perMonth);
+  }
   const msc = Math.min(35000, Math.max(5000, Math.floor((monthly + 250) / 500) * 500));
   const sssM = msc * 0.05;
   const phM = Math.min(100000, Math.max(10000, monthlyBasic)) * 0.025;
@@ -1529,8 +1540,6 @@ function estimateStatutory(key, gross, basic) {
 
   const mode = settings.deductMode || 'first';
   const minG = Math.max(0, +(settings.statMinGross ?? 2000) || 0);
-  const isFirst = sch === 'semi' && /-1$/.test(key);
-  const isSecond = sch === 'semi' && /-2$/.test(key);
   let f = 1 / perMonth, skippedLow = false, deferred = false, sssNote = '';
 
   if (sch === 'semi') {
@@ -1541,9 +1550,10 @@ function estimateStatutory(key, gross, basic) {
       } else {
         const firstKey = key.replace(/-2$/, '-1');
         const firstGross = shiftsIn(firstKey).filter(isShiftActive).reduce((a, s) => a + s.gross, 0);
-        if (minG > 0 && firstGross > 0 && firstGross < minG) {
-          if (gross >= minG) { f = 1; deferred = true; sssNote = 'deferred from 1st'; }
-          else { f = 0; skippedLow = true; sssNote = `below ${peso(minG)}`; }
+        const firstPaidStat = minG > 0 ? (firstGross >= minG) : (firstGross > 0);
+        if (!firstPaidStat) {
+          if (minG > 0 && gross < minG) { f = 0; skippedLow = true; sssNote = `below ${peso(minG)}`; }
+          else { f = 1; deferred = firstGross > 0; sssNote = firstGross > 0 ? 'deferred from 1st' : '2nd cutoff catch-up'; }
         } else {
           f = 0; sssNote = 'paid on 1st';
         }
@@ -1752,11 +1762,12 @@ function syncWidget() {
     const dueTitle = nextDue ? nextDue.badge : 'Next due';
     const dueLine = nextDue ? `${nextDue.name} · ${peso(nextDue.amount)}` : 'No upcoming PayLater or bills';
     const dueUrgent = !!(nextDue && nextDue.urgent);
+    const pinLocked = !!(lockCfg() && settings.maskWidgetWhenLocked !== false);
     if (typeof AndroidBridge.updateWidgetV2 === 'function') {
       AndroidBridge.updateWidgetV2(JSON.stringify({
         net: netText, badge: badgeText, meta: metaText, period: cur.label,
         gross: money(dispGross), ded: settings.hide ? MASK : '−' + peso(D.d.total),
-        extra, remBudget, dueTitle, dueLine, dueUrgent, appHide: !!settings.hide,
+        extra, remBudget, dueTitle, dueLine, dueUrgent, appHide: !!settings.hide, pinLocked,
         theme, accent, accentText
       }));
     } else if (typeof AndroidBridge.updateWidget === 'function') {
@@ -2001,6 +2012,10 @@ function openDebtSheet(id = null) {
   $('db-paid').value = d ? d.paidTerms : 0;
   $('db-total').value = d ? d.totalTerms : 3;
   $('db-note').value = d ? (d.note || '') : '';
+  if ($('db-settled-row')) {
+    $('db-settled-row').classList.toggle('hidden', !d);
+    $('db-settled').checked = !!(d && d.settled);
+  }
   openSheet('debt-sheet');
 }
 function saveDebt() {
@@ -2010,10 +2025,16 @@ function saveDebt() {
   const totalTerms = debtKind === 'paylater' ? Math.max(1, parseInt($('db-total').value, 10) || 1) : 1;
   const paidTerms = debtKind === 'paylater' ? Math.min(totalTerms, Math.max(0, parseInt($('db-paid').value, 10) || 0)) : 0;
   const note = $('db-note').value.trim();
-  const settled = debtKind === 'paylater' ? (paidTerms >= totalTerms) : false;
-  if (editingDebtId !== null) {
-    const d = debts.find(x => x.id === editingDebtId);
-    if (d) Object.assign(d, { kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
+  const existing = editingDebtId !== null ? debts.find(x => x.id === editingDebtId) : null;
+  let settled = false;
+  if (debtKind === 'paylater') {
+    settled = paidTerms >= totalTerms;
+    if (existing && $('db-settled') && !$('db-settled-row').classList.contains('hidden') && $('db-settled').checked) settled = true;
+  } else if (existing) {
+    settled = ($('db-settled') && !$('db-settled-row').classList.contains('hidden')) ? !!$('db-settled').checked : !!existing.settled;
+  }
+  if (existing) {
+    Object.assign(existing, { kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
   } else {
     debts.push({ id: nextId(), kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
   }
@@ -2703,13 +2724,13 @@ function mondayOf(d) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDa
 function openBulkSheet() {
   bulkMon = mondayOf(new Date()); bulkSel.clear();
   const L = settings.last || { start: '16:00', end: '22:00', brk: 0 };
-  $('bk-start').value = L.start; $('bk-end').value = L.end; $('blk-note').value = ''; setBulkBreak(L.brk || 0);
+  ensureTimeOpt($('bk-start'), L.start || '16:00'); ensureTimeOpt($('bk-end'), L.end || '22:00'); $('blk-note').value = ''; setBulkBreak(L.brk || 0);
   renderBulkPresets(); renderBulkWeek(); openSheet('bulk-sheet');
 }
 function stepBulkWeek(dir) { bulkMon = addDays(bulkMon, dir * 7); bulkSel.clear(); renderBulkWeek(); }
 function toggleBulkDay(ds) { if (bulkSel.has(ds)) bulkSel.delete(ds); else bulkSel.add(ds); renderBulkWeek(); }
 function setBulkBreak(n) { bulkBrk = n; $$('#bk-break button').forEach(b => b.classList.toggle('on', +b.dataset.bb === n)); updateBulkPreview(); }
-function applyBulkPreset(i) { const p = _bkPresetItems[i]; if (!p) return; $('bk-start').value = p.start; $('bk-end').value = p.end; $('blk-note').value = p.label || ''; setBulkBreak(p.brk || 0); }
+function applyBulkPreset(i) { const p = _bkPresetItems[i]; if (!p) return; ensureTimeOpt($('bk-start'), p.start); ensureTimeOpt($('bk-end'), p.end); $('blk-note').value = p.label || ''; setBulkBreak(p.brk || 0); }
 function renderBulkPresets() {
   const box = $('bk-presets'); if (!box) return;
   const pinned = Array.isArray(settings.customPresets) ? settings.customPresets : [];
@@ -2770,17 +2791,17 @@ function setInsTab(t) {
 function stepInsightYear(dir) { ui.insYear += dir; renderInsights(); }
 function pickInsightMonth(m) { ui.insMonth = m; drawInsightMonthDetail(); }
 function computeYearData(yr) {
-  const ys = String(yr);
   const months = Array.from({ length: 12 }, (_, m) => ({ m, gross: 0, net: 0, gigs: 0, hrs: 0, shifts: 0, sss: 0, ph: 0, pi: 0, tax: 0, oth: 0 }));
-  const yShifts = shifts.filter(s => s.date.startsWith(ys) && isShiftActive(s));
-  const yGigs = gigs.filter(g => g.date.startsWith(ys) && g.status !== 'pending');
+  // Assign each cutoff by its pay-period end year (handles weekly Dec 29–Jan 4 cutoffs with zero loss or double-counting)
   const pKeys = new Set();
-  yShifts.forEach(s => pKeys.add(periodOf(s.date).key));
-  yGigs.forEach(g => pKeys.add(periodOf(g.date).key));
+  shifts.forEach(s => { if (!isShiftActive(s)) return; const P = periodOf(s.date); if (P.end.getFullYear() === yr) pKeys.add(P.key); });
+  gigs.forEach(g => { if (g.status === 'pending') return; const P = periodOf(g.date); if (P.end.getFullYear() === yr) pKeys.add(P.key); });
+  const yShifts = [], yGigs = [];
   pKeys.forEach(k => {
     const P = periodFromKey(k);
-    if (P.start.getFullYear() !== yr) return;
-    const D = periodData(k), mo = months[P.start.getMonth()];
+    const D = periodData(k), mo = months[P.end.getMonth()];
+    D.list.filter(isShiftActive).forEach(s => yShifts.push(s));
+    D.gList.filter(g => g.status !== 'pending').forEach(g => yGigs.push(g));
     mo.gross = r2(mo.gross + D.grossAll);
     mo.net = r2(mo.net + D.net);
     mo.gigs = r2(mo.gigs + D.gigPaid);
@@ -2858,10 +2879,6 @@ async function deleteShift(id) {
   toast('Shift deleted', { label: 'Undo', fn: () => { shifts.push(s); recalcDay(s.date); persistShifts(); render(); toast('Shift restored'); } });
 }
 function deleteFromSheet() { const id = editingId; closeShift(); setTimeout(() => deleteShift(id), 200); }
-function repeatLast() {
-  const l = [...shifts].sort(sortShifts)[0]; if (!l) return;
-  openShift(); $('m-start').value = l.startTime || '16:00'; $('m-end').value = l.endTime || '22:00'; $('m-note').value = l.note || ''; setBreak(l.breakMin || 0);
-}
 async function clearCutoff() {
   const P = periodFromKey(selKey), list = shiftsIn(selKey);
   if (!list.length) return toast('No shifts in this cutoff');
@@ -2966,16 +2983,28 @@ function resolveTimeRange(rawA, rawB) {
 }
 const MM_MAP = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
 const MON_RE_STR = '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+function inferYearForMonth(mon1to12) {
+  const now = new Date(), curY = now.getFullYear(), curM = now.getMonth() + 1;
+  if (curM >= 11 && mon1to12 <= 2) return curY + 1;
+  if (curM <= 2 && mon1to12 >= 11) return curY - 1;
+  return curY;
+}
 function parseDateStrict(line) {
   let m = line.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (m && +m[2] >= 1 && +m[2] <= 12 && +m[3] >= 1 && +m[3] <= 31) return `${m[1]}-${p2(m[2])}-${p2(m[3])}`;
   m = line.match(new RegExp(`\\b(${MON_RE_STR})\\.?\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?\\b`, 'i'));
-  if (m && +m[2] >= 1 && +m[2] <= 31) return `${m[3] || new Date().getFullYear()}-${p2(MM_MAP[m[1].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[1].toLowerCase().slice(0, 3)])}-${p2(m[2])}`;
+  if (m && +m[2] >= 1 && +m[2] <= 31) {
+    const mo = MM_MAP[m[1].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[1].toLowerCase().slice(0, 3)];
+    return `${m[3] || inferYearForMonth(mo)}-${p2(mo)}-${p2(m[2])}`;
+  }
   m = line.match(new RegExp(`\\b(\\d{1,2})\\s+(${MON_RE_STR})\\.?(?:,?\\s*(\\d{4}))?\\b`, 'i'));
-  if (m && +m[1] >= 1 && +m[1] <= 31) return `${m[3] || new Date().getFullYear()}-${p2(MM_MAP[m[2].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[2].toLowerCase().slice(0, 3)])}-${p2(m[1])}`;
+  if (m && +m[1] >= 1 && +m[1] <= 31) {
+    const mo = MM_MAP[m[2].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[2].toLowerCase().slice(0, 3)];
+    return `${m[3] || inferYearForMonth(mo)}-${p2(mo)}-${p2(m[1])}`;
+  }
   m = line.match(/(?:^|\s)(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=\s|$|[-|:])/);
   if (m && +m[1] >= 1 && +m[1] <= 12 && +m[2] >= 1 && +m[2] <= 31) {
-    let y = m[3] || String(new Date().getFullYear()); if (y.length === 2) y = '20' + y;
+    let y = m[3] ? String(m[3]) : String(inferYearForMonth(+m[1])); if (y.length === 2) y = '20' + y;
     return `${y}-${p2(m[1])}-${p2(m[2])}`;
   }
   return null;
@@ -3144,14 +3173,16 @@ function syncNativeReminder() {
 function syncDueAndPlanAlarms() {
   if (!window.AndroidBridge) return;
   try {
-    if (typeof AndroidBridge.scheduleDueAlerts === 'function') {
-      const enabled = settings.dueNotifEnabled !== false;
-      const [dh, dm] = (settings.dueNotifTime || '09:00').split(':').map(Number);
-      const urgent = debts.filter(d => !d.settled && d.kind !== 'owed' && d.dueDate)
-        .map(d => ({ ...d, m: dueMeta(d.dueDate) }))
-        .filter(d => d.m.diff <= 3)
-        .sort((a, b) => a.m.diff - b.m.diff);
-      if (enabled && urgent.length) {
+    const dueOn = settings.dueNotifEnabled !== false;
+    const [dh, dm] = (settings.dueNotifTime || '09:00').split(':').map(Number);
+    const activeDues = debts
+      .filter(d => !d.settled && d.kind !== 'owed' && d.dueDate)
+      .map(d => ({ name: d.name, amount: d.amount, dueDate: d.dueDate }));
+    if (typeof AndroidBridge.scheduleDueItems === 'function') {
+      AndroidBridge.scheduleDueItems(dueOn, isFinite(dh) ? dh : 9, isFinite(dm) ? dm : 0, JSON.stringify(activeDues));
+    } else if (typeof AndroidBridge.scheduleDueAlerts === 'function') {
+      const urgent = activeDues.map(d => ({ ...d, m: dueMeta(d.dueDate) })).filter(d => d.m.diff <= 3).sort((a, b) => a.m.diff - b.m.diff);
+      if (dueOn && urgent.length) {
         const first = urgent[0];
         const title = urgent.length === 1 ? `${first.name} — ${first.m.label}` : `${urgent.length} dues need attention`;
         const body = urgent.slice(0, 3).map(x => `${x.name} (${peso(x.amount)} · ${x.m.label})`).join(' | ');
@@ -3160,25 +3191,32 @@ function syncDueAndPlanAlarms() {
         AndroidBridge.scheduleDueAlerts(false, isFinite(dh) ? dh : 9, isFinite(dm) ? dm : 0, '', '');
       }
     }
-    if (typeof AndroidBridge.schedulePlannedShift === 'function') {
-      if (settings.planNudgeEnabled === false) {
-        AndroidBridge.schedulePlannedShift(0, '', '');
-      } else {
-        const nowMs = Date.now();
-        let nextMs = 0, nextShift = null;
-        shifts.forEach(s => {
-          if (shiftStatusOf(s) !== 'scheduled' || !s.startTime) return;
-          const [y, mo, da] = s.date.split('-').map(Number);
-          const [hh, mm] = s.startTime.split(':').map(Number);
-          const startMs = new Date(y, mo - 1, da, hh, mm, 0).getTime();
-          const trig = startMs - 3600000; // 1 hour before
-          if (trig > nowMs + 60000 && (!nextMs || trig < nextMs)) { nextMs = trig; nextShift = s; }
+
+    const planOn = settings.planNudgeEnabled !== false;
+    const nowMs = Date.now();
+    const upcomingPlans = [];
+    shifts.forEach(s => {
+      if (shiftStatusOf(s) !== 'scheduled' || !s.startTime) return;
+      const [y, mo, da] = s.date.split('-').map(Number);
+      const [hh, mm] = s.startTime.split(':').map(Number);
+      const startMs = new Date(y, mo - 1, da, hh, mm, 0).getTime();
+      const trig = startMs - 3600000; // 1 hour before
+      if (trig > nowMs + 60000) {
+        upcomingPlans.push({
+          triggerAtMs: trig,
+          title: `Shift in 1 hour: ${shiftLabel(s)}`,
+          body: `${t12(s.startTime)}–${t12(s.endTime)} · Est. ${peso(s.gross)}`
         });
-        if (nextShift) {
-          AndroidBridge.schedulePlannedShift(nextMs, `Shift in 1 hour: ${shiftLabel(nextShift)}`, `${t12(nextShift.startTime)}–${t12(nextShift.endTime)} · Est. ${peso(nextShift.gross)}`);
-        } else {
-          AndroidBridge.schedulePlannedShift(0, '', '');
-        }
+      }
+    });
+    upcomingPlans.sort((a, b) => a.triggerAtMs - b.triggerAtMs);
+    if (typeof AndroidBridge.schedulePlannedList === 'function') {
+      AndroidBridge.schedulePlannedList(planOn, JSON.stringify(upcomingPlans.slice(0, 25)));
+    } else if (typeof AndroidBridge.schedulePlannedShift === 'function') {
+      if (planOn && upcomingPlans.length) {
+        AndroidBridge.schedulePlannedShift(upcomingPlans[0].triggerAtMs, upcomingPlans[0].title, upcomingPlans[0].body);
+      } else {
+        AndroidBridge.schedulePlannedShift(0, '', '');
       }
     }
   } catch (e) {}
@@ -3223,7 +3261,7 @@ window.onNotifPermission = function (granted) {
   if (r) r(granted ? 'granted' : 'denied');
   notifSub();
 };
-window.onReminderTap = function () { if (!lockVisible()) openShift(); };
+window.onReminderTap = function () { runOrQueueUnlocked(() => openShift()); };
 function notifSub() {
   const el = $('notif-sub'); if (!('Notification' in window)) { el.textContent = 'Not supported here'; return; }
   const nativeDenied = window.AndroidBridge && typeof AndroidBridge.hasNotifPermission === 'function' && settings.notifEnabled && !AndroidBridge.hasNotifPermission();
@@ -3465,7 +3503,7 @@ window.onInstallPermResult = function (ok) {
 };
 window.onUpdateNotifTap = function () {
   syncNativeUpdateStatus();
-  if (!lockVisible()) promptInstallUpdate();
+  runOrQueueUnlocked(() => promptInstallUpdate());
 };
 async function checkUpdates(manual) {
   const btn = $('upd-btn'), badge = $('upd-badge'), diag = $('upd-diag');
@@ -3567,13 +3605,62 @@ async function saveBackupFile() {
   }
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); markBackup(); toast('Backup file saved');
 }
+function chooseBackupFile() {
+  if (window.AndroidBridge && typeof AndroidBridge.pickBackupFile === 'function') {
+    AndroidBridge.pickBackupFile();
+    return;
+  }
+  const inp = $('bk-file'); if (inp) inp.click();
+}
+window.onBackupFilePicked = function (text) {
+  if (!text) return toast('Selected file is empty');
+  $('bk-text').value = text;
+  restoreFromText();
+};
+window.onBackupFileError = function (msg) { toast(msg || 'Could not read selected file'); };
+function sanitizeRestoredSettings(raw) {
+  const s = (raw && typeof raw === 'object') ? raw : {};
+  const out = { ...settings };
+  const num = (v, min, max, fb) => { const n = Number(v); return isFinite(n) ? Math.min(max, Math.max(min, n)) : fb; };
+  if (s.hourlyRate !== undefined) out.hourlyRate = r2(num(s.hourlyRate, 0, 100000, out.hourlyRate));
+  if (['73.75', '80.63', '68.75', 'custom'].includes(String(s.calabarzonArea || ''))) out.calabarzonArea = String(s.calabarzonArea);
+  if (['semi', 'weekly', 'monthly'].includes(s.schedule)) out.schedule = s.schedule;
+  if (['first', 'split', 'last'].includes(s.deductMode)) out.deductMode = s.deductMode;
+  if (s.statMinGross !== undefined) out.statMinGross = r2(num(s.statMinGross, 0, 100000, 2000));
+  if (typeof s.mwe === 'boolean') out.mwe = s.mwe;
+  if (typeof s.autoDeduct === 'boolean') out.autoDeduct = s.autoDeduct;
+  if (typeof s.hide === 'boolean') out.hide = s.hide;
+  if (s.goal !== undefined) out.goal = r2(num(s.goal, 0, 10000000, 0));
+  if (s.payLag !== undefined) out.payLag = Math.round(num(s.payLag, 0, 31, 0));
+  if (['system', 'light', 'dark', 'amoled'].includes(s.themeMode)) out.themeMode = s.themeMode;
+  if (ACCENTS[s.accentTheme]) out.accentTheme = s.accentTheme;
+  const bn = num(s.budgetNeeds, 0, 100, out.budgetNeeds), bw = num(s.budgetWants, 0, 100, out.budgetWants), bs = num(s.budgetSavings, 0, 100, out.budgetSavings);
+  if (Math.abs(bn + bw + bs - 100) < 0.05) { out.budgetNeeds = bn; out.budgetWants = bw; out.budgetSavings = bs; }
+  if (typeof s.notifEnabled === 'boolean') out.notifEnabled = s.notifEnabled;
+  if (/^\d{2}:\d{2}$/.test(s.notifTime || '')) out.notifTime = s.notifTime;
+  if (typeof s.dueNotifEnabled === 'boolean') out.dueNotifEnabled = s.dueNotifEnabled;
+  if (/^\d{2}:\d{2}$/.test(s.dueNotifTime || '')) out.dueNotifTime = s.dueNotifTime;
+  if (typeof s.planNudgeEnabled === 'boolean') out.planNudgeEnabled = s.planNudgeEnabled;
+  if (typeof s.maskWidgetWhenLocked === 'boolean') out.maskWidgetWhenLocked = s.maskWidgetWhenLocked;
+  if (s.incomeScope === 'payroll' || s.incomeScope === 'all') out.incomeScope = s.incomeScope;
+  if (s.last && /^\d{2}:\d{2}$/.test(s.last.start || '') && /^\d{2}:\d{2}$/.test(s.last.end || '')) {
+    out.last = { start: s.last.start, end: s.last.end, brk: Math.round(num(s.last.brk, 0, 180, 0)) };
+  }
+  out.cutoffData = (s.cutoffData && typeof s.cutoffData === 'object' && !Array.isArray(s.cutoffData)) ? s.cutoffData : {};
+  out.customPresets = Array.isArray(s.customPresets) ? s.customPresets.filter(p => p && /^\d{2}:\d{2}$/.test(p.start || '') && /^\d{2}:\d{2}$/.test(p.end || '')).slice(0, 6) : [];
+  out.vaults = Array.isArray(s.vaults) ? s.vaults.filter(v => v && v.name).map(v => ({ id: nextId(), name: String(v.name).trim(), target: r2(num(v.target, 0, 1e8, 0)), saved: r2(num(v.saved, 0, 1e8, 0)) })) : [];
+  out.bills = Array.isArray(s.bills) ? s.bills.filter(b => b && b.name).map(b => ({ id: nextId(), name: String(b.name).trim(), amount: r2(num(b.amount, 0, 1e7, 0)), cycle: ['both', '1', '2'].includes(b.cycle) ? b.cycle : 'both', cat: b.cat === 'wants' ? 'wants' : 'needs' })) : [];
+  // Intentionally keep current out.repo so an untrusted backup cannot hijack update sources
+  return out;
+}
 function restoreFromFile(inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const r = new FileReader(); r.onload = () => { $('bk-text').value = r.result; restoreFromText(); }; r.readAsText(f); }
 async function restoreFromText() {
   let d; try { d = JSON.parse($('bk-text').value.trim()); } catch (e) { return toast('That is not valid backup text'); }
   const list = normalizeShifts(d && d.shifts);
   if (!d || d.app !== 'SweldoPulse' || !Array.isArray(d.shifts) || (d.shifts.length && !list.length)) return toast('Not a SweldoPulse backup');
   if (!await askConfirm({ title: 'Replace all data?', body: `This replaces everything on this device with the backup (<b>${list.length}</b> shifts). This cannot be undone.`, ok: 'Restore', danger: true })) return;
-  settings = { ...settings, ...(d.settings || {}) }; if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!Array.isArray(settings.customPresets)) settings.customPresets = []; if (!Array.isArray(settings.vaults)) settings.vaults = []; if (!Array.isArray(settings.bills)) settings.bills = []; shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); debts = normalizeDebts(d.debts || []); _pm.clear(); selKey = ''; ui.calDay = '';
+  settings = sanitizeRestoredSettings(d.settings);
+  shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); debts = normalizeDebts(d.debts || []); _pm.clear(); selKey = ''; ui.calDay = '';
   persistSettings(); persistShifts(); persistGigs(); persistExpenses(); persistDebts(); syncNativeReminder(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts${gigs.length ? ' + ' + gigs.length + ' gigs' : ''}`);
 }
 function syncBackupStatus() {
@@ -3676,16 +3763,79 @@ async function savePayslipImage() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast('Payslip image saved');
 }
 
-/* ================= app lock (upgraded glass PIN screen, 4/6-digit, live timer) ================= */
+/* ================= app lock (PBKDF2-SHA256, monotonic lockout, pending deep-link queue) ================= */
 const lockCfg = () => { try { return JSON.parse(localStorage.getItem(LOCK_KEY) || 'null'); } catch (e) { return null; } };
-let pinBuf = '', pinMode = '', pinTmp = '', pinLen = 4, hiddenAt = 0, fpPurpose = '', lockTimer = 0;
-async function hashPin(p, salt) {
+let pinBuf = '', pinMode = '', pinTmp = '', pinLen = 4, hiddenAt = 0, fpPurpose = '', lockTimer = 0, pinBusy = false, pendingDeepAction = null;
+function monoNowMs() {
+  try { if (window.AndroidBridge && typeof AndroidBridge.getElapsedMs === 'function') return Number(AndroidBridge.getElapsedMs()) || 0; } catch (e) {}
+  return 0;
+}
+function setLockoutMs(durMs) {
+  const m = monoNowMs();
+  try {
+    localStorage.setItem('sp_lock_until', String(Date.now() + durMs));
+    if (m > 0) localStorage.setItem('sp_lock_mono', JSON.stringify({ base: m, until: m + durMs, dur: durMs }));
+  } catch (e) {}
+}
+function clearLockoutState() {
+  localStorage.removeItem('sp_pin_fails');
+  localStorage.removeItem('sp_lock_until');
+  localStorage.removeItem('sp_lock_mono');
+}
+function getLockRemainingMs() {
+  const m = monoNowMs();
+  if (m > 0) {
+    try {
+      const rec = JSON.parse(localStorage.getItem('sp_lock_mono') || 'null');
+      if (rec && rec.until && m >= rec.base) return Math.max(0, rec.until - m);
+    } catch (e) {}
+  }
+  const until = +localStorage.getItem('sp_lock_until') || 0;
+  return Math.max(0, until - Date.now());
+}
+function randomSalt() {
+  try {
+    if (window.crypto && crypto.getRandomValues) {
+      const a = new Uint8Array(16); crypto.getRandomValues(a);
+      return [...a].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {}
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+async function hashPinLegacy(p, salt) {
   const s = salt + ':' + p;
   if (window.crypto && crypto.subtle) { const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join(''); }
   let x = 5381; for (const ch of s) x = ((x << 5) + x + ch.charCodeAt(0)) >>> 0; return 'f' + x;
 }
+async function hashPinV2(p, salt) {
+  if (window.crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function') {
+    const enc = new TextEncoder();
+    const km = await crypto.subtle.importKey('raw', enc.encode(String(p)), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode('sp_v2:' + salt), iterations: 100000, hash: 'SHA-256' }, km, 256);
+    return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return hashPinLegacy(p, salt);
+}
+async function verifyPinAgainst(p, cfg) {
+  if (!cfg || !cfg.hash || !cfg.salt) return false;
+  if (cfg.v === 2) return (await hashPinV2(p, cfg.salt)) === cfg.hash;
+  const ok = (await hashPinLegacy(p, cfg.salt)) === cfg.hash;
+  if (ok) {
+    // Transparently upgrade legacy single-pass SHA-256 PIN to PBKDF2-SHA256
+    try {
+      const salt = randomSalt();
+      const upgraded = { ...cfg, v: 2, salt, hash: await hashPinV2(p, salt) };
+      localStorage.setItem(LOCK_KEY, JSON.stringify(upgraded));
+    } catch (e) {}
+  }
+  return ok;
+}
 const hasFp = () => { const c = lockCfg(); try { return !!(window.AndroidBridge && c && c.fp && AndroidBridge.fpAvailable()); } catch (e) { return false; } };
 const lockVisible = () => root.classList.contains('locked') || root.classList.contains('pin-open');
+function runOrQueueUnlocked(fn) {
+  if (lockVisible()) { pendingDeepAction = fn; return; }
+  fn();
+}
 function activePinLen() {
   if (pinMode === 'set1' || pinMode === 'set2') return pinLen === 6 ? 6 : 4;
   const c = lockCfg();
@@ -3706,8 +3856,7 @@ function drawDots() {
 function startLockCountdown() {
   clearInterval(lockTimer);
   const tick = () => {
-    const until = +localStorage.getItem('sp_lock_until') || 0;
-    const rem = Math.ceil((until - Date.now()) / 1000);
+    const rem = Math.ceil(getLockRemainingMs() / 1000);
     if (rem > 0 && pinMode === 'unlock' && lockVisible()) {
       setText($('lock-sub'), `Too many tries — wait ${rem}s`);
       setText($('lock-pill-txt'), `Locked (${rem}s)`);
@@ -3733,16 +3882,23 @@ function lockUI(title, sub, open) {
   $('pin-fp').style.visibility = fp ? 'visible' : 'hidden';
   if ($('lock-fp-pill')) $('lock-fp-pill').classList.toggle('hidden', !fp);
   if (open) { if (pinMode === 'unlock') root.classList.add('locked'); else root.classList.add('pin-open'); }
-  const until = +localStorage.getItem('sp_lock_until') || 0;
-  if (pinMode === 'unlock' && Date.now() < until) startLockCountdown();
-  if (fp && open && Date.now() >= until) setTimeout(tryFingerprint, 280);
+  const rem = getLockRemainingMs();
+  if (pinMode === 'unlock' && rem > 0) startLockCountdown();
+  if (fp && open && rem <= 0) setTimeout(tryFingerprint, 280);
 }
 function lockNow(sub) { pinMode = 'unlock'; lockUI('Welcome back', sub || 'Enter your PIN to unlock', true); }
-function unlockDone() { clearInterval(lockTimer); lockTimer = 0; root.classList.remove('locked', 'pin-open', 'veil'); if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} fpPurpose = ''; }
+function unlockDone() {
+  clearInterval(lockTimer); lockTimer = 0; pinBusy = false;
+  root.classList.remove('locked', 'pin-open', 'veil');
+  if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {}
+  fpPurpose = '';
+  const act = pendingDeepAction; pendingDeepAction = null;
+  if (act) setTimeout(act, 160);
+}
 const fails = () => +localStorage.getItem('sp_pin_fails') || 0;
 async function pinKey(k) {
-  const until = +localStorage.getItem('sp_lock_until') || 0;
-  if (pinMode === 'unlock' && Date.now() < until) { startLockCountdown(); return; }
+  if (pinBusy) return;
+  if (pinMode === 'unlock' && getLockRemainingMs() > 0) { startLockCountdown(); return; }
   const targetLen = activePinLen();
   if (k === '⌫') pinBuf = pinBuf.slice(0, -1); else if (pinBuf.length < targetLen) pinBuf += k;
   drawDots(); if (pinBuf.length < targetLen) return;
@@ -3750,18 +3906,24 @@ async function pinKey(k) {
   if (pinMode === 'set1') { pinTmp = p; pinMode = 'set2'; return setTimeout(() => lockUI('Confirm PIN', `Re-enter your ${pinLen}-digit PIN`), 140); }
   if (pinMode === 'set2') {
     if (p !== pinTmp) { pinMode = 'set1'; return failPin('PINs did not match — try again', 'Create PIN'); }
-    const salt = Math.random().toString(36).slice(2), old = cfg || {};
-    localStorage.setItem(LOCK_KEY, JSON.stringify({ salt, hash: await hashPin(p, salt), len: pinLen, auto: old.auto ?? 30, fp: old.fp }));
-    unlockDone(); renderSecurity(); toast(`${pinLen}-digit PIN lock enabled`); return;
+    pinBusy = true;
+    try {
+      const salt = randomSalt(), old = cfg || {};
+      localStorage.setItem(LOCK_KEY, JSON.stringify({ v: 2, salt, hash: await hashPinV2(p, salt), len: pinLen, auto: old.auto ?? 30, fp: old.fp }));
+      unlockDone(); renderSecurity(); toast(`${pinLen}-digit PIN lock enabled`);
+    } finally { pinBusy = false; }
+    return;
   }
   if (!cfg) { unlockDone(); return; }
-  const ok = (await hashPin(p, cfg.salt)) === cfg.hash;
+  pinBusy = true;
+  let ok = false;
+  try { ok = await verifyPinAgainst(p, cfg); } finally { pinBusy = false; }
   if (!ok) {
     const n = fails() + 1; localStorage.setItem('sp_pin_fails', n);
-    if (n >= 5) { localStorage.setItem('sp_lock_until', Date.now() + 30000 * Math.min(8, n - 4)); failPin('Too many tries — locked briefly'); setTimeout(startLockCountdown, 380); return; }
+    if (n >= 5) { setLockoutMs(30000 * Math.min(8, n - 4)); failPin('Too many tries — locked briefly'); setTimeout(startLockCountdown, 380); return; }
     return failPin(`Wrong PIN (${5 - n} attempt${5 - n === 1 ? '' : 's'} left)`);
   }
-  localStorage.removeItem('sp_pin_fails'); localStorage.removeItem('sp_lock_until');
+  clearLockoutState();
   if (pinMode === 'unlock') unlockDone();
   else if (pinMode === 'verify-change') { pinLen = (cfg && cfg.len === 6) ? 6 : 4; pinMode = 'set1'; lockUI('Create new PIN', `${pinLen} digits to protect your pay data`); }
   else if (pinMode === 'verify-remove') { localStorage.removeItem(LOCK_KEY); unlockDone(); renderSecurity(); toast('PIN lock removed'); }
@@ -3779,14 +3941,14 @@ document.addEventListener('keydown', e => {
 function lockSetAuto(v) { const c = lockCfg(); if (c) { c.auto = +v; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); } }
 async function lockForgot() {
   if (!await askConfirm({ title: 'Reset PIN?', body: 'Resetting the PIN <b>erases all shifts and settings</b> on this device — your PIN is what guards your data. You can restore from a backup afterwards.', ok: 'Erase & reset' })) return;
-  [SHIFTS_KEY, SETTINGS_KEY, GIGS_KEY, EXP_KEY, DEBTS_KEY, LOCK_KEY, 'sp_lock_until', 'sp_pin_fails', TOUR_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
+  [SHIFTS_KEY, SETTINGS_KEY, GIGS_KEY, EXP_KEY, DEBTS_KEY, LOCK_KEY, 'sp_lock_until', 'sp_lock_mono', 'sp_pin_fails', TOUR_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
 }
 function tryFingerprint() { if (!window.AndroidBridge || !lockVisible()) return; fpPurpose = 'unlock'; setText($('lock-sub'), 'Touch the fingerprint sensor'); AndroidBridge.fpAuth(); }
 window.onFingerprint = function (ok) {
   if (ok === null) { setText($('lock-sub'), 'Not recognized — try again'); return; }
   if (!ok) { if (lockVisible()) setText($('lock-sub'), 'Use your PIN'); fpPurpose = ''; return; }
   if (fpPurpose === 'enable') { const c = lockCfg(); c.fp = true; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); renderSecurity(); toast('Fingerprint unlock enabled'); }
-  else if (fpPurpose === 'unlock') { localStorage.removeItem('sp_pin_fails'); localStorage.removeItem('sp_lock_until'); unlockDone(); }
+  else if (fpPurpose === 'unlock') { clearLockoutState(); unlockDone(); }
   fpPurpose = '';
 };
 function toggleFingerprint() { const c = lockCfg(); if (!c) return; if (c.fp) { c.fp = false; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); renderSecurity(); toast('Fingerprint unlock off'); return; } fpPurpose = 'enable'; toast('Touch the fingerprint sensor to confirm'); AndroidBridge.fpAuth(); }
@@ -3794,11 +3956,23 @@ function renderSecurity() {
   const c = lockCfg();
   $('lock-status').textContent = c ? 'On — locks when you leave the app' : 'Off — anyone with your phone can open the app';
   $('lock-main-btn').textContent = c ? 'Change' : 'Set PIN'; $('lock-remove-btn').classList.toggle('hidden', !c); $('lock-auto-row').classList.toggle('hidden', !c);
+  if ($('lock-widget-row')) $('lock-widget-row').classList.toggle('hidden', !c);
+  if ($('lock-widget-mask')) $('lock-widget-mask').checked = settings.maskWidgetWhenLocked !== false;
   if (c) $('lock-auto').value = String(c.auto ?? 30);
   let fpOk = false; try { fpOk = !!(window.AndroidBridge && AndroidBridge.fpAvailable()); } catch (e) {}
   $('lock-fp-row').classList.toggle('hidden', !(c && fpOk)); if (c) { $('lock-fp-status').textContent = c.fp ? 'On — scan to unlock' : 'Off'; $('lock-fp-btn').textContent = c.fp ? 'Turn off' : 'Enable'; }
-  if (window.AndroidBridge) try { AndroidBridge.setSecure(!!c); } catch (e) {}
+  if (window.AndroidBridge) {
+    try { AndroidBridge.setSecure(!!c); } catch (e) {}
+    try { if (typeof AndroidBridge.setWidgetPinLocked === 'function') AndroidBridge.setWidgetPinLocked(!!(c && settings.maskWidgetWhenLocked !== false)); } catch (e) {}
+  }
   syncBackupStatus();
+}
+function toggleWidgetLockMask() {
+  settings.maskWidgetWhenLocked = $('lock-widget-mask') ? $('lock-widget-mask').checked : true;
+  persistSettings();
+  renderSecurity();
+  syncWidget();
+  toast(settings.maskWidgetWhenLocked ? 'Home widgets masked while PIN is on' : 'Home widgets unmasked');
 }
 document.addEventListener('visibilitychange', () => {
   const c = lockCfg(); if (!c) return;
@@ -3875,21 +4049,18 @@ function boot() {
   setTimeout(() => { if (!lockVisible() && navigator.onLine !== false && Date.now() - (settings.lastUpd || 0) > 216e5) checkUpdates(false); }, 4500);
   setTimeout(() => { if (shifts.length && hasNativeAutoBk() && settings.autoBackup !== false && Date.now() - (+settings.lastAutoBk || 0) > 864e5) runAutoBackup(false); }, 6500);
   function handleDeepTab(tab) {
-    if (lockVisible()) return;
-    if (tab === 'budget-dues') { go('budget'); setBudTab('dues'); }
-    else if (tab === 'log-expense') { go('budget'); setBudTab('expenses'); setTimeout(openExpSheet, 180); }
-    else if (tab === 'bulk-week') { go('home'); setTimeout(openBulkSheet, 180); }
-    else if (VIEWS[tab]) go(tab);
+    runOrQueueUnlocked(() => {
+      if (tab === 'log-shift') openShift();
+      else if (tab === 'budget-dues') { go('budget'); setBudTab('dues'); }
+      else if (tab === 'log-expense') { go('budget'); setBudTab('expenses'); setTimeout(openExpSheet, 180); }
+      else if (tab === 'bulk-week') { go('home'); setTimeout(openBulkSheet, 180); }
+      else if (tab === 'install-update') promptInstallUpdate();
+      else if (VIEWS[tab]) go(tab);
+    });
   }
   window.onShortcutTab = handleDeepTab;
-  if (location.hash === '#log-shift') setTimeout(() => openShift(), 300);
-  if (location.hash === '#deductions' || location.hash === '#payslip') setTimeout(() => handleDeepTab('deductions'), 250);
-  if (location.hash === '#insights') setTimeout(() => handleDeepTab('insights'), 250);
-  if (location.hash === '#budget-dues') setTimeout(() => handleDeepTab('budget-dues'), 250);
-  if (location.hash === '#log-expense') setTimeout(() => handleDeepTab('log-expense'), 250);
-  if (location.hash === '#bulk-week') setTimeout(() => handleDeepTab('bulk-week'), 250);
-  if (location.hash === '#shifts') setTimeout(() => handleDeepTab('shifts'), 250);
-  if (location.hash === '#install-update') setTimeout(() => { if (!lockVisible()) promptInstallUpdate(); }, 500);
+  const hMap = { '#log-shift': 'log-shift', '#deductions': 'deductions', '#payslip': 'deductions', '#insights': 'insights', '#budget-dues': 'budget-dues', '#log-expense': 'log-expense', '#bulk-week': 'bulk-week', '#shifts': 'shifts', '#install-update': 'install-update' };
+  if (hMap[location.hash]) setTimeout(() => handleDeepTab(hMap[location.hash]), 260);
   // roll the cutoff over automatically if the app stays open past midnight
   let lastCur = curPeriod().key, lastDay = today();
   const tickDay = () => { if (today() === lastDay) return; lastDay = today(); const nk = curPeriod().key; if (nk !== lastCur) { if (selKey === lastCur) selKey = nk; lastCur = nk; } if (curView === 'home') setText($('hdr-sub'), greet()); render(); };

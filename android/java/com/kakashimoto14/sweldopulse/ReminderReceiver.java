@@ -10,7 +10,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class ReminderReceiver extends BroadcastReceiver {
     static final String PREFS = "sweldopulse_prefs";
@@ -21,9 +28,12 @@ public class ReminderReceiver extends BroadcastReceiver {
     static final String KEY_DUE_ON = "due_enabled";
     static final String KEY_DUE_H = "due_hour";
     static final String KEY_DUE_M = "due_min";
+    static final String KEY_DUE_ITEMS = "due_items_json";
     static final String KEY_DUE_TITLE = "due_title";
     static final String KEY_DUE_BODY = "due_body";
 
+    static final String KEY_PLAN_ON = "plan_enabled";
+    static final String KEY_PLAN_ITEMS = "plan_items_json";
     static final String KEY_PLAN_AT = "plan_at";
     static final String KEY_PLAN_TITLE = "plan_title";
     static final String KEY_PLAN_BODY = "plan_body";
@@ -41,6 +51,13 @@ public class ReminderReceiver extends BroadcastReceiver {
     static final String ACTION_DUE = "com.kakashimoto14.sweldopulse.ALARM_DUE";
     static final String ACTION_PLAN = "com.kakashimoto14.sweldopulse.ALARM_PLAN";
 
+    static class DueEntry {
+        String name;
+        String amountText;
+        long diffDays;
+        String badge;
+    }
+
     @Override
     public void onReceive(Context ctx, Intent intent) {
         String action = intent != null ? intent.getAction() : null;
@@ -50,42 +67,178 @@ public class ReminderReceiver extends BroadcastReceiver {
             if (sp.getBoolean(KEY_ON, false)) {
                 scheduleDaily(ctx, ACTION_SHIFT, REQ_SHIFT, sp.getInt(KEY_H, 22), sp.getInt(KEY_M, 0));
             }
-            if (sp.getBoolean(KEY_DUE_ON, true)) {
+            if (sp.getBoolean(KEY_DUE_ON, true) && hasDueItems(sp)) {
                 scheduleDaily(ctx, ACTION_DUE, REQ_DUE, sp.getInt(KEY_DUE_H, 9), sp.getInt(KEY_DUE_M, 0));
             }
-            long planAt = sp.getLong(KEY_PLAN_AT, 0L);
-            if (planAt > System.currentTimeMillis() + 5000L) {
-                scheduleExactOnce(ctx, ACTION_PLAN, REQ_PLAN, planAt);
+            if (sp.getBoolean(KEY_PLAN_ON, true)) {
+                armNextPlannedShift(ctx, sp);
             }
             return;
         }
 
         if (ACTION_DUE.equals(action)) {
             if (!sp.getBoolean(KEY_DUE_ON, true)) return;
-            String title = sp.getString(KEY_DUE_TITLE, "");
-            String body = sp.getString(KEY_DUE_BODY, "");
-            if (title != null && title.length() > 0 && body != null && body.length() > 0) {
-                showRichNotification(ctx, "dues", "PayLater & due alerts", 4, NOTIF_DUE, title, body, "budget-dues", "View dues");
+            evaluateAndNotifyDues(ctx, sp);
+            if (hasDueItems(sp)) {
+                scheduleDaily(ctx, ACTION_DUE, REQ_DUE, sp.getInt(KEY_DUE_H, 9), sp.getInt(KEY_DUE_M, 0));
             }
-            scheduleDaily(ctx, ACTION_DUE, REQ_DUE, sp.getInt(KEY_DUE_H, 9), sp.getInt(KEY_DUE_M, 0));
             return;
         }
 
         if (ACTION_PLAN.equals(action)) {
-            String title = sp.getString(KEY_PLAN_TITLE, "Upcoming shift soon");
-            String body = sp.getString(KEY_PLAN_BODY, "Your planned shift starts in 1 hour.");
+            if (sp.getBoolean(KEY_PLAN_ON, true)) {
+                String title = sp.getString(KEY_PLAN_TITLE, "Upcoming shift soon");
+                String body = sp.getString(KEY_PLAN_BODY, "Your planned shift starts in 1 hour.");
+                showRichNotification(ctx, "planned", "Upcoming shift nudges", 4, NOTIF_PLAN, title, body, "shifts", "Open shifts");
+            }
             sp.edit().putLong(KEY_PLAN_AT, 0L).apply();
-            showRichNotification(ctx, "planned", "Upcoming shift nudges", 4, NOTIF_PLAN, title, body, "shifts", "Open shifts");
+            if (sp.getBoolean(KEY_PLAN_ON, true)) {
+                armNextPlannedShift(ctx, sp);
+            }
             return;
         }
 
         // Default: daily shift reminder
         if (!sp.getBoolean(KEY_ON, false)) return;
         showRichNotification(ctx, "shifts", "Shift reminders", 3, NOTIF_SHIFT,
-            "SweldoPulse \u2014 log your shift",
+            "SweldoPulse — log your shift",
             "Finished your duty? Tap to log your hours and update your net pay.",
             "log-shift", "Log shift");
         scheduleDaily(ctx, ACTION_SHIFT, REQ_SHIFT, sp.getInt(KEY_H, 22), sp.getInt(KEY_M, 0));
+    }
+
+    static boolean hasDueItems(SharedPreferences sp) {
+        String raw = sp.getString(KEY_DUE_ITEMS, "");
+        if (raw != null && raw.length() > 2) return true;
+        String fallback = sp.getString(KEY_DUE_TITLE, "");
+        return fallback != null && fallback.length() > 0;
+    }
+
+    static long todayEpochDay() {
+        Calendar now = Calendar.getInstance();
+        Calendar c = Calendar.getInstance();
+        c.clear();
+        c.set(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH), 12, 0, 0);
+        return c.getTimeInMillis() / 86400000L;
+    }
+
+    static long parseIsoEpochDay(String iso) {
+        if (iso == null || iso.length() < 10) return Long.MIN_VALUE;
+        try {
+            int y = Integer.parseInt(iso.substring(0, 4));
+            int m = Integer.parseInt(iso.substring(5, 7));
+            int d = Integer.parseInt(iso.substring(8, 10));
+            Calendar c = Calendar.getInstance();
+            c.clear();
+            c.set(y, m - 1, d, 12, 0, 0);
+            return c.getTimeInMillis() / 86400000L;
+        } catch (Throwable t) {
+            return Long.MIN_VALUE;
+        }
+    }
+
+    static String formatPeso(double amt) {
+        return String.format(Locale.US, "₱%,.2f", Math.max(0.0, amt));
+    }
+
+    static String dueBadgeFor(long diff) {
+        if (diff < 0) return "Overdue " + Math.abs(diff) + "d";
+        if (diff == 0) return "Due today";
+        if (diff == 1) return "Due tomorrow";
+        return "Due in " + diff + "d";
+    }
+
+    static void evaluateAndNotifyDues(Context ctx, SharedPreferences sp) {
+        String raw = sp.getString(KEY_DUE_ITEMS, "");
+        if (raw != null && raw.length() > 2) {
+            try {
+                JSONArray arr = new JSONArray(raw);
+                long td = todayEpochDay();
+                List<DueEntry> urgent = new ArrayList<DueEntry>();
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject o = arr.optJSONObject(i);
+                    if (o == null) continue;
+                    String dueDate = o.optString("dueDate", "");
+                    long dueDay = parseIsoEpochDay(dueDate);
+                    if (dueDay == Long.MIN_VALUE) continue;
+                    long diff = dueDay - td;
+                    if (diff <= 3L) {
+                        DueEntry e = new DueEntry();
+                        e.name = o.optString("name", "Due item");
+                        e.amountText = formatPeso(o.optDouble("amount", 0.0));
+                        e.diffDays = diff;
+                        e.badge = dueBadgeFor(diff);
+                        urgent.add(e);
+                    }
+                }
+                if (urgent.isEmpty()) return;
+                Collections.sort(urgent, new Comparator<DueEntry>() {
+                    @Override
+                    public int compare(DueEntry a, DueEntry b) {
+                        return a.diffDays < b.diffDays ? -1 : (a.diffDays > b.diffDays ? 1 : 0);
+                    }
+                });
+                DueEntry first = urgent.get(0);
+                String title = urgent.size() == 1
+                    ? (first.name + " — " + first.badge)
+                    : (urgent.size() + " dues need attention");
+                StringBuilder sb = new StringBuilder();
+                int lim = Math.min(3, urgent.size());
+                for (int i = 0; i < lim; i++) {
+                    if (i > 0) sb.append(" | ");
+                    DueEntry x = urgent.get(i);
+                    sb.append(x.name).append(" (").append(x.amountText).append(" · ").append(x.badge).append(")");
+                }
+                if (urgent.size() > 3) sb.append(" +").append(urgent.size() - 3).append(" more");
+                showRichNotification(ctx, "dues", "PayLater & due alerts", 4, NOTIF_DUE, title, sb.toString(), "budget-dues", "View dues");
+                return;
+            } catch (Throwable ignored) { }
+        }
+        // Fallback for legacy static values
+        String title = sp.getString(KEY_DUE_TITLE, "");
+        String body = sp.getString(KEY_DUE_BODY, "");
+        if (title != null && title.length() > 0 && body != null && body.length() > 0) {
+            showRichNotification(ctx, "dues", "PayLater & due alerts", 4, NOTIF_DUE, title, body, "budget-dues", "View dues");
+        }
+    }
+
+    static void armNextPlannedShift(Context ctx, SharedPreferences sp) {
+        String raw = sp.getString(KEY_PLAN_ITEMS, "");
+        long now = System.currentTimeMillis();
+        long bestAt = 0L;
+        String bestTitle = "";
+        String bestBody = "";
+        if (raw != null && raw.length() > 2) {
+            try {
+                JSONArray arr = new JSONArray(raw);
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject o = arr.optJSONObject(i);
+                    if (o == null) continue;
+                    long at = o.optLong("triggerAtMs", 0L);
+                    if (at > now + 5000L && (bestAt == 0L || at < bestAt)) {
+                        bestAt = at;
+                        bestTitle = o.optString("title", "Upcoming shift soon");
+                        bestBody = o.optString("body", "Your planned shift starts in 1 hour.");
+                    }
+                }
+            } catch (Throwable ignored) { }
+        }
+        if (bestAt > now + 5000L) {
+            sp.edit()
+                .putLong(KEY_PLAN_AT, bestAt)
+                .putString(KEY_PLAN_TITLE, bestTitle)
+                .putString(KEY_PLAN_BODY, bestBody)
+                .apply();
+            scheduleExactOnce(ctx, ACTION_PLAN, REQ_PLAN, bestAt);
+        } else {
+            long legacyAt = sp.getLong(KEY_PLAN_AT, 0L);
+            if (legacyAt > now + 5000L) {
+                scheduleExactOnce(ctx, ACTION_PLAN, REQ_PLAN, legacyAt);
+            } else {
+                sp.edit().putLong(KEY_PLAN_AT, 0L).apply();
+                cancelAlarm(ctx, ACTION_PLAN, REQ_PLAN);
+            }
+        }
     }
 
     public static void schedule(Context ctx, boolean enabled, int hour, int min) {
@@ -95,12 +248,33 @@ public class ReminderReceiver extends BroadcastReceiver {
         else cancelAlarm(ctx, ACTION_SHIFT, REQ_SHIFT);
     }
 
+    public static void scheduleDueItems(Context ctx, boolean enabled, int hour, int min, String itemsJson) {
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String safeJson = (itemsJson == null || itemsJson.length() == 0) ? "[]" : itemsJson;
+        sp.edit()
+            .putBoolean(KEY_DUE_ON, enabled)
+            .putInt(KEY_DUE_H, hour)
+            .putInt(KEY_DUE_M, min)
+            .putString(KEY_DUE_ITEMS, safeJson)
+            .putString(KEY_DUE_TITLE, "")
+            .putString(KEY_DUE_BODY, "")
+            .apply();
+        boolean any = false;
+        try { any = new JSONArray(safeJson).length() > 0; } catch (Throwable ignored) { }
+        if (enabled && any) {
+            scheduleDaily(ctx, ACTION_DUE, REQ_DUE, hour, min);
+        } else {
+            cancelAlarm(ctx, ACTION_DUE, REQ_DUE);
+        }
+    }
+
     public static void scheduleDueAlerts(Context ctx, boolean enabled, int hour, int min, String title, String body) {
         SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         sp.edit()
             .putBoolean(KEY_DUE_ON, enabled)
             .putInt(KEY_DUE_H, hour)
             .putInt(KEY_DUE_M, min)
+            .putString(KEY_DUE_ITEMS, "")
             .putString(KEY_DUE_TITLE, title == null ? "" : title)
             .putString(KEY_DUE_BODY, body == null ? "" : body)
             .apply();
@@ -111,14 +285,31 @@ public class ReminderReceiver extends BroadcastReceiver {
         }
     }
 
+    public static void schedulePlannedList(Context ctx, boolean enabled, String shiftsJson) {
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String safeJson = (shiftsJson == null || shiftsJson.length() == 0) ? "[]" : shiftsJson;
+        sp.edit()
+            .putBoolean(KEY_PLAN_ON, enabled)
+            .putString(KEY_PLAN_ITEMS, safeJson)
+            .putLong(KEY_PLAN_AT, 0L)
+            .apply();
+        if (enabled) {
+            armNextPlannedShift(ctx, sp);
+        } else {
+            cancelAlarm(ctx, ACTION_PLAN, REQ_PLAN);
+        }
+    }
+
     public static void schedulePlannedShift(Context ctx, long triggerAtMs, String title, String body) {
         SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         if (triggerAtMs <= System.currentTimeMillis() + 5000L) {
-            sp.edit().putLong(KEY_PLAN_AT, 0L).apply();
+            sp.edit().putLong(KEY_PLAN_AT, 0L).putString(KEY_PLAN_ITEMS, "[]").apply();
             cancelAlarm(ctx, ACTION_PLAN, REQ_PLAN);
             return;
         }
         sp.edit()
+            .putBoolean(KEY_PLAN_ON, true)
+            .putString(KEY_PLAN_ITEMS, "[]")
             .putLong(KEY_PLAN_AT, triggerAtMs)
             .putString(KEY_PLAN_TITLE, title == null ? "Upcoming shift soon" : title)
             .putString(KEY_PLAN_BODY, body == null ? "Your planned shift starts in 1 hour." : body)
@@ -129,7 +320,7 @@ public class ReminderReceiver extends BroadcastReceiver {
     public static void sendTest(Context ctx) {
         showRichNotification(ctx, "dues", "PayLater & due alerts", 4, NOTIF_TEST,
             "SweldoPulse notifications active",
-            "Shift reminders, PayLater due alerts, and planned-shift nudges are ready.",
+            "Shift reminders, live PayLater due alerts, and auto-chained planned-shift nudges are ready.",
             "budget-dues", "Open app");
     }
 
@@ -205,7 +396,8 @@ public class ReminderReceiver extends BroadcastReceiver {
             int flags = PendingIntent.FLAG_UPDATE_CURRENT | 0x04000000;
             PendingIntent pi = PendingIntent.getActivity(ctx, notifId + 50, launch, flags);
 
-            nb.setSmallIcon(R.mipmap.ic_launcher)
+            nb.setSmallIcon(R.drawable.ic_stat_pulse)
+              .setColor(0xFF4F46E5)
               .setContentTitle(title)
               .setContentText(body)
               .setStyle(new Notification.BigTextStyle().bigText(body))

@@ -18,24 +18,6 @@ import org.json.JSONObject;
 
 public class SweldoWidgetProvider extends AppWidgetProvider {
     static final String PREFS = "sweldopulse_widget_prefs";
-    static final String ACTION_TOGGLE_PRIVACY = "com.kakashimoto14.sweldopulse.TOGGLE_WIDGET_PRIVACY";
-
-    @Override
-    public void onReceive(Context ctx, Intent intent) {
-        super.onReceive(ctx, intent);
-        if (intent != null && ACTION_TOGGLE_PRIVACY.equals(intent.getAction())) {
-            try {
-                SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-                boolean currentlyMasked = sp.getBoolean("widgetMask", false) || sp.getBoolean("appHide", false);
-                boolean nextMasked = !currentlyMasked;
-                SharedPreferences.Editor ed = sp.edit().putBoolean("widgetMask", nextMasked);
-                if (!nextMasked) ed.putBoolean("appHide", false);
-                ed.apply();
-                refreshAll(ctx);
-                BudgetDueWidgetProvider.refreshAll(ctx);
-            } catch (Throwable t) { }
-        }
-    }
 
     @Override
     public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) {
@@ -51,13 +33,22 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
         updateOne(ctx, mgr, appWidgetId, newOptions);
     }
 
+    public static void setPinLocked(Context ctx, boolean locked) {
+        try {
+            SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            sp.edit().putBoolean("pinLocked", locked).apply();
+            refreshAll(ctx);
+            BudgetDueWidgetProvider.refreshAll(ctx);
+        } catch (Throwable t) { }
+    }
+
     public static void saveAndRefresh(Context ctx, String netText, String badgeText, String metaText, String periodText) {
         try {
             SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
             sp.edit()
-                .putString("net", netText == null ? "\u20B10.00" : netText)
+                .putString("net", netText == null ? "₱0.00" : netText)
                 .putString("badge", badgeText == null ? "Current cutoff" : badgeText)
-                .putString("meta", metaText == null ? "0h \u00B7 0 shifts" : metaText)
+                .putString("meta", metaText == null ? "0h · 0 shifts" : metaText)
                 .putString("period", periodText == null ? "SweldoPulse" : periodText)
                 .apply();
             refreshAll(ctx);
@@ -70,18 +61,19 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
             JSONObject o = new JSONObject(jsonStr);
             SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
             SharedPreferences.Editor ed = sp.edit();
-            if (o.has("net")) ed.putString("net", o.optString("net", "\u20B10.00"));
+            if (o.has("net")) ed.putString("net", o.optString("net", "₱0.00"));
             if (o.has("badge")) ed.putString("badge", o.optString("badge", "Current cutoff"));
-            if (o.has("meta")) ed.putString("meta", o.optString("meta", "0h \u00B7 0 shifts"));
+            if (o.has("meta")) ed.putString("meta", o.optString("meta", "0h · 0 shifts"));
             if (o.has("period")) ed.putString("period", o.optString("period", "SweldoPulse"));
-            if (o.has("gross")) ed.putString("gross", o.optString("gross", "\u20B10.00"));
-            if (o.has("ded")) ed.putString("ded", o.optString("ded", "\u20B10.00"));
+            if (o.has("gross")) ed.putString("gross", o.optString("gross", "₱0.00"));
+            if (o.has("ded")) ed.putString("ded", o.optString("ded", "₱0.00"));
             if (o.has("extra")) ed.putString("extra", o.optString("extra", ""));
-            if (o.has("remBudget")) ed.putString("remBudget", o.optString("remBudget", "\u20B10.00"));
+            if (o.has("remBudget")) ed.putString("remBudget", o.optString("remBudget", "₱0.00"));
             if (o.has("dueTitle")) ed.putString("dueTitle", o.optString("dueTitle", "Next due"));
             if (o.has("dueLine")) ed.putString("dueLine", o.optString("dueLine", "No upcoming dues"));
             if (o.has("dueUrgent")) ed.putBoolean("dueUrgent", o.optBoolean("dueUrgent", false));
             if (o.has("appHide")) ed.putBoolean("appHide", o.optBoolean("appHide", false));
+            if (o.has("pinLocked")) ed.putBoolean("pinLocked", o.optBoolean("pinLocked", false));
             if (o.has("theme")) ed.putString("theme", o.optString("theme", "dark"));
             if (o.has("accent")) ed.putString("accent", o.optString("accent", "#4F46E5"));
             if (o.has("accentText")) ed.putString("accentText", o.optString("accentText", "#A5B4FC"));
@@ -136,15 +128,16 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
     static void updateOne(Context ctx, AppWidgetManager mgr, int appWidgetId, Bundle opts) {
         try {
             SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-            boolean masked = sp.getBoolean("widgetMask", false) || sp.getBoolean("appHide", false);
-            String mask = "\u20B1\u2022\u2022\u2022\u2022\u2022\u2022";
-            String net = masked ? mask : sp.getString("net", "\u20B10.00");
+            boolean pinLocked = sp.getBoolean("pinLocked", false);
+            boolean masked = pinLocked || sp.getBoolean("widgetMask", false) || sp.getBoolean("appHide", false);
+            String mask = "₱••••••";
+            String net = masked ? mask : sp.getString("net", "₱0.00");
             String badge = sp.getString("badge", "Current cutoff");
-            String meta = sp.getString("meta", "Tap to open SweldoPulse");
+            String meta = pinLocked ? "PIN lock on · tap to open" : sp.getString("meta", "Tap to open SweldoPulse");
             String period = sp.getString("period", "SweldoPulse");
-            String gross = masked ? mask : sp.getString("gross", "\u20B10.00");
-            String ded = masked ? mask : sp.getString("ded", "\u20B10.00");
-            String extra = masked ? "Amounts hidden on widget" : sp.getString("extra", "Tap card to open payslip");
+            String gross = masked ? mask : sp.getString("gross", "₱0.00");
+            String ded = masked ? mask : sp.getString("ded", "₱0.00");
+            String extra = pinLocked ? "Locked · unlock app to view amounts" : (masked ? "Amounts hidden on widget" : sp.getString("extra", "Tap card to open payslip"));
             String theme = sp.getString("theme", "dark");
             int accentColor = safeColor(sp.getString("accent", "#4F46E5"), 0xFF4F46E5);
             int accentTextColor = safeColor(sp.getString("accentText", "#A5B4FC"), 0xFFA5B4FC);
@@ -191,11 +184,11 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
                 rv.setTextViewText(R.id.widget_badge, badge);
                 rv.setTextColor(R.id.widget_badge, t2);
                 rv.setInt(R.id.widget_eye_btn, "setBackgroundResource", stripRes);
-                rv.setTextViewText(R.id.widget_eye_btn, masked ? "SHOW" : "HIDE");
+                rv.setTextViewText(R.id.widget_eye_btn, pinLocked ? "LOCK" : (masked ? "SHOW" : "HIDE"));
                 rv.setTextColor(R.id.widget_eye_btn, masked ? accentTextColor : t2);
 
-                Intent eyeIntent = new Intent(ctx, SweldoWidgetProvider.class);
-                eyeIntent.setAction(ACTION_TOGGLE_PRIVACY);
+                Intent eyeIntent = new Intent(ctx, WidgetPrivacyReceiver.class);
+                eyeIntent.setAction(WidgetPrivacyReceiver.ACTION_TOGGLE_PRIVACY);
                 PendingIntent eyePi = PendingIntent.getBroadcast(ctx, 12, eyeIntent, flags);
                 rv.setOnClickPendingIntent(R.id.widget_eye_btn, eyePi);
             }

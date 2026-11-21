@@ -1,7 +1,7 @@
 {
-  "version": "2.3.0",
+  "version": "2.4.0",
   "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
-  "apkName": "SweldoPulse-v2.3.0.apk",
+  "apkName": "SweldoPulse-v2.4.0.apk",
   "apkSize": "Latest Build",
-  "notes": "SweldoPulse 2.3: Exact PH Crew Deductions (1st-cutoff SSS/PhilHealth, 2% Basic Pag-IBIG, Min Cutoff Threshold & Total Deductions line), Fixed Import/Edit Shift ID & Time Bugs, Smarter Roster Importer with Standard Template, Confirmation-Based Planned Shifts (Remove if Not Worked), and Cleaner Budget/Payslip/Settings UI."
+  "notes": "SweldoPulse 2.4 (Phase 1 Hardening): PIN Lock & Widget Privacy Hardening (PBKDF2-SHA256, Monotonic Lockout, Fixed #log-shift Bypass), Native Backup File Picker, Autonomous Live Due Alerts & Auto-Chained Shift Nudges, Monochrome Status-Bar Notification Icon, GitHub Host + APK Cert Verification, and Payroll/Dues/Importer Edge-Case Fixes."
 }

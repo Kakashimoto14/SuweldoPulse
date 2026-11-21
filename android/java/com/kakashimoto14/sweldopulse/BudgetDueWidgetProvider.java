@@ -42,12 +42,13 @@ public class BudgetDueWidgetProvider extends AppWidgetProvider {
     static void updateOne(Context ctx, AppWidgetManager mgr, int appWidgetId) {
         try {
             SharedPreferences sp = ctx.getSharedPreferences(SweldoWidgetProvider.PREFS, Context.MODE_PRIVATE);
-            boolean masked = sp.getBoolean("widgetMask", false) || sp.getBoolean("appHide", false);
-            String mask = "\u20B1\u2022\u2022\u2022\u2022\u2022\u2022";
-            String rem = masked ? mask : sp.getString("remBudget", "\u20B10.00");
-            String dueTitle = sp.getString("dueTitle", "Next due");
-            String dueLine = masked ? "Tap to view upcoming dues" : sp.getString("dueLine", "No upcoming PayLater or bills");
-            boolean urgent = sp.getBoolean("dueUrgent", false);
+            boolean pinLocked = sp.getBoolean("pinLocked", false);
+            boolean masked = pinLocked || sp.getBoolean("widgetMask", false) || sp.getBoolean("appHide", false);
+            String mask = "₱••••••";
+            String rem = masked ? mask : sp.getString("remBudget", "₱0.00");
+            String dueTitle = pinLocked ? "PIN protected" : sp.getString("dueTitle", "Next due");
+            String dueLine = pinLocked ? "Unlock app to view dues" : (masked ? "Tap to view upcoming dues" : sp.getString("dueLine", "No upcoming PayLater or bills"));
+            boolean urgent = !pinLocked && sp.getBoolean("dueUrgent", false);
             String theme = sp.getString("theme", "dark");
             int accentColor = SweldoWidgetProvider.safeColor(sp.getString("accent", "#4F46E5"), 0xFF4F46E5);
             int accentTextColor = SweldoWidgetProvider.safeColor(sp.getString("accentText", "#A5B4FC"), 0xFFA5B4FC);

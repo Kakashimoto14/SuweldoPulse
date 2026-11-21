@@ -1,23 +1,36 @@
-# SweldoPulse v2.3.0 — build, install, update
+# SweldoPulse v2.4.0 — Phase 1 Hardening, Native Fixes & Logic Accuracy
 
 ## Building & Publishing via GitHub Actions (Recommended)
 Repo: `https://github.com/Kakashimoto14/SuweldoPulse`
 
 1. Extract this folder over your local `SuweldoPulse` repo (your private `signing/sweldopulse.jks` stays untouched and excluded by `.gitignore`).
-2. Commit, push, and tag `v2.3.0`:
+2. Commit, push, and tag `v2.4.0`:
    ```cmd
    git add -A
-   git commit -m "v2.3.0: exact PH crew deductions, total deductions line, import/edit bug fixes, smart importer template, planned-shift confirm/remove & UI polish"
+   git commit -m "v2.4.0: Phase 1 security hardening, native file picker, autonomous live notifications, payroll/dues/importer fixes"
    git push origin main
-   git tag v2.3.0
-   git push origin v2.3.0
+   git tag v2.4.0
+   git push origin v2.4.0
    ```
-3. GitHub Actions (`Build APK`) compiles `SweldoPulse-v2.3.0.apk`, signs it using your `KEYSTORE_B64` and `KEYSTORE_PASS` secrets, uploads the artifact, and attaches it to the `v2.3.0` GitHub Release automatically.
+3. GitHub Actions (`Build APK`) compiles `SweldoPulse-v2.4.0.apk`, signs it using your `KEYSTORE_B64` and `KEYSTORE_PASS` secrets, uploads the artifact, and attaches it to the `v2.4.0` GitHub Release automatically.
 
-## What's New & Fixed in v2.3.0
-- **Exact PH Crew Deduction Engine:** Pag-IBIG now calculates from **Basic Pay** (2% basic, matching real payslips to the centavo), SSS & PhilHealth support **1st cutoff only** (default), **Split across cutoffs**, or **2nd cutoff only**, plus a configurable **Minimum Cutoff Threshold** (`₱2,000` default) that skips/defers SSS & PhilHealth on low-earning cutoffs.
-- **Payslip Total Deductions Line:** Added a clear **Total deductions** subtotal row right above Net Take-Home on the Payslip screen, Copy text, and Save Image PNG.
-- **Fixed Import/Edit Shift Bug & Time Bugs:** Replaced random IDs with monotonic guaranteed-unique IDs + boot-time duplicate-ID auto-repair; fixed non-30-minute times blanking out when editing; fixed `7-12`/`8-12`/`9-12` resolving to midnight instead of noon.
-- **Smarter Shift Importer + Standard Template:** Built-in standard template placeholder, Copy Template & Paste buttons, smart `OFF`/`RD` skipping, next-week auto-anchoring for weekday rosters, and editable station tags in preview.
-- **Confirmation-Based Planned Shifts:** Accurate overnight end-time tracking, queue badge (`1 of N`), and **Worked / Edit / Not worked (Remove)** actions that cleanly remove unworked planned shifts (with Undo).
-- **Cleaner UI & Organization:** 2x2 Budget Snapshot strip, organized Settings section headers, clearer Payslip basis badges, and fixed home widget HIDE/SHOW toggle when app-level hide was active.
+## What's Fixed & Hardened in v2.4.0 (Phase 1)
+- **Security Hardening:**
+  - Closed `#log-shift` PIN lock bypass and added a lock-aware pending-action queue (deep links execute smoothly right after unlock).
+  - Hardened widget privacy: non-exported `WidgetPrivacyReceiver`, automatic home-widget masking while PIN lock is on (toggleable in Settings -> Security).
+  - Upgraded PIN hashing to PBKDF2-SHA256 (100,000 iterations) with automatic seamless upgrade for existing PINs, plus monotonic lockout clock (`SystemClock.elapsedRealtime()`) immune to device clock tampering.
+  - Restricted external URLs to `http`/`https`, whitelisted GitHub update download hosts across every redirect hop, verified downloaded APK signing certificate against the installed app, sanitized restored backup settings, and set `android:allowBackup="false"`.
+- **Android Native Fixes:**
+  - Implemented `WebChromeClient.onShowFileChooser()` + native SAF `pickBackupFile()` so **Backup -> Restore -> Choose file** works inside the APK even after a clean reinstall.
+  - Added dedicated monochrome white-on-transparent `ic_stat_pulse` status-bar notification icons across all 5 screen densities.
+  - Added automatic cleanup of stale `cache/shares/` export files on startup.
+- **Autonomous Background Notifications:**
+  - `ReminderReceiver` now computes live due-date countdowns (`Due today`, `Overdue Xd`) directly from stored active dues JSON every morning and auto-chains upcoming 1-hour planned-shift nudges without needing to reopen the app.
+- **Payroll, Shift, Dues & Importer Logic Fixes:**
+  - Stopped 2nd-cutoff shifts from retroactively mutating 1st-cutoff SSS/PhilHealth brackets.
+  - Fixed 2nd-cutoff catch-up when 1st cutoff had ₱0 earnings.
+  - Preserved `settled` status when editing settled `I Owe` / `Owed to Me` items (with an explicit Settled toggle).
+  - Fixed custom-minute dropdown blanking in Bulk Week (`ensureTimeOpt`).
+  - Fixed December -> January year rollover in the Smart Shift Importer.
+  - Fixed weekly cross-year boundary loss in Insights (`computeYearData`).
+  - Expanded 2027–2028 PH movable holidays and removed dead code.

@@ -14,6 +14,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -26,6 +27,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
@@ -35,6 +37,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -48,6 +51,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.json.JSONObject;
 
@@ -57,10 +61,13 @@ public class MainActivity extends Activity {
     static final String POST_NOTIF_PERM = "android.permission.POST_NOTIFICATIONS";
     static final int REQ_STORAGE = 7;
     static final int REQ_NOTIF = 8;
+    static final int REQ_FILE_CHOOSER = 9;
+    static final int REQ_BACKUP_PICK = 10;
     static final int NOTIF_UPDATE_ID = 2002;
 
     WebView web;
     CancellationSignal fpCancel;
+    ValueCallback<Uri[]> filePathCallback;
     int notifId = 1;
 
     volatile boolean updBusy = false;
@@ -77,6 +84,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         cleanupStaleUpdate();
+        cleanupStaleShares();
         setupAppShortcuts();
         web = new WebView(this);
         web.setBackgroundColor(0xFF07090F);
@@ -89,6 +97,30 @@ public class MainActivity extends Activity {
         s.setMediaPlaybackRequiresUserGesture(true);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         web.addJavascriptInterface(new Bridge(), "AndroidBridge");
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (filePathCallback != null) {
+                    try { filePathCallback.onReceiveValue(null); } catch (Throwable ignored) {}
+                    filePathCallback = null;
+                }
+                filePathCallback = callback;
+                try {
+                    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("*/*");
+                    i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "text/plain", "text/csv", "application/octet-stream"});
+                    startActivityForResult(Intent.createChooser(i, "Choose backup file"), REQ_FILE_CHOOSER);
+                    return true;
+                } catch (Throwable t) {
+                    if (filePathCallback != null) {
+                        try { filePathCallback.onReceiveValue(null); } catch (Throwable ignored) {}
+                        filePathCallback = null;
+                    }
+                    return false;
+                }
+            }
+        });
         web.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
@@ -152,10 +184,94 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_FILE_CHOOSER) {
+            ValueCallback<Uri[]> cb = filePathCallback;
+            filePathCallback = null;
+            if (cb != null) {
+                Uri[] res = null;
+                if (resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+                    res = new Uri[]{ data.getData() };
+                }
+                try { cb.onReceiveValue(res); } catch (Throwable ignored) {}
+            }
+            return;
+        }
+        if (requestCode == REQ_BACKUP_PICK) {
+            if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null) {
+                return;
+            }
+            final Uri uri = data.getData();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    InputStream is = null;
+                    try {
+                        is = getContentResolver().openInputStream(uri);
+                        if (is == null) {
+                            js("window.onBackupFileError&&onBackupFileError(" + jsStr("Could not open selected file.") + ")");
+                            return;
+                        }
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        byte[] buf = new byte[8192];
+                        int n;
+                        long total = 0L;
+                        while ((n = is.read(buf)) != -1) {
+                            total += n;
+                            if (total > 5242880L) {
+                                js("window.onBackupFileError&&onBackupFileError(" + jsStr("Selected file is too large (max 5 MB).") + ")");
+                                return;
+                            }
+                            bos.write(buf, 0, n);
+                        }
+                        String text = bos.toString("UTF-8");
+                        js("window.onBackupFilePicked&&onBackupFilePicked(" + jsStr(text) + ")");
+                    } catch (Throwable t) {
+                        js("window.onBackupFileError&&onBackupFileError(" + jsStr("Could not read selected file.") + ")");
+                    } finally {
+                        if (is != null) try { is.close(); } catch (Throwable ignored) {}
+                    }
+                }
+            }).start();
+        }
+    }
+
     boolean external(Uri u) {
+        if (u == null) return true;
         if (HOST.equals(u.getHost())) return false;
+        String scheme = u.getScheme();
+        if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
+            return true;
+        }
         try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception e) { }
         return true;
+    }
+
+    static boolean isAllowedUpdateHost(String host) {
+        if (host == null || host.length() == 0) return false;
+        String h = host.toLowerCase();
+        return "github.com".equals(h)
+            || h.endsWith(".github.com")
+            || "githubusercontent.com".equals(h)
+            || h.endsWith(".githubusercontent.com");
+    }
+
+    void cleanupStaleShares() {
+        try {
+            File dir = new File(getCacheDir(), "shares");
+            if (!dir.isDirectory()) return;
+            File[] files = dir.listFiles();
+            if (files == null) return;
+            long cutoff = System.currentTimeMillis() - 86400000L;
+            for (int i = 0; i < files.length; i++) {
+                File f = files[i];
+                if (f != null && f.isFile() && f.lastModified() < cutoff) {
+                    f.delete();
+                }
+            }
+        } catch (Throwable ignored) { }
     }
 
     static String mime(String p) {
@@ -224,9 +340,9 @@ public class MainActivity extends Activity {
         } finally {
             if (fis != null) try { fis.close(); } catch (Throwable ignored) {}
         }
-        // Layer 2: Android PackageManager parser pre-check
+        // Layer 2: Android PackageManager parser + signing certificate match pre-check
         try {
-            PackageInfo info = getPackageManager().getPackageArchiveInfo(f.getAbsolutePath(), 0);
+            PackageInfo info = getPackageManager().getPackageArchiveInfo(f.getAbsolutePath(), PackageManager.GET_SIGNATURES);
             if (info == null) {
                 return "APK failed Android package verification (corrupted download).";
             }
@@ -236,6 +352,24 @@ public class MainActivity extends Activity {
             int installed = getInstalledVersionCode();
             if (installed > 0 && info.versionCode <= installed) {
                 return "Downloaded APK (code " + info.versionCode + ") is not newer than installed app.";
+            }
+            PackageInfo instInfo = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES);
+            if (instInfo != null && instInfo.signatures != null && instInfo.signatures.length > 0
+                    && info.signatures != null && info.signatures.length > 0) {
+                boolean matched = false;
+                for (int i = 0; i < instInfo.signatures.length; i++) {
+                    byte[] a = instInfo.signatures[i].toByteArray();
+                    for (int j = 0; j < info.signatures.length; j++) {
+                        if (Arrays.equals(a, info.signatures[j].toByteArray())) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (matched) break;
+                }
+                if (!matched) {
+                    return "APK signing certificate does not match installed SweldoPulse.";
+                }
             }
         } catch (Throwable t) {
             return "Android could not parse the downloaded APK.";
@@ -333,7 +467,8 @@ public class MainActivity extends Activity {
             int flags = PendingIntent.FLAG_UPDATE_CURRENT | 0x04000000;
             PendingIntent pi = PendingIntent.getActivity(MainActivity.this, 3, launch, flags);
             String vLabel = (version != null && version.length() > 0) ? (version.startsWith("v") ? version : "v" + version) : "Update";
-            nb.setSmallIcon(R.mipmap.ic_launcher)
+            nb.setSmallIcon(R.drawable.ic_stat_pulse)
+              .setColor(0xFF4F46E5)
               .setContentTitle("SweldoPulse " + vLabel + " ready")
               .setContentText("Verified and downloaded \u2014 tap to install now.")
               .setContentIntent(pi)
@@ -373,6 +508,10 @@ public class MainActivity extends Activity {
                         URL u = new URL(curUrl);
                         if (!"https".equalsIgnoreCase(u.getProtocol())) {
                             failUpdate(tmp, "Blocked non-HTTPS update URL.");
+                            return;
+                        }
+                        if (!isAllowedUpdateHost(u.getHost())) {
+                            failUpdate(tmp, "Blocked untrusted update host: " + u.getHost());
                             return;
                         }
                         conn = (HttpURLConnection) u.openConnection();
@@ -510,6 +649,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (fpCancel != null) fpCancel.cancel();
+        if (filePathCallback != null) { try { filePathCallback.onReceiveValue(null); } catch (Throwable ignored) {} filePathCallback = null; }
         super.onDestroy();
     }
 
@@ -526,6 +666,34 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void updateWidgetV2(String json) {
             SweldoWidgetProvider.saveJsonAndRefresh(MainActivity.this, json);
+        }
+
+        @JavascriptInterface
+        public void setWidgetPinLocked(boolean locked) {
+            SweldoWidgetProvider.setPinLocked(MainActivity.this, locked);
+        }
+
+        @JavascriptInterface
+        public long getElapsedMs() {
+            return SystemClock.elapsedRealtime();
+        }
+
+        @JavascriptInterface
+        public boolean pickBackupFile() {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                        i.addCategory(Intent.CATEGORY_OPENABLE);
+                        i.setType("*/*");
+                        i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "text/plain", "application/octet-stream"});
+                        startActivityForResult(Intent.createChooser(i, "Choose backup file"), REQ_BACKUP_PICK);
+                    } catch (Throwable t) {
+                        js("window.onBackupFileError&&onBackupFileError(" + jsStr("Could not open file picker.") + ")");
+                    }
+                }
+            });
+            return true;
         }
 
         @JavascriptInterface
@@ -774,6 +942,9 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean downloadUpdate(String url, String version, long expectedSize, boolean autoNotify) {
             if (url == null || !url.startsWith("https://")) return false;
+            try {
+                if (!isAllowedUpdateHost(new URL(url).getHost())) return false;
+            } catch (Throwable t) { return false; }
             if (updBusy) return true;
             // Already downloaded & verified this exact version?
             if ("ready".equals(updState) && version != null && version.equals(updVersion) && verifyApkFile(updateApkFile()) == null) {
@@ -942,8 +1113,18 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void scheduleDueItems(boolean enabled, int hour, int min, String itemsJson) {
+            ReminderReceiver.scheduleDueItems(MainActivity.this, enabled, hour, min, itemsJson);
+        }
+
+        @JavascriptInterface
         public void scheduleDueAlerts(boolean enabled, int hour, int min, String title, String body) {
             ReminderReceiver.scheduleDueAlerts(MainActivity.this, enabled, hour, min, title, body);
+        }
+
+        @JavascriptInterface
+        public void schedulePlannedList(boolean enabled, String shiftsJson) {
+            ReminderReceiver.schedulePlannedList(MainActivity.this, enabled, shiftsJson);
         }
 
         @JavascriptInterface
@@ -1019,7 +1200,7 @@ public class MainActivity extends Activity {
                 launch.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 int flags = PendingIntent.FLAG_UPDATE_CURRENT | 0x04000000;
                 PendingIntent pi = PendingIntent.getActivity(MainActivity.this, 0, launch, flags);
-                nb.setSmallIcon(R.mipmap.ic_launcher).setContentTitle(title).setContentText(body).setContentIntent(pi).setAutoCancel(true);
+                nb.setSmallIcon(R.drawable.ic_stat_pulse).setColor(0xFF4F46E5).setContentTitle(title).setContentText(body).setContentIntent(pi).setAutoCancel(true);
                 nm.notify(notifId++, nb.build());
             } catch (Throwable t) { }
         }
