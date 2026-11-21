@@ -26,8 +26,11 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
         if (intent != null && ACTION_TOGGLE_PRIVACY.equals(intent.getAction())) {
             try {
                 SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-                boolean masked = !sp.getBoolean("widgetMask", false);
-                sp.edit().putBoolean("widgetMask", masked).apply();
+                boolean currentlyMasked = sp.getBoolean("widgetMask", false) || sp.getBoolean("appHide", false);
+                boolean nextMasked = !currentlyMasked;
+                SharedPreferences.Editor ed = sp.edit().putBoolean("widgetMask", nextMasked);
+                if (!nextMasked) ed.putBoolean("appHide", false);
+                ed.apply();
                 refreshAll(ctx);
                 BudgetDueWidgetProvider.refreshAll(ctx);
             } catch (Throwable t) { }

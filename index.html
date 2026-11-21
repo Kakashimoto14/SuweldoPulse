@@ -476,7 +476,23 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 /* ---------- v2.2: PayLater/Hulugan & Utang dues + planned shift check-in ---------- */
 .due-card{padding:13px 14px;border-radius:18px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
 .due-card.settled{opacity:.58}
-.checkin{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border-radius:18px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);color:var(--accent-text)}
+.checkin{display:flex;flex-direction:column;gap:10px;padding:13px 14px;border-radius:18px;background:var(--card);border:1.5px solid var(--accent-soft-border);box-shadow:var(--shadow)}
+.btn.soft-bad{background:var(--bad-soft);color:var(--bad)}
+
+/* ---------- v2.3: UI polish, organized settings, budget snapshot, payslip basis, smart importer ---------- */
+.sec-lbl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);padding:6px 4px 0}
+.sec-lbl:first-child{padding-top:0}
+.bud-snap{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bs-tile{padding:11px 13px;border-radius:16px;background:var(--card);border:1px solid var(--line);text-align:left;display:flex;flex-direction:column;gap:2px}
+.bs-tile span{font-size:11px;font-weight:600;color:var(--t3)}
+.bs-tile b{font-size:15.5px;font-weight:700;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-tile small{font-size:10.5px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-basis{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:99px;font-size:10px;font-weight:700;background:var(--subtle);color:var(--t3);vertical-align:middle}
+.ps-basis.warn{background:var(--warn-soft);color:var(--warn)}
+.ps-basis.ok{background:var(--ok-soft);color:var(--ok)}
+.io-tools{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.io-note-in{width:100%;margin-top:4px;height:28px;padding:0 8px;border-radius:8px;background:var(--card);border:1px solid var(--line);font-size:11.5px;font-weight:500;color:var(--t1)}
+.io-note-in:focus{border-color:var(--accent)}
 
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
 @media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.hero{padding:16px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
@@ -609,11 +625,11 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       </div>
 
       <div class="checkin hidden" id="checkin-card">
-        <div class="row between"><div class="grow" style="min-width:0"><p style="font-size:13px;font-weight:700" id="ci-title">Finished your shift?</p><p style="font-size:11.5px;opacity:.85" id="ci-sub"></p></div><span class="chip">Check-in</span></div>
+        <div class="row between"><div class="grow" style="min-width:0"><p style="font-size:13.5px;font-weight:700;color:var(--t1)" id="ci-title">Finished your shift?</p><p class="card-s num" id="ci-sub"></p></div><span class="chip num" id="ci-badge">Check-in</span></div>
         <div class="grid3">
-          <button type="button" class="btn primary sm press" onclick="resolveCheckin('worked')">Worked</button>
+          <button type="button" class="btn primary sm press" onclick="resolveCheckin('worked')">Worked ✓</button>
           <button type="button" class="btn ghost sm press" onclick="resolveCheckin('edit')">Edit</button>
-          <button type="button" class="btn ghost sm press" onclick="resolveCheckin('cancelled')">Off</button>
+          <button type="button" class="btn soft-bad sm press" onclick="resolveCheckin('remove')">Remove</button>
         </div>
       </div>
 
@@ -640,6 +656,12 @@ input[type=search]::-webkit-search-cancel-button{display:none}
     <!-- ================= BUDGET ================= -->
     <section id="view-budget" class="view">
       <div class="row between"><button type="button" class="btn ghost sm press" onclick="go('home')"><svg class="ic sm"><use href="#i-back"/></svg>Home</button><span class="chip num" id="bud-net">Net: ₱0.00</span></div>
+      <div class="bud-snap">
+        <button type="button" class="bs-tile press" onclick="setBudTab('overview')"><span>Remaining cash</span><b class="num" id="bs-rem">₱0.00</b><small id="bs-rem-sub">After spend</small></button>
+        <button type="button" class="bs-tile press" onclick="setBudTab('expenses')"><span>Cutoff spend</span><b class="num neg" id="bs-spent">₱0.00</b><small id="bs-spent-sub">0 items</small></button>
+        <button type="button" class="bs-tile press" onclick="setBudTab('dues')"><span>Active dues</span><b class="num" id="bs-dues" style="color:var(--warn)">₱0.00</b><small id="bs-dues-sub">PayLater &amp; utang</small></button>
+        <button type="button" class="bs-tile press" onclick="setBudTab('vaults')"><span>Vaults saved</span><b class="num pos-ok" id="bs-vaults">₱0.00</b><small id="bs-vaults-sub">0 goals</small></button>
+      </div>
       <div class="seg" id="bud-tabs">
         <button type="button" data-bt="overview" class="on" onclick="setBudTab('overview')">Overview</button>
         <button type="button" data-bt="expenses" onclick="setBudTab('expenses')">Spend</button>
@@ -797,11 +819,12 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="ps-row hidden" id="ps-allow-row"><span class="k">Allowances &amp; add-ons</span><span class="v pos-ok" id="ps-allow">+₱0.00</span></div>
         <div class="ps-row total"><span class="k">Gross earnings</span><span class="v" id="ps-gross">₱0.00</span></div>
         <p class="ps-group" style="margin-top:18px">Deductions</p>
-        <div class="ps-row"><span class="k">SSS</span><span class="v neg" id="ps-sss">₱0.00</span></div>
-        <div class="ps-row"><span class="k">PhilHealth</span><span class="v neg" id="ps-ph">₱0.00</span></div>
-        <div class="ps-row"><span class="k">Pag-IBIG</span><span class="v neg" id="ps-pi">₱0.00</span></div>
+        <div class="ps-row"><span class="k">SSS<span class="ps-basis hidden" id="ps-sss-tag"></span></span><span class="v neg" id="ps-sss">₱0.00</span></div>
+        <div class="ps-row"><span class="k">PhilHealth<span class="ps-basis hidden" id="ps-ph-tag"></span></span><span class="v neg" id="ps-ph">₱0.00</span></div>
+        <div class="ps-row"><span class="k">Pag-IBIG<span class="ps-basis hidden" id="ps-pi-tag"></span></span><span class="v neg" id="ps-pi">₱0.00</span></div>
         <div class="ps-row"><span class="k">Withholding tax</span><span class="v neg" id="ps-tax">₱0.00</span></div>
         <div class="ps-row"><span class="k">Other / cash advance</span><span class="v neg" id="ps-oth">₱0.00</span></div>
+        <div class="ps-row total"><span class="k">Total deductions</span><span class="v neg" id="ps-tot-ded">−₱0.00</span></div>
         <div class="ps-net"><div><p class="eyebrow" style="color:var(--accent-text);opacity:.8">Net take-home</p><p class="ps-net-sub num hidden" id="ps-net-recon"></p></div><span class="v num" id="ps-net">₱0.00</span></div>
         <p class="note hidden" id="ps-gig-note" style="margin-top:10px"></p>
       </div>
@@ -821,10 +844,11 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Adjustments &amp; deductions</p><p class="card-s">Saved for this cutoff — past cutoffs stay locked</p></div></div>
         <div class="seg" id="ded-mode"><button type="button" data-m="auto" onclick="setDedMode(true)">Auto-estimate</button><button type="button" data-m="manual" onclick="setDedMode(false)">Manual</button></div>
         <div id="ded-auto" class="stack" style="margin-top:14px">
-          <div><label class="lbl" for="stat-mode">When to deduct SSS / PhilHealth / Pag-IBIG</label>
-            <select id="stat-mode" class="field" onchange="setStatOpt()"><option value="split">Split across each cutoff</option><option value="last">On the 2nd cutoff only</option></select></div>
+          <div><label class="lbl" for="stat-mode">When to deduct SSS &amp; PhilHealth</label>
+            <select id="stat-mode" class="field" onchange="setStatOpt()"><option value="first">1st cutoff only (Pag-IBIG every cutoff)</option><option value="split">Split across each cutoff</option><option value="last">2nd cutoff only (Pag-IBIG every cutoff)</option></select></div>
+          <div class="row between"><div><label class="k" for="stat-min" style="font-weight:600;font-size:13.5px;display:block">Min cutoff pay for SSS/PhilHealth</label><span class="card-s">Skip/defer if earnings are below this · 0 = always</span></div><label class="money-field" style="width:128px"><span>₱</span><input id="stat-min" type="number" inputmode="decimal" min="0" step="100" placeholder="2000" oninput="setStatOpt()"></label></div>
           <label class="setting" style="min-height:40px;border:0;padding:0;margin:0"><span class="k" style="font-size:13.5px">Minimum wage earner (no income tax)</span><span class="switch"><input type="checkbox" id="stat-mwe" onchange="setStatOpt()"><i></i></span></label>
-          <p class="note" id="stat-note">Uses 2026 rules: SSS 5% of salary credit, PhilHealth 2.5%, Pag-IBIG 2% (max ₱200), TRAIN tax. Estimates only — your employer's payslip is the final word.</p>
+          <p class="note" id="stat-note">Uses 2026 rules: SSS 5% of MSC (₱250 min), PhilHealth 2.5% (₱250 min), Pag-IBIG 2% of Basic Pay (max ₱100/cutoff). Estimates only — your employer's payslip is the final word.</p>
         </div>
         <div id="ded-manual" class="stack hidden" style="margin-top:14px;gap:10px">
           <div class="row between"><label class="k" for="in-sss" style="font-weight:600">SSS</label><label class="money-field" style="width:150px"><span>₱</span><input id="in-sss" type="number" inputmode="decimal" min="0" step="any" oninput="saveManual()"></label></div>
@@ -857,8 +881,9 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
     <!-- ================= SETTINGS ================= -->
     <section id="view-settings" class="view">
+      <p class="sec-lbl">Payroll &amp; Goals</p>
       <div class="card">
-        <div class="card-h"><div><p class="card-t">Pay</p><p class="card-s">Everything is computed from these</p></div><span class="chip mute">Calabarzon</span></div>
+        <div class="card-h"><div><p class="card-t">Pay &amp; cutoff</p><p class="card-s">Everything is computed from these</p></div><span class="chip mute">Calabarzon</span></div>
         <div class="stack">
           <div><label class="lbl" for="set-area">Area classification</label>
             <select id="set-area" class="field" onchange="applyArea()"><option value="73.75">1st class municipalities — ₱73.75/hr</option><option value="80.63">Extended metro / cities — ₱80.63/hr</option><option value="68.75">2nd–5th class municipalities — ₱68.75/hr</option><option value="custom">Custom rate</option></select></div>
@@ -871,6 +896,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         </div>
       </div>
 
+      <p class="sec-lbl">Alerts &amp; Reminders</p>
       <div class="card">
         <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Notifications</p><p class="card-s">Separate Android channels for shifts &amp; dues</p></div><button type="button" class="btn soft sm press" style="min-height:32px;padding:0 11px" onclick="sendTestNotif()">Test</button></div>
         <div class="setting"><div><p class="k">Daily shift reminder</p><p class="d" id="notif-sub">Daily alert to log your shift</p></div><span class="switch"><input type="checkbox" id="notif-on" onchange="toggleNotif()"><i></i></span></div>
@@ -880,6 +906,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="setting"><div><p class="k">Planned shift nudge</p><p class="d">Alert 1 hour before a planned shift starts</p></div><span class="switch"><input type="checkbox" id="plan-nudge-on" onchange="togglePlanNudge()"><i></i></span></div>
       </div>
 
+      <p class="sec-lbl">Theme &amp; Display</p>
       <div class="card">
         <div class="card-h" style="margin-bottom:12px"><p class="card-t">Appearance</p></div>
         <div class="seg" id="theme-seg"><button type="button" data-m="system" onclick="setThemeMode('system',this)">System</button><button type="button" data-m="light" onclick="setThemeMode('light',this)">Light</button><button type="button" data-m="dark" onclick="setThemeMode('dark',this)">Dark</button><button type="button" data-m="amoled" onclick="setThemeMode('amoled',this)">Black</button></div>
@@ -889,6 +916,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="sw-row"><button type="button" class="theme-sw" data-theme="indigo" onclick="setAccent('indigo')" aria-label="Indigo" title="Indigo" style="background:#4F46E5;color:#4F46E5"></button><button type="button" class="theme-sw" data-theme="purple" onclick="setAccent('purple')" aria-label="Purple" title="Purple" style="background:#9333EA;color:#9333EA"></button><button type="button" class="theme-sw" data-theme="rose" onclick="setAccent('rose')" aria-label="Rose" title="Rose" style="background:#E11D48;color:#E11D48"></button><button type="button" class="theme-sw" data-theme="amber" onclick="setAccent('amber')" aria-label="Amber" title="Amber" style="background:#D97706;color:#D97706"></button><button type="button" class="theme-sw" data-theme="emerald" onclick="setAccent('emerald')" aria-label="Emerald" title="Emerald" style="background:#059669;color:#059669"></button></div>
       </div>
 
+      <p class="sec-lbl">Security &amp; Data</p>
       <div class="card">
         <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Security</p><p class="card-s">Lock the app and protect your logs</p></div></div>
         <div class="setting"><div><p class="k">PIN lock</p><p class="d" id="lock-status">Off</p></div>
@@ -909,8 +937,9 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         </div>
       </div>
 
+      <p class="sec-lbl">App &amp; Updates</p>
       <div class="card">
-        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 1.17.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
+        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.3.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
         <div id="upd-box" class="hidden" style="margin-top:12px">
           <div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div>
           <p class="note" id="upd-notes" style="margin:4px 0 10px"></p>
@@ -1111,11 +1140,18 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
 <div id="io-sheet" class="scrim" onclick="if(event.target===this)closeSheet('io-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">Smart roster import</h2><p class="card-s">Paste from Messenger — preview before saving</p></div><button type="button" class="icon-btn press" onclick="closeSheet('io-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <div class="card flat" style="padding:10px 12px;background:var(--subtle);margin-bottom:10px"><div class="row between" style="margin-bottom:4px"><b style="font-size:12px">Understands crew shorthand</b><button type="button" class="link" style="padding:0" onclick="fillExample()">Insert example</button></div><pre class="muted num" style="font:11px/1.55 ui-monospace,Menlo,monospace;overflow-x:auto">Nov 23: 6-12mn Lobby
-M/W/F 4-10pm Grill
-2026-11-26 | 3-9 | Prepping</pre></div>
-    <textarea id="io-text" class="field" placeholder="Paste your roster or group chat schedule…" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px" oninput="queueIoPreview()"></textarea>
+    <div class="sheet-h"><div><h2 class="sheet-t">Smart shift importer</h2><p class="card-s">Paste any crew roster or use the standard template</p></div><button type="button" class="icon-btn press" onclick="closeSheet('io-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="io-tools">
+      <button type="button" class="fchip press" onclick="pasteIntoIo()">Paste</button>
+      <button type="button" class="fchip press" onclick="copyIoTemplate()">Copy template</button>
+      <button type="button" class="fchip press" onclick="fillExample()">Insert sample</button>
+      <button type="button" class="fchip press" onclick="clearIoText()">Clear</button>
+    </div>
+    <textarea id="io-text" class="field" rows="5" placeholder="Standard template (or paste Messenger text):&#10;Nov 23 | 4:00 PM - 10:00 PM | Lobby&#10;Nov 24 | 6:00 PM - 12:00 AM | Grill&#10;Nov 25 | OFF" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;min-height:112px" oninput="queueIoPreview()"></textarea>
+    <div id="io-wk-row" class="row between hidden" style="margin-top:10px">
+      <span class="card-s" style="margin:0">Weekday schedule applies to:</span>
+      <div class="seg" id="io-wk-seg" style="width:186px"><button type="button" data-wk="0" class="on" onclick="setIoWeek(0)">This week</button><button type="button" data-wk="1" onclick="setIoWeek(1)">Next week</button></div>
+    </div>
     <div id="io-prev-wrap" class="hidden">
       <div class="row between" style="margin-top:10px"><span class="eyebrow" id="io-prev-count">0 shifts detected</span><span class="chip ok num" id="io-prev-gross">₱0.00</span></div>
       <div class="io-prev" id="io-prev-list"></div>
@@ -1136,12 +1172,12 @@ M/W/F 4-10pm Grill
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.2</span></h2><p class="card-s">PayLater &amp; Utang tracker, 3 widgets &amp; rich alerts</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.3</span></h2><p class="card-s">Exact PH crew deductions, smarter import &amp; rock-solid fixes</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:11px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Dues</span><span class="sub">PayLater, Hulugan &amp; Utang tracker inside Budget → Dues (SPayLater, SLoan, GLoan, Atome, IOUs) with term progress &amp; 1-tap Pay.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Widgets</span><span class="sub">3 theme-synced home widgets: Pay Glance (now with 1-tap HIDE/SHOW privacy button), Budget &amp; Dues Glance, and 4×1 Quick Actions Bar.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Alerts</span><span class="sub">Multi-channel Android notifications with morning PayLater due alerts, 1-hour planned-shift nudges, action buttons &amp; Test alert.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Check-in</span><span class="sub">1-tap Home check-in banner after a planned shift ends to confirm Worked, Edit, or Off.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Payslip</span><span class="sub">Exact PH crew deductions: 1st-cutoff SSS &amp; PhilHealth, 2% Basic Pay Pag-IBIG, ₱2,000 minimum cutoff threshold (auto-defers on low cutoffs), plus a clear Total Deductions row.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Fixed</span><span class="sub">Resolved the imported-shift edit bug (guaranteed unique IDs + auto-repair on boot), custom-minute edit dropdowns, and morning-to-noon (8–12) time parsing.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Import</span><span class="sub">Smarter roster importer with a built-in standard template, Copy/Paste buttons, OFF/RD auto-skip, next-week anchoring, and inline editable station tags.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Check-in</span><span class="sub">Confirmation-based planned shifts (including overnight shifts): tap Worked ✓, Edit, or Remove if you didn't work that shift.</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
   </div>
@@ -1172,7 +1208,7 @@ M/W/F 4-10pm Grill
 </div>
 
 <script>
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.3.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', DEBTS_KEY = 'sweldo_pulse_debts_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -1197,7 +1233,9 @@ const today = () => dstr(new Date());
 const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
 const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const dayNum = s => { const [y, m, d] = s.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };
-const tmin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+let _uid = 0;
+function nextId() { const n = Date.now() * 100; _uid = Math.max(_uid + 1, n); return _uid; }
+const tmin = t => { if (!t || !/^\d{1,2}:\d{2}$/.test(t)) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 const t12 = t => { const [h, m] = t.split(':'); const H = +h; return `${H % 12 === 0 ? 12 : H % 12}:${m} ${H >= 12 ? 'PM' : 'AM'}`; };
 const fmtDay = ds => { const d = pd(ds); return `${DOW[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`; };
 
@@ -1206,7 +1244,7 @@ let shifts = [], gigs = [], expenses = [], debts = [];
 let settings = {
   hourlyRate: 73.75, calabarzonArea: '73.75', schedule: 'semi', sss: 0, philhealth: 0, pagibig: 0, tax: 0, otherDed: 0,
   accentTheme: 'indigo', darkMode: false, themeMode: '', budgetNeeds: 70, budgetWants: 20, budgetSavings: 10,
-  notifEnabled: false, notifTime: '22:00', lastNotifDate: '', goal: 0, deductMode: 'split', mwe: false, autoDeduct: null, hide: false, payLag: 0, repo: '', lastUpd: 0,
+  notifEnabled: false, notifTime: '22:00', lastNotifDate: '', goal: 0, deductMode: 'first', statMinGross: 2000, mwe: true, autoDeduct: null, hide: false, payLag: 0, repo: '', lastUpd: 0,
   last: { start: '16:00', end: '22:00', brk: 0 },
   cutoffData: {}, customPresets: [], vaults: [], bills: [], incomeScope: 'all',
   autoDownloadUpd: true, updWifiOnly: true, autoBackup: true, lastAutoBk: 0,
@@ -1243,15 +1281,28 @@ function loadState() {
   if (!Array.isArray(settings.bills)) settings.bills = [];
   if (settings.incomeScope !== 'payroll' && settings.incomeScope !== 'all') settings.incomeScope = 'all';
   if (!hadCutoffData && +settings.otherDed > 0) { const ck = curPeriod().key; settings.cutoffData[ck] = { ...(settings.cutoffData[ck] || {}), otherDed: +settings.otherDed }; settings.otherDed = 0; }
-  try { shifts = normalizeShifts(JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]')); } catch (e) { shifts = []; }
+  if (settings.statMinGross === undefined || settings.statMinGross === null) settings.statMinGross = 2000;
+  let repairedIds = false;
+  try { const rawS = JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]'); shifts = normalizeShifts(rawS, () => { repairedIds = true; }); } catch (e) { shifts = []; }
   try { gigs = normalizeGigs(JSON.parse(localStorage.getItem(GIGS_KEY) || '[]')); } catch (e) { gigs = []; }
   try { expenses = normalizeExpenses(JSON.parse(localStorage.getItem(EXP_KEY) || '[]')); } catch (e) { expenses = []; }
   try { debts = normalizeDebts(JSON.parse(localStorage.getItem(DEBTS_KEY) || '[]')); } catch (e) { debts = []; }
+  if (repairedIds) { try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} }
 }
-function normalizeShifts(arr) {
+function uniqueIdOf(rawId, seen, onRepair) {
+  const n = Number(rawId);
+  if (Number.isSafeInteger(n) && n > 0 && !seen.has(n)) { seen.add(n); return n; }
+  if (onRepair) onRepair();
+  let id = nextId();
+  while (seen.has(id)) id = nextId();
+  seen.add(id);
+  return id;
+}
+function normalizeShifts(arr, onRepair) {
   if (!Array.isArray(arr)) return [];
-  return arr.filter(s => s && /^\d{4}-\d{2}-\d{2}$/.test(s.date) && isFinite(s.gross)).map((s, i) => ({
-    id: s.id || (Date.now() + i), date: s.date, startTime: s.startTime || '', endTime: s.endTime || '', note: s.note || '',
+  const seen = new Set();
+  return arr.filter(s => s && /^\d{4}-\d{2}-\d{2}$/.test(s.date) && isFinite(s.gross)).map(s => ({
+    id: uniqueIdOf(s.id, seen, onRepair), date: s.date, startTime: s.startTime || '', endTime: s.endTime || '', note: s.note || '',
     hourlyRate: +s.hourlyRate || settings.hourlyRate, reg: +s.reg || 0, nd: +s.nd || 0, ot: +s.ot || 0, multiplier: +s.multiplier || 1,
     gross: +s.gross || 0, ndPay: s.ndPay === undefined ? undefined : +s.ndPay, breakMin: +s.breakMin || 0,
     status: (s.status === 'worked' || s.status === 'scheduled' || s.status === 'cancelled') ? s.status : ''
@@ -1259,15 +1310,17 @@ function normalizeShifts(arr) {
 }
 function normalizeGigs(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr.filter(g => g && /^\d{4}-\d{2}-\d{2}$/.test(g.date) && isFinite(g.amount)).map((g, i) => ({
-    id: g.id || (Date.now() + 5000 + i), date: g.date, stream: String(g.stream || 'Side Gig').trim() || 'Side Gig',
+  const seen = new Set();
+  return arr.filter(g => g && /^\d{4}-\d{2}-\d{2}$/.test(g.date) && isFinite(g.amount)).map(g => ({
+    id: uniqueIdOf(g.id, seen), date: g.date, stream: String(g.stream || 'Side Gig').trim() || 'Side Gig',
     title: String(g.title || '').trim(), amount: r2(Math.max(0, +g.amount || 0)), status: g.status === 'pending' ? 'pending' : 'paid'
   }));
 }
 function normalizeExpenses(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr.filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && isFinite(x.amount)).map((x, i) => ({
-    id: x.id || (Date.now() + 9000 + i), date: x.date, cat: x.cat === 'wants' ? 'wants' : 'needs',
+  const seen = new Set();
+  return arr.filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && isFinite(x.amount)).map(x => ({
+    id: uniqueIdOf(x.id, seen), date: x.date, cat: x.cat === 'wants' ? 'wants' : 'needs',
     note: String(x.note || '').trim() || 'Expense', amount: r2(Math.max(0, +x.amount || 0)),
     billId: x.billId || null
   }));
@@ -1276,12 +1329,13 @@ const shiftStatusOf = s => s.status || (s.date > today() ? 'scheduled' : 'worked
 const isShiftActive = s => shiftStatusOf(s) !== 'cancelled';
 let dv = 0, _idx = null, _idxV = -1, _gidx = null, _gidxV = -1, _eidx = null, _eidxV = -1; const _pdc = new Map();
 let _psT = 0;
-const persistShifts = () => { dv++; try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} scheduleAutoBackup(); };
+const persistShifts = () => { dv++; try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} scheduleAutoBackup(); syncDueAndPlanAlarms(); };
 const persistGigs = () => { dv++; try { localStorage.setItem(GIGS_KEY, JSON.stringify(gigs)); } catch (e) {} scheduleAutoBackup(); };
 function normalizeDebts(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr.filter(d => d && d.name && isFinite(d.amount)).map((d, i) => ({
-    id: d.id || (Date.now() + 12000 + i),
+  const seen = new Set();
+  return arr.filter(d => d && d.name && isFinite(d.amount)).map(d => ({
+    id: uniqueIdOf(d.id, seen),
     kind: (d.kind === 'owe' || d.kind === 'owed') ? d.kind : 'paylater',
     name: String(d.name).trim(),
     amount: r2(Math.max(0, +d.amount || 0)),
@@ -1384,6 +1438,7 @@ function buildPeriods() {
   let hi = cur, lo = cur;
   shifts.forEach(s => { const p = periodOf(s.date); if (p.sort > hi.sort) hi = p; if (p.sort < lo.sort) lo = p; });
   gigs.forEach(g => { const p = periodOf(g.date); if (p.sort > hi.sort) hi = p; if (p.sort < lo.sort) lo = p; });
+  expenses.forEach(e => { const p = periodOf(e.date); if (p.sort > hi.sort) hi = p; if (p.sort < lo.sort) lo = p; });
   const sp = periodFromKey(selKey); if (sp.sort > hi.sort) hi = sp; if (sp.sort < lo.sort) lo = sp;
   const keys = []; let p = hi, guard = 0;
   while (guard++ < 80) { keys.push(p.key); if (p.sort <= lo.sort) break; p = periodOf(dstr(addDays(p.start, -1))); }
@@ -1455,25 +1510,66 @@ function totals(list) {
   t.gross = r2(t.gross); t.basic = r2(t.basic); t.nd = r2(t.nd); t.otp = r2(Math.max(0, t.gross - t.basic - t.nd)); t.hrs = t.reg + t.otH; return t;
 }
 
-/* ================= statutory & tax (2026) ================= */
-function estimateStatutory(key, gross) {
+/* ================= statutory & tax (2026 PH Crew Accurate) ================= */
+function estimateStatutory(key, gross, basic) {
   const sch = settings.schedule, perMonth = sch === 'monthly' ? 1 : (sch === 'weekly' ? 52 / 12 : 2);
+  const basePay = (basic !== undefined && basic > 0) ? basic : gross;
   const ym = dstr(periodFromKey(key).start).slice(0, 7);
   const monthActual = shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.gross, 0);
   const monthly = Math.max(monthActual, gross * perMonth);
+  const monthlyBasic = Math.max(basePay * perMonth, shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.reg * s.hourlyRate, 0));
   const msc = Math.min(35000, Math.max(5000, Math.floor((monthly + 250) / 500) * 500));
   const sssM = msc * 0.05;
-  const phM = Math.min(100000, Math.max(10000, monthly)) * 0.025;
-  const piM = monthly <= 1500 ? monthly * 0.01 : Math.min(monthly, 10000) * 0.02;
+  const phM = Math.min(100000, Math.max(10000, monthlyBasic)) * 0.025;
+  // Pag-IBIG: 2% of Basic Pay per cutoff (1% if monthly basic <= 1,500), capped at 200/month
+  const piRate = monthlyBasic <= 1500 ? 0.01 : 0.02;
+  const piCap = 200 / perMonth;
+  const pi = r2(Math.min(piCap, basePay * piRate));
+  const piM = Math.min(200, monthlyBasic * piRate);
+
+  const mode = settings.deductMode || 'first';
+  const minG = Math.max(0, +(settings.statMinGross ?? 2000) || 0);
+  const isFirst = sch === 'semi' && /-1$/.test(key);
+  const isSecond = sch === 'semi' && /-2$/.test(key);
+  let f = 1 / perMonth, skippedLow = false, deferred = false, sssNote = '';
+
+  if (sch === 'semi') {
+    if (mode === 'first') {
+      if (isFirst) {
+        if (minG > 0 && gross < minG) { f = 0; skippedLow = true; sssNote = `below ${peso(minG)}`; }
+        else { f = 1; sssNote = '1st cutoff'; }
+      } else {
+        const firstKey = key.replace(/-2$/, '-1');
+        const firstGross = shiftsIn(firstKey).filter(isShiftActive).reduce((a, s) => a + s.gross, 0);
+        if (minG > 0 && firstGross > 0 && firstGross < minG) {
+          if (gross >= minG) { f = 1; deferred = true; sssNote = 'deferred from 1st'; }
+          else { f = 0; skippedLow = true; sssNote = `below ${peso(minG)}`; }
+        } else {
+          f = 0; sssNote = 'paid on 1st';
+        }
+      }
+    } else if (mode === 'last') {
+      if (isSecond) {
+        if (minG > 0 && gross < minG) { f = 0; skippedLow = true; sssNote = `below ${peso(minG)}`; }
+        else { f = 1; sssNote = '2nd cutoff'; }
+      } else {
+        f = 0; sssNote = '2nd cutoff only';
+      }
+    } else {
+      if (minG > 0 && gross < minG) { f = 0; skippedLow = true; sssNote = `below ${peso(minG)}`; }
+      else { f = 0.5; sssNote = 'split 50%'; }
+    }
+  } else {
+    if (minG > 0 && gross < minG) { f = 0; skippedLow = true; sssNote = `below ${peso(minG)}`; }
+  }
+
   let taxM = 0;
   if (!settings.mwe) {
     const t = Math.max(0, monthly - sssM - phM - piM) * 12;
     const a = t <= 250000 ? 0 : t <= 400000 ? (t - 250000) * .15 : t <= 800000 ? 22500 + (t - 400000) * .20 : t <= 2000000 ? 102500 + (t - 800000) * .25 : t <= 8000000 ? 402500 + (t - 2000000) * .30 : 2202500 + (t - 8000000) * .35;
     taxM = a / 12;
   }
-  const isLast = sch === 'semi' && /-2$/.test(key);
-  const f = (sch === 'semi' && settings.deductMode === 'last') ? (isLast ? 1 : 0) : 1 / perMonth;
-  return { sss: r2(sssM * f), ph: r2(phM * f), pi: r2(piM * f), tax: r2(taxM * f), monthly, msc, f };
+  return { sss: r2(sssM * f), ph: r2(phM * f), pi, tax: r2(taxM / perMonth), monthly, msc, f, skippedLow, deferred, sssNote, piRate };
 }
 const getCutoffExtra = key => (settings.cutoffData && settings.cutoffData[key]) || {};
 function ensureCutoffExtra(key) { if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!settings.cutoffData[key]) settings.cutoffData[key] = {}; return settings.cutoffData[key]; }
@@ -1481,13 +1577,13 @@ const getAllowance = key => r2(Math.max(0, +getCutoffExtra(key).allowance || 0))
 const getOtherDed = key => r2(Math.max(0, +(getCutoffExtra(key).otherDed !== undefined ? getCutoffExtra(key).otherDed : 0) || 0));
 const getManualDed = key => { const m = getCutoffExtra(key).manual; return m ? { sss: +m.sss || 0, ph: +m.ph || 0, pi: +m.pi || 0, tax: +m.tax || 0 } : { sss: +settings.sss || 0, ph: +settings.philhealth || 0, pi: +settings.pagibig || 0, tax: +settings.tax || 0 }; };
 const getActualNet = key => { const v = getCutoffExtra(key).actualNet; return (v === null || v === undefined || v === '') ? null : r2(Math.max(0, +v)); };
-function deductionsFor(key, gross, allow = 0) {
+function deductionsFor(key, gross, allow = 0, basic = 0) {
   const z = { sss: 0, ph: 0, pi: 0, tax: 0, oth: 0, total: 0, est: null };
   const grossAll = r2(gross + allow);
   if (grossAll <= 0) return z;
   let d;
   if (settings.autoDeduct) {
-    if (gross > 0) { const e = estimateStatutory(key, gross); d = { sss: e.sss, ph: e.ph, pi: e.pi, tax: e.tax, est: e }; }
+    if (gross > 0) { const e = estimateStatutory(key, gross, basic); d = { sss: e.sss, ph: e.ph, pi: e.pi, tax: e.tax, est: e }; }
     else d = { sss: 0, ph: 0, pi: 0, tax: 0, est: null };
   } else {
     const m = getManualDed(key); d = { sss: m.sss, ph: m.ph, pi: m.pi, tax: m.tax, est: null };
@@ -1502,7 +1598,7 @@ function deductionsFor(key, gross, allow = 0) {
 function periodData(key) {
   const list = shiftsIn(key); if (_pdc.has(key)) return _pdc.get(key);
   const gList = gigsIn(key);
-  const t = totals(list), allow = getAllowance(key), grossAll = r2(t.gross + allow), d = deductionsFor(key, t.gross, allow), actual = getActualNet(key);
+  const t = totals(list), allow = getAllowance(key), grossAll = r2(t.gross + allow), d = deductionsFor(key, t.gross, allow, t.basic), actual = getActualNet(key);
   const net = r2(Math.max(0, grossAll - d.total));
   const gigPaid = r2(gList.filter(g => g.status !== 'pending').reduce((a, g) => a + g.amount, 0));
   const gigPending = r2(gList.filter(g => g.status === 'pending').reduce((a, g) => a + g.amount, 0));
@@ -1766,32 +1862,44 @@ function renderTrend() {
   }).join(''));
 }
 const DONUT_C = 2 * Math.PI * 46;
+function shiftEndMs(s) {
+  const d = pd(s.date);
+  if (!s.startTime || !s.endTime) return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 0).getTime();
+  const sm = tmin(s.startTime), em = tmin(s.endTime);
+  const endDate = em <= sm ? addDays(d, 1) : d;
+  return new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), Math.floor(em / 60), em % 60, 0).getTime();
+}
 function renderCheckin() {
   const card = $('checkin-card'); if (!card) return;
-  const now = new Date(), td = today(), nowMin = now.getHours() * 60 + now.getMinutes();
+  const nowMs = Date.now();
   const pastPlanned = shifts.filter(s => {
     if (shiftStatusOf(s) !== 'scheduled') return false;
-    if (s.date < td) return true;
-    if (s.date > td) return false;
-    if (!s.startTime || !s.endTime) return false;
-    const sm = tmin(s.startTime), em = tmin(s.endTime);
-    if (em <= sm) return false; // overnight ends tomorrow
-    return nowMin >= em + 10;
-  }).sort(sortShifts);
+    return nowMs >= shiftEndMs(s) + 600000; // 10 mins after shift end (handles overnight shifts accurately)
+  }).sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
   const s = pastPlanned[0];
   checkinShiftId = s ? s.id : null;
   card.classList.toggle('hidden', !s);
   if (!s) return;
-  setText($('ci-title'), `Finished your ${shiftLabel(s)} shift?`);
+  setText($('ci-badge'), pastPlanned.length > 1 ? `1 of ${pastPlanned.length}` : 'Confirm');
+  setText($('ci-title'), `Did you work your ${shiftLabel(s)} shift?`);
   setText($('ci-sub'), `${fmtDay(s.date)}${s.startTime && s.endTime ? ` · ${t12(s.startTime)}–${t12(s.endTime)}` : ''} · ${peso(s.gross)}`);
 }
 function resolveCheckin(act) {
   const id = checkinShiftId; if (!id) return;
   const s = shifts.find(x => x.id === id); if (!s) return;
   if (act === 'edit') { openShift(id); return; }
-  s.status = act === 'cancelled' ? 'cancelled' : 'worked';
+  if (act === 'remove') {
+    shifts = shifts.filter(x => x.id !== id);
+    recalcDay(s.date); persistShifts(); render();
+    toast('Planned shift removed', {
+      label: 'Undo',
+      fn: () => { shifts.push(s); recalcDay(s.date); persistShifts(); render(); toast('Shift restored'); }
+    });
+    return;
+  }
+  s.status = 'worked';
   recalcDay(s.date); persistShifts(); render();
-  toast(act === 'cancelled' ? 'Marked as Off / Cancelled' : 'Confirmed as Worked ✓');
+  toast('Confirmed as Worked ✓');
 }
 function setBudTab(t) {
   ui.budTab = t;
@@ -1824,6 +1932,11 @@ function getNextUpcomingDue() {
   if (active.length) {
     const x = active[0];
     return { name: x.name, amount: x.amount, badge: x.m.label, urgent: x.m.urgent, diff: x.m.diff };
+  }
+  const ck = curPeriod().key, paidIds = new Set(expensesIn(ck).filter(e => e.billId).map(e => e.billId));
+  const unpaidBill = (settings.bills || []).find(b => billDueIn(b, ck) && !paidIds.has(b.id));
+  if (unpaidBill) {
+    return { name: unpaidBill.name, amount: r2(+unpaidBill.amount || 0), badge: 'Cutoff bill due', urgent: false, diff: 5 };
   }
   return null;
 }
@@ -1902,7 +2015,7 @@ function saveDebt() {
     const d = debts.find(x => x.id === editingDebtId);
     if (d) Object.assign(d, { kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
   } else {
-    debts.push({ id: Date.now() + Math.floor(Math.random() * 999), kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
+    debts.push({ id: nextId(), kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
   }
   editingDebtId = null; persistDebts(); closeSheet('debt-sheet'); render(); toast('Saved to Dues');
 }
@@ -1924,11 +2037,11 @@ function payDebt(id) {
     d.paidTerms = Math.min(d.totalTerms, (d.paidTerms || 0) + 1);
     if (d.paidTerms >= d.totalTerms) d.settled = true;
     else if (d.dueDate) d.dueDate = addMonthsStr(d.dueDate, 1);
-    loggedExp = { id: Date.now() + Math.floor(Math.random() * 999), date: payDate, cat: 'needs', note: `${d.name} (${d.paidTerms}/${d.totalTerms})`, amount: d.amount, billId: null };
+    loggedExp = { id: nextId(), date: payDate, cat: 'needs', note: `${d.name} (${d.paidTerms}/${d.totalTerms})`, amount: d.amount, billId: null };
     expenses.push(loggedExp); persistExpenses();
   } else if (d.kind === 'owe') {
     d.settled = true;
-    loggedExp = { id: Date.now() + Math.floor(Math.random() * 999), date: payDate, cat: 'needs', note: `Paid ${d.name}`, amount: d.amount, billId: null };
+    loggedExp = { id: nextId(), date: payDate, cat: 'needs', note: `Paid ${d.name}`, amount: d.amount, billId: null };
     expenses.push(loggedExp); persistExpenses();
   } else {
     d.settled = true;
@@ -1974,6 +2087,17 @@ function renderBudget(net) {
   if (ebw) { ebw.style.transform = `scaleX(${rw.toFixed(3)})`; ebw.className = spW > aw ? 'bad' : (rw > 0.85 ? 'warn' : 'wants'); }
   setText($('bud-net'), 'Net: ' + money(net));
   setText($('bud-period'), (settings.incomeScope === 'all' && gigs.length ? 'All income · ' : 'Payroll · ') + periodFromKey(selKey).label);
+  const actDues = debts.filter(d => !d.settled && d.kind !== 'owed');
+  const duesBal = r2(actDues.reduce((a, d) => a + (d.kind === 'paylater' ? d.amount * Math.max(1, d.totalTerms - d.paidTerms) : d.amount), 0));
+  const vList = Array.isArray(settings.vaults) ? settings.vaults : [];
+  const vTot = r2(vList.reduce((a, v) => a + (+v.saved || 0), 0));
+  if ($('bs-rem')) {
+    setText($('bs-rem'), money(leftAll)); $('bs-rem').style.color = leftAll < 0 ? 'var(--bad)' : '';
+    setText($('bs-rem-sub'), leftAll >= 0 ? 'Available cash' : 'Over cutoff net');
+    setText($('bs-spent'), money(spTot)); setText($('bs-spent-sub'), `${exList.length} item${exList.length === 1 ? '' : 's'}`);
+    setText($('bs-dues'), money(duesBal)); setText($('bs-dues-sub'), actDues.length ? `${actDues.length} active` : 'All clear');
+    setText($('bs-vaults'), money(vTot)); setText($('bs-vaults-sub'), `${vList.length} goal${vList.length === 1 ? '' : 's'}`);
+  }
   if (curView === 'budget') {
     if (ui.budTab === 'expenses') renderExpenses();
     if (ui.budTab === 'dues') renderDues();
@@ -2031,7 +2155,7 @@ function saveBill() {
     const b = settings.bills.find(x => x.id === editingBillId);
     if (b) Object.assign(b, { name, amount, cycle, cat: billCat });
   } else {
-    settings.bills.push({ id: Date.now() + Math.floor(Math.random() * 999), name, amount, cycle, cat: billCat });
+    settings.bills.push({ id: nextId(), name, amount, cycle, cat: billCat });
   }
   editingBillId = null; persistSettings(); closeSheet('bill-sheet'); renderExpenses(); toast('Recurring bill saved');
 }
@@ -2047,7 +2171,7 @@ function markBillPaid(id) {
   const b = (settings.bills || []).find(x => x.id === id); if (!b) return;
   const P = periodFromKey(selKey), cur = curPeriod();
   const date = P.key === cur.key ? today() : P.endStr;
-  const exp = { id: Date.now() + Math.floor(Math.random() * 999), date, cat: b.cat === 'wants' ? 'wants' : 'needs', note: b.name, amount: r2(+b.amount || 0), billId: b.id };
+  const exp = { id: nextId(), date, cat: b.cat === 'wants' ? 'wants' : 'needs', note: b.name, amount: r2(+b.amount || 0), billId: b.id };
   expenses.push(exp); persistExpenses(); render();
   toast(`Paid ${b.name} (${peso(exp.amount)})`, { label: 'Undo', fn: () => { expenses = expenses.filter(x => x.id !== exp.id); persistExpenses(); render(); toast('Payment undone'); } });
 }
@@ -2081,7 +2205,7 @@ function saveExpense() {
   const amt = r2(Math.max(0, parseFloat($('ex-amt').value) || 0));
   if (!(amt > 0)) return toast('Enter an amount');
   const date = $('ex-date').value || today(), note = $('ex-note').value.trim() || (expCat === 'wants' ? 'Wants' : 'Needs');
-  expenses.push({ id: Date.now() + Math.floor(Math.random() * 999), date, cat: expCat, note, amount: amt });
+  expenses.push({ id: nextId(), date, cat: expCat, note, amount: amt });
   persistExpenses(); closeSheet('exp-sheet'); render(); toast(`Logged ${peso(amt)} (${expCat})`);
 }
 function deleteExpense(id) {
@@ -2139,7 +2263,7 @@ function saveVault() {
     const v = settings.vaults.find(x => x.id === editingVaultId);
     if (v) Object.assign(v, { name, target, saved });
   } else {
-    settings.vaults.push({ id: Date.now() + Math.floor(Math.random() * 999), name, target, saved });
+    settings.vaults.push({ id: nextId(), name, target, saved });
   }
   editingVaultId = null; persistSettings(); closeSheet('vault-sheet'); renderVaults(); toast('Vault saved');
 }
@@ -2244,7 +2368,19 @@ function renderPayslip() {
   if (D.allow > 0) setText($('ps-allow'), '+' + peso(D.allow));
   setText($('ps-gross'), peso(D.grossAll));
   setText($('ps-sss'), '−' + peso(d.sss)); setText($('ps-ph'), '−' + peso(d.ph)); setText($('ps-pi'), '−' + peso(d.pi)); setText($('ps-tax'), '−' + peso(d.tax)); setText($('ps-oth'), '−' + peso(d.oth));
+  setText($('ps-tot-ded'), '−' + peso(d.total));
   setText($('ps-net'), peso(D.net));
+  const setTag = (id, txt, cls) => { const el = $(id); if (!el) return; el.classList.toggle('hidden', !txt); if (txt) { setText(el, txt); el.className = 'ps-basis' + (cls ? ' ' + cls : ''); } };
+  if (settings.autoDeduct && d.est) {
+    const tc = d.est.skippedLow ? 'warn' : (d.est.deferred ? 'warn' : '');
+    setTag('ps-sss-tag', d.est.sssNote, tc);
+    setTag('ps-ph-tag', d.est.sssNote, tc);
+    setTag('ps-pi-tag', `${Math.round(d.est.piRate * 100)}% basic`, '');
+  } else {
+    setTag('ps-sss-tag', settings.autoDeduct ? '' : 'manual', '');
+    setTag('ps-ph-tag', settings.autoDeduct ? '' : 'manual', '');
+    setTag('ps-pi-tag', settings.autoDeduct ? '' : 'manual', '');
+  }
   // Actual pay reconciliation
   const badge = $('recon-badge'), msg = $('recon-msg'), sub = $('ps-net-recon'), clr = $('actual-clear');
   if (D.actual === null) {
@@ -2270,8 +2406,10 @@ function renderPayslip() {
     }
   }
   const n = $('stat-note'), capNote = d.capped ? ' Deductions are limited to your total earnings for this cutoff.' : '';
-  if (settings.autoDeduct && d.est) n.textContent = `Based on est. monthly pay ${peso(d.est.monthly)} · SSS credit ${peso(d.est.msc)} · ${settings.mwe ? 'tax-exempt (minimum wage)' : 'TRAIN tax'}. Estimates only — your employer's payslip is the final word.${capNote}`;
-  else n.textContent = "Uses 2026 rules: SSS 5% of salary credit, PhilHealth 2.5%, Pag-IBIG 2% (max ₱200), TRAIN tax. Estimates only — your employer's payslip is the final word." + capNote;
+  if (settings.autoDeduct && d.est) {
+    const lowTxt = d.est.skippedLow ? ` · SSS/PhilHealth skipped (below ${peso(settings.statMinGross || 0)} threshold)` : (d.est.deferred ? ' · includes deferred 1st-cutoff SSS/PhilHealth' : '');
+    n.textContent = `SSS MSC ${peso(d.est.msc)} · Pag-IBIG ${Math.round(d.est.piRate * 100)}% of Basic (${peso(t.basic)}) · ${settings.mwe ? 'MWE tax-exempt' : 'TRAIN tax'}${lowTxt}.${capNote}`;
+  } else n.textContent = "2026 PH Crew rules: SSS 5% MSC (₱250 min), PhilHealth 2.5% (₱250 min), Pag-IBIG 2% of Basic Pay (max ₱100/cutoff)." + capNote;
   const gn = $('ps-gig-note');
   if (gn) {
     gn.classList.toggle('hidden', !(D.gigTotal > 0));
@@ -2296,7 +2434,8 @@ function renderNow() { cancelAnimationFrame(_rq); doRender(); }
 function syncDedUI() {
   $$('#ded-mode button').forEach(b => b.classList.toggle('on', (b.dataset.m === 'auto') === !!settings.autoDeduct));
   $('ded-auto').classList.toggle('hidden', !settings.autoDeduct); $('ded-manual').classList.toggle('hidden', !!settings.autoDeduct);
-  $('stat-mode').value = settings.deductMode || 'split'; $('stat-mwe').checked = !!settings.mwe;
+  $('stat-mode').value = settings.deductMode || 'first'; $('stat-mwe').checked = !!settings.mwe;
+  const smEl = $('stat-min'); if (smEl && document.activeElement !== smEl) smEl.value = (settings.statMinGross !== undefined && settings.statMinGross !== null) ? settings.statMinGross : 2000;
   const k = selKey || curPeriod().key, m = getManualDed(k), allow = getAllowance(k), oth = getOtherDed(k), act = getActualNet(k);
   const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = (v !== null && v !== undefined && v !== 0 && v !== '') ? v : ''; };
   set('in-sss', m.sss); set('in-ph', m.ph); set('in-pi', m.pi); set('in-tax', m.tax); set('in-allow', allow); set('in-oth', oth);
@@ -2331,15 +2470,22 @@ function clearActualPay() {
 }
 function fillFromEstimate() {
   const k = selKey || curPeriod().key, D = periodData(k); if (D.t.gross <= 0) return toast('Log shifts in this cutoff first');
-  const e = estimateStatutory(k, D.t.gross); ensureCutoffExtra(k).manual = { sss: e.sss, ph: e.ph, pi: e.pi, tax: e.tax };
+  const e = estimateStatutory(k, D.t.gross, D.t.basic); ensureCutoffExtra(k).manual = { sss: e.sss, ph: e.ph, pi: e.pi, tax: e.tax };
   persistSettings(); syncDedUI(); render(); toast('Filled from estimate');
 }
-function setStatOpt() { settings.deductMode = $('stat-mode').value; settings.mwe = $('stat-mwe').checked; persistSettings(); render(); }
+function setStatOpt() { settings.deductMode = $('stat-mode').value; settings.mwe = $('stat-mwe').checked; if ($('stat-min')) settings.statMinGross = Math.max(0, parseFloat($('stat-min').value) || 0); persistSettingsDebounced(); render(); }
 
 /* ================= shift sheet ================= */
 function populateTimes() {
   let h = ''; for (let m = 0; m < 1440; m += 30) { const v = `${p2(Math.floor(m / 60))}:${p2(m % 60)}`; h += `<option value="${v}">${t12(v)}</option>`; }
   ['m-start', 'm-end', 'notif-time', 'due-notif-time', 'bk-start', 'bk-end'].forEach(id => { if ($(id)) $(id).innerHTML = h; });
+}
+function ensureTimeOpt(sel, val) {
+  if (!sel || !val || !/^\d{2}:\d{2}$/.test(val)) return;
+  if ([...sel.options].some(o => o.value === val)) { sel.value = val; return; }
+  const opt = document.createElement('option'); opt.value = val; opt.textContent = t12(val);
+  const targetM = tmin(val), after = [...sel.options].find(o => tmin(o.value) > targetM);
+  sel.insertBefore(opt, after || null); sel.value = val;
 }
 function setBreak(n) { modalBrk = n; $$('#m-break button').forEach(b => b.classList.toggle('on', +b.dataset.b === n)); updatePreview(); }
 function priorHours(date, startMin, excludeId) {
@@ -2407,12 +2553,12 @@ function openShift(id = null) {
   $('g-date').value = P.key === cur.key ? today() : P.endStr; $('g-amt').value = ''; $('g-title').value = ''; $('g-stream').value = ''; setGigStatus('paid');
   $('m-rate-box').classList.add('hidden');
   if (s) {
-    $('m-date').value = s.date; $('m-start').value = s.startTime || '16:00'; $('m-end').value = s.endTime || '22:00';
+    $('m-date').value = s.date; ensureTimeOpt($('m-start'), s.startTime || '16:00'); ensureTimeOpt($('m-end'), s.endTime || '22:00');
     $('m-rate').value = s.hourlyRate || settings.hourlyRate;
     $('m-mult').value = s.multiplier.toFixed(2); if (!$('m-mult').value) $('m-mult').value = '1.00'; $('m-note').value = s.note || ''; modalBrk = s.breakMin || 0; modalStatus = shiftStatusOf(s); onDateChange(true);
   } else {
     const L = settings.last;
-    $('m-date').value = P.key === cur.key ? today() : P.endStr; $('m-start').value = L.start; $('m-end').value = L.end; $('m-rate').value = settings.hourlyRate; $('m-note').value = ''; modalBrk = L.brk || 0; onDateChange(false);
+    $('m-date').value = P.key === cur.key ? today() : P.endStr; ensureTimeOpt($('m-start'), L.start || '16:00'); ensureTimeOpt($('m-end'), L.end || '22:00'); $('m-rate').value = settings.hourlyRate; $('m-note').value = ''; modalBrk = L.brk || 0; onDateChange(false);
   }
   setLogKind('shift'); setShiftStatus(modalStatus); renderPresets(); renderStationChips(); setBreak(modalBrk); openSheet('shift-sheet');
 }
@@ -2452,7 +2598,7 @@ function saveGig() {
     const g = gigs.find(x => x.id === editingGigId);
     if (g) Object.assign(g, { date, stream, title, amount: amt, status });
   } else {
-    gigs.push({ id: Date.now() + Math.floor(Math.random() * 999), date, stream, title, amount: amt, status });
+    gigs.push({ id: nextId(), date, stream, title, amount: amt, status });
   }
   persistGigs(); selKey = periodOf(date).key; closeShift(); render();
   toast(wasEdit ? 'Side gig updated' : `Added ${peso(amt)} (${stream})`);
@@ -2535,7 +2681,8 @@ function overlaps(v) {
 }
 async function saveShift() {
   const v = readModal();
-  if (!v.r) return toast('End time must differ from start time');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v.date)) return toast('Choose a valid shift date');
+  if (!v.start || !v.end || !v.r) return toast('End time must differ from start time');
   if (v.r.gross <= 0) return toast('Choose a valid time range');
   if (modalStatus !== 'cancelled' && v.r.paid > 16 && !await askConfirm({ title: 'Very long shift', body: `This shift is <b>${fh(v.r.paid)}</b> of paid time. Is that right?`, ok: 'Yes, save it', danger: false })) return;
   const ov = overlaps(v);
@@ -2544,7 +2691,7 @@ async function saveShift() {
   if (editingId !== null) {
     const s = shifts.find(x => x.id === editingId);
     if (s) { old = s.date; Object.assign(s, { date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: v.rate, multiplier: v.mult, breakMin: v.brk, status: modalStatus }); }
-  } else shifts.push({ id: Date.now() + Math.floor(Math.random() * 999), date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: v.rate, reg: 0, nd: 0, ot: 0, multiplier: v.mult, gross: 0, breakMin: v.brk, status: modalStatus });
+  } else shifts.push({ id: nextId(), date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: v.rate, reg: 0, nd: 0, ot: 0, multiplier: v.mult, gross: 0, breakMin: v.brk, status: modalStatus });
   recalcDay(v.date); if (old && old !== v.date) recalcDay(old);
   settings.last = { start: v.start, end: v.end, brk: v.brk }; persistSettings(); persistShifts();
   const P = periodOf(v.date); selKey = P.key; const wasEdit = editingId !== null;
@@ -2605,7 +2752,7 @@ function saveBulkShifts() {
   days.forEach((ds, idx) => {
     if (shifts.some(s => s.date === ds && s.startTime === st && s.endTime === en && isShiftActive(s))) { skipped++; return; }
     const hol = holidayFor(ds);
-    shifts.push({ id: Date.now() + idx + Math.floor(Math.random() * 999), date: ds, startTime: st, endTime: en, note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: hol ? hol.mult : 1, gross: 0, breakMin: bulkBrk, status: ds > td ? 'scheduled' : 'worked' });
+    shifts.push({ id: nextId(), date: ds, startTime: st, endTime: en, note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: hol ? hol.mult : 1, gross: 0, breakMin: bulkBrk, status: ds > td ? 'scheduled' : 'worked' });
     recalcDay(ds); added++;
   });
   if (added) { settings.last = { start: st, end: en, brk: bulkBrk }; persistSettings(); persistShifts(); selKey = periodOf(days[days.length - 1]).key; }
@@ -2724,11 +2871,37 @@ async function clearCutoff() {
   toast(`${list.length} shift${list.length > 1 ? 's' : ''} deleted`, { label: 'Undo', fn: () => { shifts.push(...list); persistShifts(); render(); toast('Shifts restored'); } });
 }
 
-/* ================= smart roster import / export ================= */
-let _ioParsed = [], _ioPrevT = 0;
-function openIO() { openSheet('io-sheet'); updateIoPreview(); }
+/* ================= smart roster import / export (v2.3) ================= */
+let _ioParsed = [], _ioPrevT = 0, _ioWeekOff = null;
+const IO_TEMPLATE = () => {
+  const d0 = addDays(new Date(), 1), d1 = addDays(new Date(), 2), d2 = addDays(new Date(), 3);
+  return `${MON[d0.getMonth()]} ${d0.getDate()} | 4:00 PM - 10:00 PM | Lobby\n${MON[d1.getMonth()]} ${d1.getDate()} | 6:00 PM - 12:00 AM | Grill\n${MON[d2.getMonth()]} ${d2.getDate()} | OFF`;
+};
+function openIO() {
+  const dow = new Date().getDay();
+  _ioWeekOff = (dow === 0 || dow === 6) ? 1 : 0; // On Sat/Sun, default weekday-only schedules to Next week
+  $$('#io-wk-seg button').forEach(b => b.classList.toggle('on', +b.dataset.wk === _ioWeekOff));
+  openSheet('io-sheet'); updateIoPreview();
+}
+function setIoWeek(off) {
+  _ioWeekOff = off ? 1 : 0;
+  $$('#io-wk-seg button').forEach(b => b.classList.toggle('on', +b.dataset.wk === _ioWeekOff));
+  updateIoPreview();
+}
+async function copyIoTemplate() {
+  toast((await copyText(IO_TEMPLATE())) ? 'Standard template copied' : "Couldn't copy template");
+}
+async function pasteIntoIo() {
+  try {
+    const txt = await navigator.clipboard.readText();
+    if (txt) { $('io-text').value = txt; updateIoPreview(); toast('Pasted from clipboard'); return; }
+  } catch (e) {}
+  $('io-text').focus(); toast('Long-press inside the box to paste');
+}
+function clearIoText() { $('io-text').value = ''; updateIoPreview(); }
 function fillExample() {
-  $('io-text').value = 'Nov. 23 - 6-12mn (Mon.)\nLOBBY\nM/W/F 4-10pm Grill\n2026-11-26 | 3-9 | Prepping';
+  const d0 = addDays(new Date(), 1), d1 = addDays(new Date(), 2), d2 = addDays(new Date(), 3);
+  $('io-text').value = `${MON[d0.getMonth()]}. ${d0.getDate()} - 6-12mn (${DOW[d0.getDay()]}.)\nLOBBY\n${MON[d1.getMonth()]} ${d1.getDate()} | 8-12 | Prepping\n${MON[d2.getMonth()]} ${d2.getDate()} | OFF\nM/W/F 4-10pm Grill`;
   updateIoPreview();
 }
 async function copyText(text) {
@@ -2745,8 +2918,8 @@ async function exportText() {
 function parseTimePart(raw) {
   if (!raw) return null;
   const c = raw.trim().toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
-  if (c === '12mn' || c === 'mn' || c === '24:00') return { h: 0, m: 0, mer: 'mn' };
-  if (c === '12nn' || c === 'nn') return { h: 12, m: 0, mer: 'nn' };
+  if (c === '12mn' || c === 'mn' || c === 'midnight' || c === '24:00') return { h: 0, m: 0, mer: 'mn' };
+  if (c === '12nn' || c === 'nn' || c === 'noon') return { h: 12, m: 0, mer: 'nn' };
   const m = c.match(/^(\d{1,2})(?::(\d{2}))?(am|pm|a|p|mn|nn)?$/);
   if (!m) return null;
   const h = +m[1], mi = +(m[2] || 0);
@@ -2772,6 +2945,7 @@ function resolveTimeRange(rawA, rawB) {
   else if (!a.mer && b.mer) {
     h2 = to24(b, b.mer);
     if (b.mer === 'mn') h1 = (a.h < 12 && a.h >= 1) ? a.h + 12 : a.h;
+    else if (b.mer === 'nn') h1 = a.h === 12 ? 0 : a.h;
     else if (b.mer === 'pm') h1 = (a.h <= b.h && a.h < 12) ? a.h + 12 : a.h;
     else h1 = (a.h > b.h && a.h < 12) ? a.h + 12 : a.h;
   } else if (a.mer && !b.mer) {
@@ -2780,20 +2954,25 @@ function resolveTimeRange(rawA, rawB) {
     else { h2 = b.h; if (h2 <= h1 && h2 + 12 <= 23 && (h2 + 12 - h1) <= 14) h2 += 12; }
   } else {
     if (a.h > 12 || b.h > 12) { h1 = a.h; h2 = b.h; }
-    else if (a.h >= 1 && a.h <= 6 && b.h > a.h) { h1 = a.h + 12; h2 = b.h === 12 ? 0 : b.h + 12; }
-    else if (a.h >= 7 && a.h <= 11 && b.h >= 1 && b.h <= 7) { h1 = a.h; h2 = b.h + 12; }
-    else if (a.h === 12 && b.h >= 1 && b.h <= 10) { h1 = 12; h2 = b.h + 12; }
+    else if (a.h >= 7 && a.h <= 11 && b.h === 12) { h1 = a.h; h2 = 12; } // morning to noon (e.g. 8-12 -> 8am-12pm)
+    else if (a.h >= 1 && a.h <= 6 && b.h > a.h) { h1 = a.h + 12; h2 = b.h === 12 ? 0 : b.h + 12; } // afternoon/closing (e.g. 3-9, 6-12)
+    else if (a.h >= 7 && a.h <= 11 && b.h >= 1 && b.h <= 7) { h1 = a.h; h2 = b.h + 12; } // morning to afternoon (e.g. 10-4)
+    else if (a.h === 12 && b.h >= 1 && b.h <= 10) { h1 = 12; h2 = b.h + 12; } // noon to evening (e.g. 12-6)
     else { h1 = a.h; h2 = b.h === 12 ? 0 : b.h; }
   }
   if (h1 > 23 || h2 > 23) return null;
   const s = `${p2(h1)}:${p2(a.m)}`, e = `${p2(h2)}:${p2(b.m)}`;
   return s === e ? null : { start: s, end: e };
 }
+const MM_MAP = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+const MON_RE_STR = '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
 function parseDateStrict(line) {
-  let m = line.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${p2(m[2])}-${p2(m[3])}`;
-  const MM = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
-  m = line.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:,?\s*(\d{4}))?\b/i);
-  if (m) return `${m[3] || new Date().getFullYear()}-${p2(MM[m[1].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[1].toLowerCase().slice(0, 3)])}-${p2(m[2])}`;
+  let m = line.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m && +m[2] >= 1 && +m[2] <= 12 && +m[3] >= 1 && +m[3] <= 31) return `${m[1]}-${p2(m[2])}-${p2(m[3])}`;
+  m = line.match(new RegExp(`\\b(${MON_RE_STR})\\.?\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?\\b`, 'i'));
+  if (m && +m[2] >= 1 && +m[2] <= 31) return `${m[3] || new Date().getFullYear()}-${p2(MM_MAP[m[1].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[1].toLowerCase().slice(0, 3)])}-${p2(m[2])}`;
+  m = line.match(new RegExp(`\\b(\\d{1,2})\\s+(${MON_RE_STR})\\.?(?:,?\\s*(\\d{4}))?\\b`, 'i'));
+  if (m && +m[1] >= 1 && +m[1] <= 31) return `${m[3] || new Date().getFullYear()}-${p2(MM_MAP[m[2].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[2].toLowerCase().slice(0, 3)])}-${p2(m[1])}`;
   m = line.match(/(?:^|\s)(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=\s|$|[-|:])/);
   if (m && +m[1] >= 1 && +m[1] <= 12 && +m[2] >= 1 && +m[2] <= 31) {
     let y = m[3] || String(new Date().getFullYear()); if (y.length === 2) y = '20' + y;
@@ -2801,9 +2980,19 @@ function parseDateStrict(line) {
   }
   return null;
 }
-function parseDowTokens(prefix) {
+function stripDateFromLine(line) {
+  return line
+    .replace(/\d{4}-\d{1,2}-\d{1,2}/, ' ')
+    .replace(new RegExp(`\\b${MON_RE_STR}\\.?\\s+\\d{1,2}(?:,?\\s*\\d{4})?\\b`, 'i'), ' ')
+    .replace(new RegExp(`\\b\\d{1,2}\\s+${MON_RE_STR}\\.?(?:,?\\s*\\d{4})?\\b`, 'i'), ' ')
+    .replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/, ' ');
+}
+function isOffLine(s) {
+  return /^(?:day\s*off|rest\s*day|off|rd|vl|sl|leave|no\s*duty|no\s*shift|none|[-–—]+)$/i.test(s.trim());
+}
+function parseDowTokens(prefix, weekOff = 0) {
   const MAP = { mon: 0, monday: 0, m: 0, tue: 1, tues: 1, tuesday: 1, tu: 1, wed: 2, wednesday: 2, w: 2, thu: 3, thur: 3, thurs: 3, thursday: 3, th: 3, fri: 4, friday: 4, f: 4, sat: 5, saturday: 5, sa: 5, sun: 6, sunday: 6, su: 6 };
-  const clean = prefix.replace(/[()]/g, ' ').trim();
+  const clean = prefix.replace(/[():]/g, ' ').trim();
   if (!clean) return [];
   const toks = clean.split(/[\s,/+&]+/).filter(Boolean);
   if (!toks.length || toks.length > 7) return [];
@@ -2813,22 +3002,33 @@ function parseDowTokens(prefix) {
     if (MAP[k] === undefined) return [];
     if (!idxs.includes(MAP[k])) idxs.push(MAP[k]);
   }
-  const mon = mondayOf(new Date());
+  const mon = addDays(mondayOf(new Date()), weekOff * 7);
   return idxs.map(i => dstr(addDays(mon, i)));
+}
+function cleanNoteText(s) {
+  return (s || '')
+    .replace(/^\(?\s*(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(?:day)?\.?\s*\)?\s*[-|:•]*\s*/i, '')
+    .replace(/^[-|•:]+\s*/, '')
+    .replace(/\s*[-|•:]+$/, '')
+    .trim();
 }
 function parseScheduleText(raw) {
   const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const reRange = /\b(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn|a|p)\.?|\b12mn\b|\b12nn\b|\d{1,2}(?::\d{2})?)\s*(?:-|–|—|\bto\b)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn|a|p)\.?|\b12mn\b|\b12nn\b|\d{1,2}(?::\d{2})?)\b/i;
   const out = [];
-  let ctxDate = null;
+  const seenKeys = new Set();
+  let ctxDate = null, usedDow = false;
   lines.forEach(line => {
     const strictDate = parseDateStrict(line);
-    const cleaned = strictDate ? line.replace(/\d{4}-\d{1,2}-\d{1,2}/, ' ').replace(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2}(?:,?\s*\d{4})?\b/i, ' ').replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/, ' ') : line;
+    const cleaned = strictDate ? stripDateFromLine(line) : line;
+    const remClean = cleaned.replace(/[|:-]+/g, ' ').trim();
+    if (isOffLine(remClean) || isOffLine(line)) { ctxDate = null; return; }
     const tm = cleaned.match(reRange);
     if (!tm) {
       if (strictDate) { ctxDate = strictDate; return; }
       const l = out[out.length - 1];
-      if (l && !l.labeled) { l.note = line; l.labeled = true; }
+      const cn = cleanNoteText(line);
+      if (l && !l.labeled && cn && !isOffLine(cn) && !parseDowTokens(cn, 0).length) { l.note = cn; l.labeled = true; }
       return;
     }
     const tr = resolveTimeRange(tm[1], tm[2]);
@@ -2837,29 +3037,34 @@ function parseScheduleText(raw) {
     if (strictDate) { dates = [strictDate]; ctxDate = strictDate; }
     else {
       const pre = cleaned.slice(0, tm.index).replace(/[-|:•]+$/, '').trim();
-      const dows = parseDowTokens(pre);
-      if (dows.length) dates = dows;
+      const dows = parseDowTokens(pre, _ioWeekOff || 0);
+      if (dows.length) { dates = dows; usedDow = true; }
       else if (ctxDate) dates = [ctxDate];
       else dates = [dstr(addDays(new Date(), out.length))];
     }
     let note = '', labeled = false;
     const parts = line.split('|').map(x => x.trim());
-    if (parts.length >= 3 && parts[2]) { note = parts[2]; labeled = true; }
+    if (parts.length >= 3 && parts[2] && !isOffLine(parts[2])) { note = cleanNoteText(parts[2]); labeled = !!note; }
     else {
-      const after = cleaned.slice(tm.index + tm[0].length).trim().replace(/^\([a-zA-Z.]+\)\s*/, '').replace(/^[-|•:]+\s*/, '').trim();
-      if (after) { note = after; labeled = true; }
+      const after = cleanNoteText(cleaned.slice(tm.index + tm[0].length));
+      if (after && !isOffLine(after)) { note = after; labeled = true; }
     }
     dates.forEach(date => {
+      const sig = `${date}|${tr.start}|${tr.end}`;
+      if (seenKeys.has(sig)) return;
+      seenKeys.add(sig);
       const hol = holidayFor(date), mult = hol ? hol.mult : 1;
       const r = calcPay({ start: tr.start, end: tr.end, mult, rate: settings.hourlyRate, brk: 0, prior: 0 });
       const dup = shifts.some(s => s.date === date && s.startTime === tr.start && s.endTime === tr.end && isShiftActive(s));
       out.push({ date, start: tr.start, end: tr.end, note, labeled, mult, hol: hol ? hol.name : '', gross: r ? r.gross : 0, dup, checked: !dup });
     });
   });
+  if ($('io-wk-row')) $('io-wk-row').classList.toggle('hidden', !usedDow);
   return out;
 }
 function queueIoPreview() { clearTimeout(_ioPrevT); _ioPrevT = setTimeout(updateIoPreview, 130); }
 function toggleIoRow(i, on) { if (_ioParsed[i]) { _ioParsed[i].checked = !!on; syncIoSummary(); } }
+function editIoNote(i, val) { if (_ioParsed[i]) { _ioParsed[i].note = val.trim(); } }
 function syncIoSummary() {
   const sel = _ioParsed.filter(x => x.checked);
   const tot = r2(sel.reduce((a, x) => a + x.gross, 0));
@@ -2871,16 +3076,17 @@ function syncIoSummary() {
 function updateIoPreview() {
   const raw = ($('io-text').value || '').trim();
   const wrap = $('io-prev-wrap');
-  if (!raw) { _ioParsed = []; wrap.classList.add('hidden'); $('io-imp-btn').disabled = false; setText($('io-imp-btn'), 'Import shifts'); return; }
+  if (!raw) { _ioParsed = []; wrap.classList.add('hidden'); if ($('io-wk-row')) $('io-wk-row').classList.add('hidden'); $('io-imp-btn').disabled = false; setText($('io-imp-btn'), 'Import shifts'); return; }
   _ioParsed = parseScheduleText(raw);
   wrap.classList.toggle('hidden', !_ioParsed.length);
   if (!_ioParsed.length) { $('io-imp-btn').disabled = false; setText($('io-imp-btn'), 'Import shifts'); return; }
   setHTML($('io-prev-list'), _ioParsed.map((o, i) =>
-    `<label class="io-row${o.dup ? ' dup' : ''}">` +
-    `<input type="checkbox"${o.checked ? ' checked' : ''} onchange="toggleIoRow(${i},this.checked)">` +
+    `<div class="io-row${o.dup ? ' dup' : ''}">` +
+    `<input type="checkbox"${o.checked ? ' checked' : ''} onchange="toggleIoRow(${i},this.checked)" aria-label="Select shift">` +
     `<div class="grow" style="min-width:0"><p style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtDay(o.date)} · ${t12(o.start)}–${t12(o.end)}</p>` +
-    `<p class="card-s">${esc(o.note || 'Shift')}${o.hol ? ` · ${o.mult}× ${esc(o.hol)}` : ''}${o.dup ? ' · Already logged' : ''}</p></div>` +
-    `<b class="num">${peso(o.gross)}</b></label>`
+    `<p class="card-s">${o.hol ? `${o.mult}× ${esc(o.hol)}` : 'Regular'}${o.dup ? ' · Already logged' : ''}</p>` +
+    `<input class="io-note-in" value="${esc(o.note)}" placeholder="Station / note (optional)" oninput="editIoNote(${i},this.value)"></div>` +
+    `<b class="num">${peso(o.gross)}</b></div>`
   ).join(''));
   syncIoSummary();
 }
@@ -2888,15 +3094,15 @@ function importText() {
   const raw = $('io-text').value.trim(); if (!raw) return toast('Paste your schedule first');
   if (!_ioParsed.length) _ioParsed = parseScheduleText(raw);
   const picked = _ioParsed.filter(x => x.checked);
-  if (!picked.length) return toast(_ioParsed.length ? 'Select at least one shift to import' : 'No valid shifts found — check the time format');
+  if (!picked.length) return toast(_ioParsed.length ? 'Select at least one shift to import' : 'No valid shifts found — try the standard template');
   const td = today(), days = new Set();
-  picked.forEach((o, idx) => {
-    shifts.push({ id: Date.now() + idx + Math.floor(Math.random() * 999), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: o.mult, gross: 0, breakMin: 0, status: o.date > td ? 'scheduled' : 'worked' });
+  picked.forEach(o => {
+    shifts.push({ id: nextId(), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: o.mult, gross: 0, breakMin: 0, status: o.date > td ? 'scheduled' : 'worked' });
     days.add(o.date);
   });
   days.forEach(recalcDay);
   selKey = periodOf([...days].sort().pop()).key;
-  $('io-text').value = ''; _ioParsed = []; $('io-prev-wrap').classList.add('hidden');
+  $('io-text').value = ''; _ioParsed = []; $('io-prev-wrap').classList.add('hidden'); if ($('io-wk-row')) $('io-wk-row').classList.add('hidden');
   persistShifts(); render(); closeSheet('io-sheet');
   toast(`Imported ${picked.length} shift${picked.length > 1 ? 's' : ''}`);
 }
@@ -3386,7 +3592,7 @@ function payslipText() {
   const P = periodFromKey(selKey), D = periodData(selKey);
   const lines = [`SweldoPulse payslip — ${P.label}`, `${D.t.n} shift${D.t.n === 1 ? '' : 's'} · ${fh(D.t.hrs)}`];
   if (D.allow > 0) lines.push(`Allowances: +${peso(D.allow)}`);
-  lines.push(`Gross: ${peso(D.grossAll)}`, `SSS: -${peso(D.d.sss)}`, `PhilHealth: -${peso(D.d.ph)}`, `Pag-IBIG: -${peso(D.d.pi)}`, `Tax: -${peso(D.d.tax)}`, `Other: -${peso(D.d.oth)}`, `Net take-home: ${peso(D.net)}`);
+  lines.push(`Gross: ${peso(D.grossAll)}`, `SSS: -${peso(D.d.sss)}`, `PhilHealth: -${peso(D.d.ph)}`, `Pag-IBIG: -${peso(D.d.pi)}`, `Tax: -${peso(D.d.tax)}`, `Other: -${peso(D.d.oth)}`, `Total deductions: -${peso(D.d.total)}`, `Net take-home: ${peso(D.net)}`);
   if (D.actual !== null) { const diff = r2(D.actual - D.net); lines.push(`Actual received: ${peso(D.actual)} (${Math.abs(diff) < 0.01 ? 'Matched' : (diff < 0 ? '-' + peso(Math.abs(diff)) + ' short' : '+' + peso(diff) + ' over')})`); }
   return lines.join('\n');
 }
@@ -3396,7 +3602,7 @@ async function viewPayslip() {
   const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d, W = 1080;
   const rows = [['Basic pay', t.basic], ['Night differential', t.nd], ['Overtime & holiday', t.otp]];
   if (D.allow > 0) rows.push(['Allowances & add-ons', D.allow]);
-  rows.push(['Gross pay', D.grossAll, 1], ['SSS', -d.sss], ['PhilHealth', -d.ph], ['Pag-IBIG', -d.pi], ['Withholding tax', -d.tax], ['Other deductions', -d.oth]);
+  rows.push(['Gross pay', D.grossAll, 1], ['SSS', -d.sss], ['PhilHealth', -d.ph], ['Pag-IBIG', -d.pi], ['Withholding tax', -d.tax], ['Other deductions', -d.oth], ['Total deductions', -d.total, 1]);
   if (D.actual !== null) rows.push(['Actual received', D.actual, 1]);
   const H = 560 + rows.length * 78 + 250, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#161B33'); g.addColorStop(1, '#07090F'); x.fillStyle = g; x.fillRect(0, 0, W, H);
