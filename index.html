@@ -56,22 +56,34 @@ input,select,textarea{outline:none}
 .press{transition:transform .12s var(--ease),opacity .12s linear}
 .press:active{transform:scale(.97)}
 
-/* ---------- lock-first: nothing of the app is visible while locked ---------- */
+/* ---------- lock-first: upgraded theme-aware glass PIN screen ---------- */
 html.locked #app,html.locked #sp-splash,html.locked #toast{visibility:hidden}
-#sp-lock{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;padding:24px;
-  background:radial-gradient(120% 80% at 50% 30%,#1D1A2E 0%,#07090F 64%)}
+#sp-lock{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--t1);padding:calc(20px + var(--safe-t)) 24px calc(20px + var(--safe-b));overflow-y:auto;
+  background:radial-gradient(95% 58% at 50% 14%,var(--accent-soft) 0%,var(--bg) 68%)}
+html.dark #sp-lock{background:radial-gradient(95% 55% at 50% 14%,color-mix(in srgb,var(--accent) 26%,#0B1020) 0%,var(--bg) 66%)}
+html.amoled #sp-lock{background:radial-gradient(90% 50% at 50% 12%,color-mix(in srgb,var(--accent) 20%,#000) 0%,#000 62%)}
 html.locked #sp-lock,html.pin-open #sp-lock{display:flex}
-#sp-veil{position:fixed;inset:0;z-index:290;display:none;background:radial-gradient(120% 80% at 50% 30%,#1D1A2E 0%,#07090F 64%)}
+#sp-veil{position:fixed;inset:0;z-index:290;display:none;background:var(--bg)}
 html.veil #sp-veil{display:block}
-.lock-logo{width:64px;height:64px;border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(245,165,36,.25)}
-.pin-dots{display:flex;gap:16px;margin:6px 0}
-.pin-dot{width:13px;height:13px;border-radius:99px;border:1.5px solid #F5A524;transition:transform .12s}
-.pin-dot.f{background:#F5A524;transform:scale(1.15)}
-.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px}
-.pin-key{width:72px;height:72px;border-radius:99px;background:rgba(255,255,255,.08);font-size:25px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;transition:transform .1s}
-.pin-key:active{transform:scale(.9);background:rgba(245,165,36,.32)}
+.lock-card{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.lock-ring{padding:5px;border-radius:22px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);box-shadow:0 16px 38px -12px var(--accent-glow)}
+.lock-logo{width:58px;height:58px;border-radius:16px;overflow:hidden;display:block}
+.lock-pill{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 11px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.02em;background:var(--accent-soft);color:var(--accent-text);border:1px solid var(--accent-soft-border)}
+.lock-len{display:flex;padding:3px;border-radius:12px;background:var(--subtle);border:1px solid var(--line);gap:2px;width:190px}
+.lock-len button{flex:1;height:28px;border-radius:9px;font-size:11.5px;font-weight:700;color:var(--t3)}
+.lock-len button.on{background:var(--card);color:var(--t1);box-shadow:0 1px 4px rgba(15,23,42,.15)}
+.pin-dots{display:flex;gap:14px;margin:4px 0 6px;min-height:16px;align-items:center}
+.pin-dot{width:13px;height:13px;border-radius:99px;border:2px solid var(--line);background:transparent;transition:transform .16s cubic-bezier(.34,1.56,.64,1),background-color .14s,border-color .14s}
+.pin-dot.f{background:var(--accent);border-color:var(--accent);transform:scale(1.22);box-shadow:0 0 12px var(--accent-glow)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px}
+.pin-key{width:72px;height:72px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:24px;font-weight:600;color:var(--t1);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:var(--shadow);transition:transform .1s var(--ease),background-color .12s,border-color .12s}
+.pin-key small{font-size:8.5px;font-weight:700;letter-spacing:.08em;color:var(--t3);margin-top:3px}
+.pin-key.util{background:var(--subtle);border-color:transparent;box-shadow:none;color:var(--t2)}
+.pin-key:active{transform:scale(.9);background:var(--accent);border-color:var(--accent);color:#fff}
+.pin-key:active small{color:rgba(255,255,255,.78)}
+.lock-fp-pill{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:99px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);color:var(--accent-text);font-size:12.5px;font-weight:700;margin-top:2px}
 @keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
-.shake{animation:shake .4s}
+.shake{animation:shake .38s}
 
 /* ---------- splash (short, only on a cold start) ---------- */
 #sp-splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:radial-gradient(120% 80% at 50% 36%,#1D1A2E 0%,#07090F 64%);transition:opacity .35s ease,visibility .35s}
@@ -452,6 +464,15 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .rank-row{display:flex;flex-direction:column;gap:4px}
 .rank-row+.rank-row{margin-top:10px}
 
+/* ---------- v2.1: recurring bills, roster preview, rate override ---------- */
+.bill-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--subtle);border:1px solid var(--line)}
+.bill-row.paid{opacity:.66}
+.io-prev{display:flex;flex-direction:column;gap:6px;max-height:210px;overflow-y:auto;margin-top:10px;padding-right:2px}
+.io-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:12px;background:var(--subtle);border:1px solid var(--line);font-size:12.5px}
+.io-row.dup{opacity:.62}
+.io-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.rate-pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--accent-text);background:var(--accent-soft);padding:2px 8px;border-radius:99px}
+
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
 @media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.hero{padding:16px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
 @media (prefers-reduced-motion:reduce){.wallet::before,.wallet::after{animation:none}.spark{transition:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -503,20 +524,36 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
 <!-- Lock screen is static markup so it paints on the very first frame -->
 <div id="sp-lock">
-  <div class="lock-logo"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div>
-  <div id="lock-title" style="font-size:19px;font-weight:700;letter-spacing:-.02em">Enter PIN</div>
-  <div id="lock-sub" style="font-size:12.5px;color:#94A3B8;min-height:18px;margin-top:-8px">SweldoPulse is locked</div>
-  <div id="pin-dots" class="pin-dots"></div>
-  <div class="pin-pad" id="pin-pad">
-    <button type="button" class="pin-key" onclick="pinKey('1')">1</button><button type="button" class="pin-key" onclick="pinKey('2')">2</button><button type="button" class="pin-key" onclick="pinKey('3')">3</button>
-    <button type="button" class="pin-key" onclick="pinKey('4')">4</button><button type="button" class="pin-key" onclick="pinKey('5')">5</button><button type="button" class="pin-key" onclick="pinKey('6')">6</button>
-    <button type="button" class="pin-key" onclick="pinKey('7')">7</button><button type="button" class="pin-key" onclick="pinKey('8')">8</button><button type="button" class="pin-key" onclick="pinKey('9')">9</button>
-    <button type="button" class="pin-key" id="pin-fp" onclick="tryFingerprint()" aria-label="Fingerprint" style="visibility:hidden"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#F5A524" stroke-width="1.7" stroke-linecap="round"><path d="M12 11v3a5 5 0 0 1-1 3"/><path d="M8 12a4 4 0 0 1 8 0v2a8 8 0 0 1-1.5 4.5"/><path d="M5 12a7 7 0 0 1 14 0v1"/><path d="M5 15c0 2 .5 3.5 1.5 5"/></svg></button>
-    <button type="button" class="pin-key" onclick="pinKey('0')">0</button>
-    <button type="button" class="pin-key" onclick="pinKey('⌫')" aria-label="Delete">⌫</button>
+  <div class="lock-card">
+    <div class="lock-ring"><div class="lock-logo"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div></div>
+    <span class="lock-pill" id="lock-pill"><svg class="ic xs"><use href="#i-lock"/></svg><span id="lock-pill-txt">Secured</span></span>
+    <div id="lock-title" style="font-size:21px;font-weight:700;letter-spacing:-.025em">Enter PIN</div>
+    <div id="lock-sub" class="num" style="font-size:12.5px;color:var(--t3);min-height:18px;margin-top:-6px;text-align:center">SweldoPulse is locked</div>
+    <div class="lock-len hidden" id="pin-len-seg">
+      <button type="button" data-pl="4" class="on" onclick="setPinLen(4)">4 digits</button>
+      <button type="button" data-pl="6" onclick="setPinLen(6)">6 digits</button>
+    </div>
+    <div id="pin-dots" class="pin-dots"></div>
+    <div class="pin-pad" id="pin-pad">
+      <button type="button" class="pin-key" onclick="pinKey('1')">1<small>&nbsp;</small></button>
+      <button type="button" class="pin-key" onclick="pinKey('2')">2<small>ABC</small></button>
+      <button type="button" class="pin-key" onclick="pinKey('3')">3<small>DEF</small></button>
+      <button type="button" class="pin-key" onclick="pinKey('4')">4<small>GHI</small></button>
+      <button type="button" class="pin-key" onclick="pinKey('5')">5<small>JKL</small></button>
+      <button type="button" class="pin-key" onclick="pinKey('6')">6<small>MNO</small></button>
+      <button type="button" class="pin-key" onclick="pinKey('7')">7<small>PQRS</small></button>
+      <button type="button" class="pin-key" onclick="pinKey('8')">8<small>TUV</small></button>
+      <button type="button" class="pin-key" onclick="pinKey('9')">9<small>WXYZ</small></button>
+      <button type="button" class="pin-key util" id="pin-fp" onclick="tryFingerprint()" aria-label="Fingerprint" style="visibility:hidden"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 11v3a5 5 0 0 1-1 3"/><path d="M8 12a4 4 0 0 1 8 0v2a8 8 0 0 1-1.5 4.5"/><path d="M5 12a7 7 0 0 1 14 0v1"/><path d="M5 15c0 2 .5 3.5 1.5 5"/></svg></button>
+      <button type="button" class="pin-key" onclick="pinKey('0')">0</button>
+      <button type="button" class="pin-key util" onclick="pinKey('⌫')" aria-label="Delete">⌫</button>
+    </div>
+    <button type="button" class="lock-fp-pill press hidden" id="lock-fp-pill" onclick="tryFingerprint()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 11v3a5 5 0 0 1-1 3"/><path d="M8 12a4 4 0 0 1 8 0v2a8 8 0 0 1-1.5 4.5"/><path d="M5 12a7 7 0 0 1 14 0v1"/></svg>Use fingerprint</button>
+    <div class="row" style="gap:16px;margin-top:2px">
+      <button type="button" id="lock-forgot" onclick="lockForgot()" style="font-size:12px;font-weight:600;color:var(--t3);padding:8px">Forgot PIN?</button>
+      <button type="button" id="lock-cancel" onclick="lockCancel()" class="hidden" style="font-size:13px;font-weight:600;color:var(--t2);padding:8px">Cancel</button>
+    </div>
   </div>
-  <button type="button" id="lock-forgot" onclick="lockForgot()" style="font-size:12px;color:#64748B;padding:8px">Forgot PIN?</button>
-  <button type="button" id="lock-cancel" onclick="lockCancel()" class="hidden" style="font-size:13px;font-weight:600;color:#94A3B8;padding:8px">Cancel</button>
 </div>
 <div id="sp-veil"></div>
 
@@ -555,7 +592,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
           <div class="ring" id="ring" title="Cutoff progress"><svg viewBox="0 0 40 40"><circle class="tr" cx="20" cy="20" r="16"/><circle class="pg" id="ring-pg" cx="20" cy="20" r="16"/></svg><div class="tx"><b id="ring-n">0</b><small id="ring-u">days</small></div></div>
         </div>
         <svg class="spark" id="spark" viewBox="0 0 300 40" aria-hidden="true"></svg>
-        <div class="w-goal hidden" id="w-goal"><span id="g-txt"></span><span class="gb"><i id="g-fill"></i></span></div>
+        <div class="w-goal hidden" id="w-goal" onclick="event.stopPropagation();openGoalSettings()" title="Tap to edit pay goal"><span id="g-txt"></span><span class="gb"><i id="g-fill"></i></span></div>
         <div class="w-strip"><div><span>Gross</span><b class="num" id="ws-g">₱0.00</b></div><div><span>Deductions</span><b class="num" id="ws-d">₱0.00</b></div><div><span>Hours</span><b class="num" id="ws-h">0h</b></div></div>
       </div>
 
@@ -629,6 +666,10 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
       <div id="bud-p-expenses" class="stack hidden">
         <div class="card">
+          <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Recurring bills</p><p class="card-s num" id="bill-sub">Fixed bills for this cutoff</p></div><button type="button" class="btn soft sm press" onclick="openBillSheet()">+ Add bill</button></div>
+          <div class="list" id="bill-list"></div>
+        </div>
+        <div class="card">
           <div class="row between"><div><p class="card-t">Cutoff spending</p><p class="card-s num" id="exp-sub">₱0.00 spent</p></div><button type="button" class="btn primary sm press" onclick="openExpSheet()">+ Log expense</button></div>
         </div>
         <div class="list" id="exp-list"></div>
@@ -647,6 +688,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="row between">
         <button type="button" class="btn ghost sm press" onclick="go('home')"><svg class="ic sm"><use href="#i-back"/></svg>Home</button>
         <div class="row" style="gap:6px">
+          <button type="button" class="icon-btn press" style="width:34px;height:34px;border-radius:11px" onclick="viewInsightsCard()" aria-label="Save summary image" title="Save summary image"><svg class="ic sm"><use href="#i-image"/></svg></button>
           <button type="button" class="icon-btn press" style="width:34px;height:34px;border-radius:11px" onclick="stepInsightYear(-1)" aria-label="Previous year"><svg class="ic sm"><use href="#i-l"/></svg></button>
           <span class="chip num" id="ins-year-lbl" style="height:34px;padding:0 14px">2026</span>
           <button type="button" class="icon-btn press" style="width:34px;height:34px;border-radius:11px" onclick="stepInsightYear(1)" aria-label="Next year"><svg class="ic sm"><use href="#i-r"/></svg></button>
@@ -825,7 +867,13 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="card">
         <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Backup</p><p class="card-s" id="backup-status">Never backed up</p></div></div>
         <div class="grid2"><button type="button" class="btn primary press" onclick="openBackup('export')"><svg class="ic sm"><use href="#i-down"/></svg>Back up</button><button type="button" class="btn ghost press" onclick="openBackup('restore')"><svg class="ic sm"><use href="#i-up"/></svg>Restore</button></div>
-        <button type="button" class="btn soft sm block press" style="margin-top:8px" onclick="openBackup('csv')">Export all shifts as CSV</button>
+        <button type="button" class="btn soft sm block press" style="margin-top:8px" onclick="openBackup('csv')">Export shifts &amp; gigs as CSV</button>
+        <div class="divider" style="margin:12px 0"></div>
+        <div class="setting" style="min-height:40px"><div><p class="k" style="font-size:13.5px">Auto-backup to Documents</p><p class="d" id="autobk-sub">Saves daily to Documents/SweldoPulse</p></div><span class="switch"><input type="checkbox" id="autobk-on" onchange="toggleAutoBackup()"><i></i></span></div>
+        <div class="grid2 hidden" id="autobk-actions" style="margin-top:10px">
+          <button type="button" class="btn ghost sm press" onclick="runAutoBackup(true)">Save now</button>
+          <button type="button" class="btn soft sm press" onclick="restoreAutoBackup()">Restore auto-backup</button>
+        </div>
       </div>
 
       <div class="card">
@@ -884,7 +932,8 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       </div>
       <div id="m-holiday" class="chip ok hidden" style="height:auto;padding:7px 12px;white-space:normal"></div>
       <div><div class="row between" style="margin-bottom:6px"><label class="lbl" for="m-note" style="margin:0">Station / label (optional)</label><button type="button" class="link" style="padding:0;font-size:12px" onclick="pinCurrentPreset()">+ Pin preset</button></div><input id="m-note" class="field" style="font-weight:500" placeholder="e.g. Lobby, Grill, Prepping" autocomplete="off" oninput="syncStationHighlight()"><div class="st-chips" id="m-stations"></div></div>
-      <div class="preview"><div><p class="eyebrow" style="color:inherit;opacity:.75" id="m-gross-lbl">Gross pay</p><p class="big num" id="m-gross">₱0.00</p></div><div style="text-align:right;font-size:12px" class="num" id="m-cut"></div></div>
+      <div class="hidden" id="m-rate-box"><div class="row between"><label class="lbl" for="m-rate" style="margin:0">Shift hourly rate override</label><button type="button" class="link" style="padding:0;font-size:12px" onclick="resetShiftRate()">Use default</button></div><label class="money-field" style="margin-top:6px"><span>₱</span><input id="m-rate" type="number" inputmode="decimal" step="0.01" min="0" oninput="updatePreview()"><span>/hr</span></label></div>
+      <div class="preview"><div><div class="row" style="gap:6px"><p class="eyebrow" style="color:inherit;opacity:.75" id="m-gross-lbl">Gross pay</p><button type="button" class="rate-pill press" id="m-rate-btn" onclick="toggleShiftRateBox()">₱73.75/hr</button></div><p class="big num" id="m-gross">₱0.00</p></div><div style="text-align:right;font-size:12px" class="num" id="m-cut"></div></div>
       <div class="row"><button type="button" class="btn ghost press hidden" id="m-del" onclick="deleteFromSheet()" aria-label="Delete shift"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="m-save" onclick="saveShift()">Save shift</button></div>
     </div>
 
@@ -976,14 +1025,34 @@ input[type=search]::-webkit-search-cancel-button{display:none}
   </div>
 </div>
 
+<div id="bill-sheet" class="scrim" onclick="if(event.target===this)closeSheet('bill-sheet')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t" id="bill-sheet-t">New recurring bill</h2><p class="card-s">Appears automatically in your cutoff checklist</p></div><button type="button" class="icon-btn press" onclick="closeSheet('bill-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:12px">
+      <div><label class="lbl" for="bl-name">Bill name</label><input id="bl-name" class="field" style="font-weight:500" placeholder="e.g. Internet, Electricity, Tuition, Load" autocomplete="off"></div>
+      <div class="grid2">
+        <div><label class="lbl" for="bl-amt">Amount</label><label class="money-field"><span>₱</span><input id="bl-amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00"></label></div>
+        <div><label class="lbl" for="bl-cycle">Due cycle</label><select id="bl-cycle" class="field"><option value="both">Every cutoff</option><option value="1">1st cutoff (1–15)</option><option value="2">2nd cutoff (16–end)</option></select></div>
+      </div>
+      <div><label class="lbl">Envelope</label><div class="seg" id="bl-cat"><button type="button" data-bc="needs" class="on" onclick="setBillCat('needs')">Needs</button><button type="button" data-bc="wants" onclick="setBillCat('wants')">Wants</button></div></div>
+      <div class="row"><button type="button" class="btn ghost press hidden" id="bl-del" onclick="deleteBillFromSheet()" aria-label="Delete bill"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="bl-save" onclick="saveBill()">Save bill</button></div>
+    </div>
+  </div>
+</div>
+
 <div id="io-sheet" class="scrim" onclick="if(event.target===this)closeSheet('io-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">Import / export</h2><p class="card-s">Paste a schedule — it's sorted into the right cutoffs</p></div><button type="button" class="icon-btn press" onclick="closeSheet('io-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <div class="card flat" style="padding:12px 14px;background:var(--subtle);margin-bottom:12px"><div class="row between" style="margin-bottom:6px"><b style="font-size:12px">Accepted formats</b><button type="button" class="link" style="padding:0" onclick="fillExample()">Insert example</button></div><pre class="muted num" style="font:11.5px/1.6 ui-monospace,Menlo,monospace;overflow-x:auto">Nov. 09 - 6pm to 12mn (Mon.)
-LOBBY
-2026-11-16 | 4:00 PM - 10:00 PM | Counter</pre></div>
-    <textarea id="io-text" class="field" placeholder="Paste or type your schedule…" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px"></textarea>
-    <div class="grid2" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="exportText()">Export cutoff</button><button type="button" class="btn primary press" onclick="importText()">Import shifts</button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">Smart roster import</h2><p class="card-s">Paste from Messenger — preview before saving</p></div><button type="button" class="icon-btn press" onclick="closeSheet('io-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="card flat" style="padding:10px 12px;background:var(--subtle);margin-bottom:10px"><div class="row between" style="margin-bottom:4px"><b style="font-size:12px">Understands crew shorthand</b><button type="button" class="link" style="padding:0" onclick="fillExample()">Insert example</button></div><pre class="muted num" style="font:11px/1.55 ui-monospace,Menlo,monospace;overflow-x:auto">Nov 23: 6-12mn Lobby
+M/W/F 4-10pm Grill
+2026-11-26 | 3-9 | Prepping</pre></div>
+    <textarea id="io-text" class="field" placeholder="Paste your roster or group chat schedule…" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px" oninput="queueIoPreview()"></textarea>
+    <div id="io-prev-wrap" class="hidden">
+      <div class="row between" style="margin-top:10px"><span class="eyebrow" id="io-prev-count">0 shifts detected</span><span class="chip ok num" id="io-prev-gross">₱0.00</span></div>
+      <div class="io-prev" id="io-prev-list"></div>
+    </div>
+    <div class="grid2" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="exportText()">Export cutoff</button><button type="button" class="btn primary press" id="io-imp-btn" onclick="importText()">Import shifts</button></div>
   </div>
 </div>
 
@@ -999,13 +1068,13 @@ LOBBY
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.0</span></h2><p class="card-s">Your complete paycheck &amp; cash-flow hub</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.1</span></h2><p class="card-s">Smarter widget, upgraded security &amp; payday tools</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:11px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Widget</span><span class="sub">Native Home Screen Widget showing live net pay &amp; 1-tap + logging, plus long-press app icon shortcuts.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Budget</span><span class="sub">Actionable Budget hub with Cutoff Expense Envelopes and persistent Savings Vaults.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Gigs</span><span class="sub">Multi-Stream Income — log Catering, Freelance, or Sound System side gigs cleanly separate from main payroll.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Roster</span><span class="sub">Weekly Roster Bulk-Logger &amp; Shift Status (Worked, Planned, Cancelled) for instant weekly entry.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Insights</span><span class="sub">Yearly Analytics dashboard &amp; month-by-month SSS, PhilHealth, Pag-IBIG &amp; Tax Ledger.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Widget</span><span class="sub">Resizable Home Widget (drag from compact 2×1 to expanded stats card) that automatically follows your Light/Dark/Black theme &amp; accent color.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">PIN</span><span class="sub">Redesigned theme-synced PIN lock screen with 4- or 6-digit option, step pills, live lockout timer, and quick fingerprint trigger.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Bills</span><span class="sub">Recurring Bills checklist inside Budget → Expenses — mark repeating bills paid in 1 tap.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Import</span><span class="sub">Smart Messenger Roster Importer with shorthand parsing (3-9, M/W/F) &amp; checkable live preview.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">More</span><span class="sub">Silent daily Auto-Backup to Documents/SweldoPulse, Smart Goal shifts-left planner, per-shift rate override, and Shareable Insights PNG card.</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
   </div>
@@ -1036,7 +1105,7 @@ LOBBY
 </div>
 
 <script>
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.1.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -1072,12 +1141,12 @@ let settings = {
   accentTheme: 'indigo', darkMode: false, themeMode: '', budgetNeeds: 70, budgetWants: 20, budgetSavings: 10,
   notifEnabled: false, notifTime: '22:00', lastNotifDate: '', goal: 0, deductMode: 'split', mwe: false, autoDeduct: null, hide: false, payLag: 0, repo: '', lastUpd: 0,
   last: { start: '16:00', end: '22:00', brk: 0 },
-  cutoffData: {}, customPresets: [], vaults: [], incomeScope: 'all',
-  autoDownloadUpd: true, updWifiOnly: true
+  cutoffData: {}, customPresets: [], vaults: [], bills: [], incomeScope: 'all',
+  autoDownloadUpd: true, updWifiOnly: true, autoBackup: true, lastAutoBk: 0
 };
 let selKey = '', periodKeys = [], curView = 'home';
 const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '', budTab: 'overview', insTab: 'overview', insYear: new Date().getFullYear(), insMonth: new Date().getMonth() };
-let editingId = null, editingGigId = null, editingVaultId = null, modalKind = 'shift', modalBrk = 0, modalStatus = 'worked', modalGigStatus = 'paid', expCat = 'needs', budNet = 0;
+let editingId = null, editingGigId = null, editingVaultId = null, editingBillId = null, modalKind = 'shift', modalBrk = 0, modalStatus = 'worked', modalGigStatus = 'paid', expCat = 'needs', billCat = 'needs', budNet = 0;
 
 const ACCENTS = {
   midnight: { a: '#1E3A8A', ad: '#3556B8', h: '#1E40AF', sl: '#EAF0FF', bl: '#BCCBF5', tl: '#1E3A8A', sd: 'rgba(59,91,184,.22)', bd: 'rgba(96,130,220,.4)', td: '#A9BEF5', g: 'rgba(30,58,138,.38)' },
@@ -1103,6 +1172,7 @@ function loadState() {
   if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {};
   if (!Array.isArray(settings.customPresets)) settings.customPresets = [];
   if (!Array.isArray(settings.vaults)) settings.vaults = [];
+  if (!Array.isArray(settings.bills)) settings.bills = [];
   if (settings.incomeScope !== 'payroll' && settings.incomeScope !== 'all') settings.incomeScope = 'all';
   if (!hadCutoffData && +settings.otherDed > 0) { const ck = curPeriod().key; settings.cutoffData[ck] = { ...(settings.cutoffData[ck] || {}), otherDed: +settings.otherDed }; settings.otherDed = 0; }
   try { shifts = normalizeShifts(JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]')); } catch (e) { shifts = []; }
@@ -1129,16 +1199,17 @@ function normalizeExpenses(arr) {
   if (!Array.isArray(arr)) return [];
   return arr.filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && isFinite(x.amount)).map((x, i) => ({
     id: x.id || (Date.now() + 9000 + i), date: x.date, cat: x.cat === 'wants' ? 'wants' : 'needs',
-    note: String(x.note || '').trim() || 'Expense', amount: r2(Math.max(0, +x.amount || 0))
+    note: String(x.note || '').trim() || 'Expense', amount: r2(Math.max(0, +x.amount || 0)),
+    billId: x.billId || null
   }));
 }
 const shiftStatusOf = s => s.status || (s.date > today() ? 'scheduled' : 'worked');
 const isShiftActive = s => shiftStatusOf(s) !== 'cancelled';
 let dv = 0, _idx = null, _idxV = -1, _gidx = null, _gidxV = -1, _eidx = null, _eidxV = -1; const _pdc = new Map();
 let _psT = 0;
-const persistShifts = () => { dv++; try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} };
-const persistGigs = () => { dv++; try { localStorage.setItem(GIGS_KEY, JSON.stringify(gigs)); } catch (e) {} };
-const persistExpenses = () => { dv++; try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses)); } catch (e) {} };
+const persistShifts = () => { dv++; try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} scheduleAutoBackup(); };
+const persistGigs = () => { dv++; try { localStorage.setItem(GIGS_KEY, JSON.stringify(gigs)); } catch (e) {} scheduleAutoBackup(); };
+const persistExpenses = () => { dv++; try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses)); } catch (e) {} scheduleAutoBackup(); };
 const persistSettings = () => { dv++; if (_psT) { clearTimeout(_psT); _psT = 0; } try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} };
 const persistSettingsDebounced = () => { dv++; clearTimeout(_psT); _psT = setTimeout(() => { _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }, 220); };
 const flushSettings = () => { if (_psT) { clearTimeout(_psT); _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} } };
@@ -1162,6 +1233,7 @@ function applyTheme(first) {
   const cut = $('moon-cutout'); if (cut) { cut.setAttribute('cx', dark ? '16.5' : '24'); cut.setAttribute('cy', dark ? '8.5' : '4'); cut.setAttribute('r', dark ? '5.2' : '0'); }
   $$('#theme-seg button').forEach(b => b.classList.toggle('on', b.dataset.m === settings.themeMode));
   $$('.theme-sw').forEach(b => b.classList.toggle('on', b.dataset.theme === settings.accentTheme));
+  if (!first && typeof syncWidget === 'function') syncWidget();
 }
 // Circular reveal from the toggle (View Transitions API): the browser snapshots old/new and we only animate a clip-path on the GPU.
 // Falls back to an instant switch where unsupported (older WebViews) or when reduced motion is on.
@@ -1468,18 +1540,43 @@ function toggleIncomeScope() {
   toast(settings.incomeScope === 'all' ? 'Showing Payroll + Side gigs' : 'Showing Main payroll only');
 }
 function syncWidget() {
-  if (!window.AndroidBridge || typeof AndroidBridge.updateWidget !== 'function') return;
+  if (!window.AndroidBridge) return;
   try {
     const cur = curPeriod(), D = periodData(cur.key), td = today();
     const left = Math.max(0, dayNum(cur.endStr) - dayNum(td));
-    const dispNet = activeNetOf(D);
+    const allMode = settings.incomeScope === 'all' && gigs.length > 0;
+    const dispNet = allMode ? D.netAll : D.net;
+    const dispGross = allMode ? r2(D.grossAll + D.gigPaid) : D.grossAll;
     const netText = money(dispNet);
     const badgeText = `${cur.badge} · ${left === 0 ? 'ends today' : left + 'd left'}`;
-    const gigPart = (settings.incomeScope === 'all' && D.gigPaid > 0 && !settings.hide) ? ` · +${peso(D.gigPaid)} gigs` : '';
+    const gigPart = (allMode && D.gigPaid > 0 && !settings.hide) ? ` · +${peso(D.gigPaid)} gigs` : '';
     const metaText = `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n === 1 ? '' : 's'}${gigPart}`;
-    AndroidBridge.updateWidget(netText, badgeText, metaText, cur.label);
+    const goal = +settings.goal || 0;
+    let extra = '';
+    if (goal > 0) {
+      const pc = Math.min(100, Math.round(dispNet / goal * 100));
+      extra = settings.hide ? `Goal ${pc}%` : (pc >= 100 ? 'Pay goal reached ✓' : `Goal ${pc}% · ${peso(Math.max(0, goal - dispNet))} left`);
+    } else {
+      const exList = expensesIn(cur.key);
+      const sp = r2(exList.reduce((a, e) => a + e.amount, 0));
+      if (sp > 0) extra = settings.hide ? `${exList.length} expenses logged` : `Spent ${peso(sp)} · ${peso(r2(dispNet - sp))} left`;
+    }
+    const dark = isDark(), theme = settings.themeMode === 'amoled' ? 'amoled' : (dark ? 'dark' : 'light');
+    const P = ACCENTS[settings.accentTheme] || ACCENTS.indigo;
+    const accent = dark && P.ad ? P.ad : P.a;
+    const accentText = dark ? P.td : P.tl;
+    if (typeof AndroidBridge.updateWidgetV2 === 'function') {
+      AndroidBridge.updateWidgetV2(JSON.stringify({
+        net: netText, badge: badgeText, meta: metaText, period: cur.label,
+        gross: money(dispGross), ded: settings.hide ? MASK : '−' + peso(D.d.total),
+        extra, theme, accent, accentText
+      }));
+    } else if (typeof AndroidBridge.updateWidget === 'function') {
+      AndroidBridge.updateWidget(netText, badgeText, metaText, cur.label);
+    }
   } catch (e) {}
 }
+function openGoalSettings() { go('settings'); setTimeout(() => { const el = $('set-goal'); if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.focus(); } }, 220); }
 function renderHome() {
   const P = periodFromKey(selKey), D = periodData(selKey), cur = curPeriod(), isCur = P.key === cur.key, isPast = P.sort < cur.sort, td = today();
   const allMode = settings.incomeScope === 'all' && gigs.length > 0;
@@ -1510,9 +1607,22 @@ function renderHome() {
   else { const st = dayNum(P.startStr) - dayNum(td); f = 0; n = String(st); u = 'to start'; }
   setText($('ring-n'), n); setText($('ring-u'), u); $('ring-pg').style.strokeDashoffset = String(100.5 * (1 - f));
   $('ring').title = isCur ? `Cutoff ends ${MON[P.end.getMonth()]} ${P.end.getDate()}` : 'Cutoff status';
-  // goal
+  // goal (smart planner: shows peso left + estimated shifts needed)
   const goal = +settings.goal || 0; $('w-goal').classList.toggle('hidden', !(goal > 0));
-  if (goal > 0) { const pc = Math.min(100, Math.round(dispNet / goal * 100)); setText($('g-txt'), settings.hide ? 'Goal' : (pc >= 100 ? 'Goal reached ✓' : `Goal ${pc}%`)); $('g-fill').style.transform = `scaleX(${pc / 100})`; }
+  if (goal > 0) {
+    const pc = Math.min(100, Math.round(dispNet / goal * 100));
+    let gLabel = 'Goal';
+    if (!settings.hide) {
+      if (pc >= 100) gLabel = 'Goal reached ✓';
+      else {
+        const rem = r2(goal - dispNet);
+        const avgShift = D.t.n > 0 ? (D.t.gross / D.t.n) : (settings.hourlyRate * 6);
+        const needSh = avgShift > 0 ? Math.max(0.5, Math.round((rem / avgShift) * 10) / 10) : 0;
+        gLabel = `Goal ${pc}% · ${peso(rem)} left${needSh ? ` (~${needSh} sh)` : ''}`;
+      }
+    }
+    setText($('g-txt'), gLabel); $('g-fill').style.transform = `scaleX(${pc / 100})`;
+  }
   // spark
   const W = Math.max(200, Math.min(document.documentElement.clientWidth || 360, innerWidth >= 600 ? 560 : 520) - (innerWidth >= 600 ? 76 : 60)), ti = isCur ? dayRange(P).indexOf(td) : (isPast ? dayRange(P).length - 1 : -1);
   renderSpark(P, D.list.filter(isShiftActive), ti, W);
@@ -1605,8 +1715,80 @@ function renderBudget(net) {
     if (ui.budTab === 'vaults') renderVaults();
   }
 }
+function billDueIn(b, key) {
+  if (!b.cycle || b.cycle === 'both' || settings.schedule !== 'semi') return true;
+  if (b.cycle === '1') return /-1$/.test(key);
+  if (b.cycle === '2') return /-2$/.test(key);
+  return true;
+}
+function renderBills(exList) {
+  const all = Array.isArray(settings.bills) ? settings.bills : [];
+  const due = all.filter(b => billDueIn(b, selKey));
+  const paidIds = new Set(exList.filter(e => e.billId).map(e => e.billId));
+  const paidCount = due.filter(b => paidIds.has(b.id)).length;
+  const dueSum = r2(due.reduce((a, b) => a + (+b.amount || 0), 0));
+  setText($('bill-sub'), due.length ? `${paidCount}/${due.length} paid · ${money(dueSum)} total` : (all.length ? 'No bills due in this cutoff' : 'Save rent, load, internet or tuition once'));
+  if (!due.length) {
+    setHTML($('bill-list'), all.length ? '<p class="note">Your saved bills are scheduled for the other cutoff.</p>' : '<p class="note">Tap “+ Add bill” to create a 1-tap payday checklist.</p>');
+    return;
+  }
+  setHTML($('bill-list'), due.map(b => {
+    const paid = paidIds.has(b.id);
+    const cyc = b.cycle === '1' ? '1st cutoff' : (b.cycle === '2' ? '2nd cutoff' : 'Every cutoff');
+    return `<div class="bill-row${paid ? ' paid' : ''}">` +
+      `<i class="exp-dot ${b.cat === 'wants' ? 'c-wants' : 'c-needs'}"></i>` +
+      `<div class="grow" onclick="openBillSheet(${b.id})" role="button" tabindex="0"><p style="font-weight:600">${esc(b.name)}</p><p class="card-s num">${money(b.amount)} · ${cyc}</p></div>` +
+      (paid
+        ? `<span class="chip ok">Paid ✓</span>`
+        : `<button type="button" class="btn primary sm press" style="min-height:32px;padding:0 12px" onclick="markBillPaid(${b.id})">Pay</button>`) +
+      `</div>`;
+  }).join(''));
+}
+function setBillCat(c) { billCat = c; $$('#bl-cat button').forEach(b => b.classList.toggle('on', b.dataset.bc === c)); }
+function openBillSheet(id = null) {
+  editingBillId = id;
+  const b = id !== null ? (settings.bills || []).find(x => x.id === id) : null;
+  setText($('bill-sheet-t'), b ? 'Edit recurring bill' : 'New recurring bill');
+  setText($('bl-save'), b ? 'Update bill' : 'Save bill');
+  $('bl-del').classList.toggle('hidden', !b);
+  $('bl-name').value = b ? b.name : '';
+  $('bl-amt').value = b ? b.amount : '';
+  $('bl-cycle').value = b ? (b.cycle || 'both') : 'both';
+  setBillCat(b ? (b.cat || 'needs') : 'needs');
+  openSheet('bill-sheet');
+}
+function saveBill() {
+  const name = $('bl-name').value.trim(); if (!name) return toast('Enter a bill name');
+  const amount = r2(Math.max(0, parseFloat($('bl-amt').value) || 0)); if (!(amount > 0)) return toast('Enter a valid amount');
+  const cycle = $('bl-cycle').value || 'both';
+  if (!Array.isArray(settings.bills)) settings.bills = [];
+  if (editingBillId !== null) {
+    const b = settings.bills.find(x => x.id === editingBillId);
+    if (b) Object.assign(b, { name, amount, cycle, cat: billCat });
+  } else {
+    settings.bills.push({ id: Date.now() + Math.floor(Math.random() * 999), name, amount, cycle, cat: billCat });
+  }
+  editingBillId = null; persistSettings(); closeSheet('bill-sheet'); renderExpenses(); toast('Recurring bill saved');
+}
+async function deleteBillFromSheet() {
+  const id = editingBillId; if (id === null) return;
+  const b = (settings.bills || []).find(x => x.id === id); if (!b) return;
+  closeSheet('bill-sheet'); editingBillId = null;
+  const ok = await askConfirm({ title: 'Delete recurring bill?', body: `Remove <b>${esc(b.name)}</b> from future checklists? Already logged expenses stay untouched.`, ok: 'Delete' });
+  if (!ok) return;
+  settings.bills = settings.bills.filter(x => x.id !== id); persistSettings(); renderExpenses(); toast('Bill removed');
+}
+function markBillPaid(id) {
+  const b = (settings.bills || []).find(x => x.id === id); if (!b) return;
+  const P = periodFromKey(selKey), cur = curPeriod();
+  const date = P.key === cur.key ? today() : P.endStr;
+  const exp = { id: Date.now() + Math.floor(Math.random() * 999), date, cat: b.cat === 'wants' ? 'wants' : 'needs', note: b.name, amount: r2(+b.amount || 0), billId: b.id };
+  expenses.push(exp); persistExpenses(); render();
+  toast(`Paid ${b.name} (${peso(exp.amount)})`, { label: 'Undo', fn: () => { expenses = expenses.filter(x => x.id !== exp.id); persistExpenses(); render(); toast('Payment undone'); } });
+}
 function renderExpenses() {
   const list = expensesIn(selKey).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+  renderBills(list);
   const tot = r2(list.reduce((a, e) => a + e.amount, 0));
   setText($('exp-sub'), `${list.length} item${list.length === 1 ? '' : 's'} · ${money(tot)} spent in ${periodFromKey(selKey).label}`);
   if (!list.length) {
@@ -1615,7 +1797,7 @@ function renderExpenses() {
   }
   setHTML($('exp-list'), list.map(e =>
     `<div class="exp-row"><i class="exp-dot ${e.cat === 'wants' ? 'c-wants' : 'c-needs'}"></i>` +
-    `<div class="grow"><p style="font-weight:600">${esc(e.note)}</p><p class="card-s num">${fmtDay(e.date)} · ${e.cat === 'wants' ? 'Wants' : 'Needs'}</p></div>` +
+    `<div class="grow"><p style="font-weight:600">${esc(e.note)}</p><p class="card-s num">${fmtDay(e.date)} · ${e.cat === 'wants' ? 'Wants' : 'Needs'}${e.billId ? ' · Bill' : ''}</p></div>` +
     `<b class="num neg">−${money(e.amount)}</b>` +
     `<button type="button" class="trash" onclick="deleteExpense(${e.id})" aria-label="Delete expense"><svg class="ic sm"><use href="#i-trash"/></svg></button></div>`
   ).join(''));
@@ -1899,9 +2081,21 @@ function priorHours(date, startMin, excludeId) {
   return shifts.filter(s => s.date === date && s.id !== excludeId && isShiftActive(s) && s.startTime && s.endTime && tmin(s.startTime) < startMin)
     .reduce((a, s) => { const r = calcPay({ start: s.startTime, end: s.endTime, mult: s.multiplier, rate: s.hourlyRate, brk: s.breakMin || 0 }); return a + (r ? r.paid : 0); }, 0);
 }
+function toggleShiftRateBox() {
+  const box = $('m-rate-box'); if (!box) return;
+  box.classList.toggle('hidden');
+  if (!box.classList.contains('hidden')) setTimeout(() => { const inp = $('m-rate'); if (inp) inp.focus(); }, 60);
+}
+function resetShiftRate() {
+  const inp = $('m-rate'); if (inp) inp.value = settings.hourlyRate;
+  $('m-rate-box').classList.add('hidden');
+  updatePreview();
+}
 function readModal() {
   const date = $('m-date').value || today(), start = $('m-start').value, end = $('m-end').value, mult = parseFloat($('m-mult').value) || 1;
-  const rate = editingId !== null ? (shifts.find(s => s.id === editingId) || {}).hourlyRate || settings.hourlyRate : settings.hourlyRate;
+  const rawRate = $('m-rate') ? parseFloat($('m-rate').value) : NaN;
+  const fallbackRate = editingId !== null ? (shifts.find(s => s.id === editingId) || {}).hourlyRate || settings.hourlyRate : settings.hourlyRate;
+  const rate = (isFinite(rawRate) && rawRate > 0) ? r2(rawRate) : fallbackRate;
   const r = calcPay({ start, end, mult, rate, brk: modalBrk, prior: priorHours(date, tmin(start), editingId) });
   return { date, start, end, mult, rate, brk: modalBrk, r };
 }
@@ -1926,6 +2120,7 @@ function updatePreview() {
   $('m-next').classList.toggle('hidden', !(tmin(v.end) < tmin(v.start)));
   setText($('m-gross-lbl'), modalStatus === 'cancelled' ? 'Cancelled shift' : (modalStatus === 'scheduled' ? 'Projected gross' : 'Gross pay'));
   setText($('m-gross'), modalStatus === 'cancelled' ? '₱0.00' : (v.r ? peso(v.r.gross) : '₱0.00'));
+  if ($('m-rate-btn')) setText($('m-rate-btn'), `${peso(v.rate)}/hr`);
   setText($('shift-hint'), modalStatus === 'cancelled' ? 'Excluded from pay & hours (kept in log history)' : (v.r ? `${fh(v.r.reg)} regular · ${fh(v.r.nd)} night · ${fh(v.r.ot)} overtime` : 'End time must differ from start time'));
   const P = periodOf(v.date); setText($('m-cut'), `${P.badge}\n${P.label}`); $('m-cut').style.whiteSpace = 'pre-line';
 }
@@ -1945,12 +2140,14 @@ function openShift(id = null) {
   $('g-del').classList.add('hidden'); $('g-save').textContent = 'Save side gig';
   const cur = curPeriod(), P = periodFromKey(selKey);
   $('g-date').value = P.key === cur.key ? today() : P.endStr; $('g-amt').value = ''; $('g-title').value = ''; $('g-stream').value = ''; setGigStatus('paid');
+  $('m-rate-box').classList.add('hidden');
   if (s) {
     $('m-date').value = s.date; $('m-start').value = s.startTime || '16:00'; $('m-end').value = s.endTime || '22:00';
+    $('m-rate').value = s.hourlyRate || settings.hourlyRate;
     $('m-mult').value = s.multiplier.toFixed(2); if (!$('m-mult').value) $('m-mult').value = '1.00'; $('m-note').value = s.note || ''; modalBrk = s.breakMin || 0; modalStatus = shiftStatusOf(s); onDateChange(true);
   } else {
     const L = settings.last;
-    $('m-date').value = P.key === cur.key ? today() : P.endStr; $('m-start').value = L.start; $('m-end').value = L.end; $('m-note').value = ''; modalBrk = L.brk || 0; onDateChange(false);
+    $('m-date').value = P.key === cur.key ? today() : P.endStr; $('m-start').value = L.start; $('m-end').value = L.end; $('m-rate').value = settings.hourlyRate; $('m-note').value = ''; modalBrk = L.brk || 0; onDateChange(false);
   }
   setLogKind('shift'); setShiftStatus(modalStatus); renderPresets(); renderStationChips(); setBreak(modalBrk); openSheet('shift-sheet');
 }
@@ -2081,8 +2278,8 @@ async function saveShift() {
   const note = $('m-note').value.trim(); let old = null;
   if (editingId !== null) {
     const s = shifts.find(x => x.id === editingId);
-    if (s) { old = s.date; Object.assign(s, { date: v.date, startTime: v.start, endTime: v.end, note, multiplier: v.mult, breakMin: v.brk, status: modalStatus }); }
-  } else shifts.push({ id: Date.now() + Math.floor(Math.random() * 999), date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: v.mult, gross: 0, breakMin: v.brk, status: modalStatus });
+    if (s) { old = s.date; Object.assign(s, { date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: v.rate, multiplier: v.mult, breakMin: v.brk, status: modalStatus }); }
+  } else shifts.push({ id: Date.now() + Math.floor(Math.random() * 999), date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: v.rate, reg: 0, nd: 0, ot: 0, multiplier: v.mult, gross: 0, breakMin: v.brk, status: modalStatus });
   recalcDay(v.date); if (old && old !== v.date) recalcDay(old);
   settings.last = { start: v.start, end: v.end, brk: v.brk }; persistSettings(); persistShifts();
   const P = periodOf(v.date); selKey = P.key; const wasEdit = editingId !== null;
@@ -2262,9 +2459,13 @@ async function clearCutoff() {
   toast(`${list.length} shift${list.length > 1 ? 's' : ''} deleted`, { label: 'Undo', fn: () => { shifts.push(...list); persistShifts(); render(); toast('Shifts restored'); } });
 }
 
-/* ================= import / export schedule text ================= */
-function openIO() { openSheet('io-sheet'); }
-function fillExample() { $('io-text').value = 'Nov. 09 - 6pm to 12mn (Mon.)\nLOBBY\n\nNov. 16 - 4pm to 10pm (Mon.)\nFRONT COUNTER'; }
+/* ================= smart roster import / export ================= */
+let _ioParsed = [], _ioPrevT = 0;
+function openIO() { openSheet('io-sheet'); updateIoPreview(); }
+function fillExample() {
+  $('io-text').value = 'Nov. 23 - 6-12mn (Mon.)\nLOBBY\nM/W/F 4-10pm Grill\n2026-11-26 | 3-9 | Prepping';
+  updateIoPreview();
+}
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
   try { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch (e) { return false; }
@@ -2273,52 +2474,166 @@ async function exportText() {
   const list = shiftsIn(selKey).sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
   if (!list.length) return toast('No shifts in this cutoff to export');
   const lines = list.map(s => `${s.date} | ${t12(s.startTime || '16:00')} - ${t12(s.endTime || '22:00')} | ${s.note || 'Shift'}`).join('\n');
-  $('io-text').value = lines; toast((await copyText(lines)) ? `Copied ${list.length} shift${list.length > 1 ? 's' : ''}` : 'Exported below');
+  $('io-text').value = lines; updateIoPreview();
+  toast((await copyText(lines)) ? `Copied ${list.length} shift${list.length > 1 ? 's' : ''}` : 'Exported below');
 }
-function parseTime(raw) {
-  if (!raw) return null; const c = raw.trim().toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
-  if (c === '12mn' || c === 'mn' || c === '24:00') return '00:00'; if (c === '12nn' || c === 'nn') return '12:00';
-  const m = c.match(/^(\d{1,2})(?::(\d{2}))?(am|pm|mn|nn)?$/); if (!m) return null;
-  let h = +m[1]; const mi = +(m[2] || 0), pr = m[3];
-  if (pr === 'mn') h = h === 12 ? 0 : h; else if (pr === 'pm') { if (h < 12) h += 12; } else if (pr === 'am') { if (h === 12) h = 0; }
-  if (h > 23 || mi > 59) return null; return `${p2(h)}:${p2(mi)}`;
+function parseTimePart(raw) {
+  if (!raw) return null;
+  const c = raw.trim().toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
+  if (c === '12mn' || c === 'mn' || c === '24:00') return { h: 0, m: 0, mer: 'mn' };
+  if (c === '12nn' || c === 'nn') return { h: 12, m: 0, mer: 'nn' };
+  const m = c.match(/^(\d{1,2})(?::(\d{2}))?(am|pm|a|p|mn|nn)?$/);
+  if (!m) return null;
+  const h = +m[1], mi = +(m[2] || 0);
+  let mer = m[3] || '';
+  if (mer === 'a') mer = 'am';
+  if (mer === 'p') mer = 'pm';
+  if (h > 23 || mi > 59) return null;
+  return { h, m: mi, mer };
 }
-function parseDate(line, fb) {
+function resolveTimeRange(rawA, rawB) {
+  const a = parseTimePart(rawA), b = parseTimePart(rawB);
+  if (!a || !b) return null;
+  const to24 = (t, mer) => {
+    let h = t.h;
+    if (mer === 'mn') h = h === 12 ? 0 : h;
+    else if (mer === 'nn') h = 12;
+    else if (mer === 'pm') { if (h < 12) h += 12; }
+    else if (mer === 'am') { if (h === 12) h = 0; }
+    return h;
+  };
+  let h1, h2;
+  if (a.mer && b.mer) { h1 = to24(a, a.mer); h2 = to24(b, b.mer); }
+  else if (!a.mer && b.mer) {
+    h2 = to24(b, b.mer);
+    if (b.mer === 'mn') h1 = (a.h < 12 && a.h >= 1) ? a.h + 12 : a.h;
+    else if (b.mer === 'pm') h1 = (a.h <= b.h && a.h < 12) ? a.h + 12 : a.h;
+    else h1 = (a.h > b.h && a.h < 12) ? a.h + 12 : a.h;
+  } else if (a.mer && !b.mer) {
+    h1 = to24(a, a.mer);
+    if (b.h === 12) h2 = h1 >= 12 ? 0 : 12;
+    else { h2 = b.h; if (h2 <= h1 && h2 + 12 <= 23 && (h2 + 12 - h1) <= 14) h2 += 12; }
+  } else {
+    if (a.h > 12 || b.h > 12) { h1 = a.h; h2 = b.h; }
+    else if (a.h >= 1 && a.h <= 6 && b.h > a.h) { h1 = a.h + 12; h2 = b.h === 12 ? 0 : b.h + 12; }
+    else if (a.h >= 7 && a.h <= 11 && b.h >= 1 && b.h <= 7) { h1 = a.h; h2 = b.h + 12; }
+    else if (a.h === 12 && b.h >= 1 && b.h <= 10) { h1 = 12; h2 = b.h + 12; }
+    else { h1 = a.h; h2 = b.h === 12 ? 0 : b.h; }
+  }
+  if (h1 > 23 || h2 > 23) return null;
+  const s = `${p2(h1)}:${p2(a.m)}`, e = `${p2(h2)}:${p2(b.m)}`;
+  return s === e ? null : { start: s, end: e };
+}
+function parseDateStrict(line) {
   let m = line.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${p2(m[2])}-${p2(m[3])}`;
   const MM = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
   m = line.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:,?\s*(\d{4}))?\b/i);
   if (m) return `${m[3] || new Date().getFullYear()}-${p2(MM[m[1].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[1].toLowerCase().slice(0, 3)])}-${p2(m[2])}`;
-  m = line.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/); if (m) { let y = m[3] || String(new Date().getFullYear()); if (y.length === 2) y = '20' + y; return `${y}-${p2(m[1])}-${p2(m[2])}`; }
-  return fb;
+  m = line.match(/(?:^|\s)(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=\s|$|[-|:])/);
+  if (m && +m[1] >= 1 && +m[1] <= 12 && +m[2] >= 1 && +m[2] <= 31) {
+    let y = m[3] || String(new Date().getFullYear()); if (y.length === 2) y = '20' + y;
+    return `${y}-${p2(m[1])}-${p2(m[2])}`;
+  }
+  return null;
+}
+function parseDowTokens(prefix) {
+  const MAP = { mon: 0, monday: 0, m: 0, tue: 1, tues: 1, tuesday: 1, tu: 1, wed: 2, wednesday: 2, w: 2, thu: 3, thur: 3, thurs: 3, thursday: 3, th: 3, fri: 4, friday: 4, f: 4, sat: 5, saturday: 5, sa: 5, sun: 6, sunday: 6, su: 6 };
+  const clean = prefix.replace(/[()]/g, ' ').trim();
+  if (!clean) return [];
+  const toks = clean.split(/[\s,/+&]+/).filter(Boolean);
+  if (!toks.length || toks.length > 7) return [];
+  const idxs = [];
+  for (const t of toks) {
+    const k = t.toLowerCase().replace(/\.$/, '');
+    if (MAP[k] === undefined) return [];
+    if (!idxs.includes(MAP[k])) idxs.push(MAP[k]);
+  }
+  const mon = mondayOf(new Date());
+  return idxs.map(i => dstr(addDays(mon, i)));
+}
+function parseScheduleText(raw) {
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const reRange = /\b(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn|a|p)\.?|\b12mn\b|\b12nn\b|\d{1,2}(?::\d{2})?)\s*(?:-|–|—|\bto\b)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn|a|p)\.?|\b12mn\b|\b12nn\b|\d{1,2}(?::\d{2})?)\b/i;
+  const out = [];
+  let ctxDate = null;
+  lines.forEach(line => {
+    const strictDate = parseDateStrict(line);
+    const cleaned = strictDate ? line.replace(/\d{4}-\d{1,2}-\d{1,2}/, ' ').replace(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2}(?:,?\s*\d{4})?\b/i, ' ').replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/, ' ') : line;
+    const tm = cleaned.match(reRange);
+    if (!tm) {
+      if (strictDate) { ctxDate = strictDate; return; }
+      const l = out[out.length - 1];
+      if (l && !l.labeled) { l.note = line; l.labeled = true; }
+      return;
+    }
+    const tr = resolveTimeRange(tm[1], tm[2]);
+    if (!tr) return;
+    let dates = [];
+    if (strictDate) { dates = [strictDate]; ctxDate = strictDate; }
+    else {
+      const pre = cleaned.slice(0, tm.index).replace(/[-|:•]+$/, '').trim();
+      const dows = parseDowTokens(pre);
+      if (dows.length) dates = dows;
+      else if (ctxDate) dates = [ctxDate];
+      else dates = [dstr(addDays(new Date(), out.length))];
+    }
+    let note = '', labeled = false;
+    const parts = line.split('|').map(x => x.trim());
+    if (parts.length >= 3 && parts[2]) { note = parts[2]; labeled = true; }
+    else {
+      const after = cleaned.slice(tm.index + tm[0].length).trim().replace(/^\([a-zA-Z.]+\)\s*/, '').replace(/^[-|•:]+\s*/, '').trim();
+      if (after) { note = after; labeled = true; }
+    }
+    dates.forEach(date => {
+      const hol = holidayFor(date), mult = hol ? hol.mult : 1;
+      const r = calcPay({ start: tr.start, end: tr.end, mult, rate: settings.hourlyRate, brk: 0, prior: 0 });
+      const dup = shifts.some(s => s.date === date && s.startTime === tr.start && s.endTime === tr.end && isShiftActive(s));
+      out.push({ date, start: tr.start, end: tr.end, note, labeled, mult, hol: hol ? hol.name : '', gross: r ? r.gross : 0, dup, checked: !dup });
+    });
+  });
+  return out;
+}
+function queueIoPreview() { clearTimeout(_ioPrevT); _ioPrevT = setTimeout(updateIoPreview, 130); }
+function toggleIoRow(i, on) { if (_ioParsed[i]) { _ioParsed[i].checked = !!on; syncIoSummary(); } }
+function syncIoSummary() {
+  const sel = _ioParsed.filter(x => x.checked);
+  const tot = r2(sel.reduce((a, x) => a + x.gross, 0));
+  setText($('io-prev-count'), `${sel.length} of ${_ioParsed.length} shift${_ioParsed.length === 1 ? '' : 's'} selected`);
+  setText($('io-prev-gross'), peso(tot));
+  setText($('io-imp-btn'), sel.length ? `Import ${sel.length} shift${sel.length > 1 ? 's' : ''}` : 'Import shifts');
+  $('io-imp-btn').disabled = _ioParsed.length > 0 && sel.length === 0;
+}
+function updateIoPreview() {
+  const raw = ($('io-text').value || '').trim();
+  const wrap = $('io-prev-wrap');
+  if (!raw) { _ioParsed = []; wrap.classList.add('hidden'); $('io-imp-btn').disabled = false; setText($('io-imp-btn'), 'Import shifts'); return; }
+  _ioParsed = parseScheduleText(raw);
+  wrap.classList.toggle('hidden', !_ioParsed.length);
+  if (!_ioParsed.length) { $('io-imp-btn').disabled = false; setText($('io-imp-btn'), 'Import shifts'); return; }
+  setHTML($('io-prev-list'), _ioParsed.map((o, i) =>
+    `<label class="io-row${o.dup ? ' dup' : ''}">` +
+    `<input type="checkbox"${o.checked ? ' checked' : ''} onchange="toggleIoRow(${i},this.checked)">` +
+    `<div class="grow" style="min-width:0"><p style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtDay(o.date)} · ${t12(o.start)}–${t12(o.end)}</p>` +
+    `<p class="card-s">${esc(o.note || 'Shift')}${o.hol ? ` · ${o.mult}× ${esc(o.hol)}` : ''}${o.dup ? ' · Already logged' : ''}</p></div>` +
+    `<b class="num">${peso(o.gross)}</b></label>`
+  ).join(''));
+  syncIoSummary();
 }
 function importText() {
   const raw = $('io-text').value.trim(); if (!raw) return toast('Paste your schedule first');
-  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  const re12 = /(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn)\.?|\b12mn\b|\b12nn\b)\s*(?:-|–|—|to)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn)\.?|\b12mn\b|\b12nn\b)/i;
-  const re24 = /\b(\d{1,2}:\d{2})\s*(?:-|–|—|to)\s*(\d{1,2}:\d{2})\b/;
-  const out = [];
-  lines.forEach(line => {
-    const tm = line.match(re12) || line.match(re24);
-    if (!tm) { const l = out[out.length - 1]; if (l && !l.labeled) { l.note = line; l.labeled = true; } return; }
-    const st = parseTime(tm[1]), en = parseTime(tm[2]); if (!st || !en) return;
-    const fb = dstr(addDays(new Date(), out.length)), date = parseDate(line, fb);
-    let note = '', labeled = false; const parts = line.split('|').map(x => x.trim());
-    if (parts.length >= 3 && parts[2]) { note = parts[2]; labeled = true; }
-    else { const after = line.slice(tm.index + tm[0].length).trim().replace(/^\([a-zA-Z.]+\)\s*/, '').replace(/^[-|•:]+\s*/, '').trim(); if (after) { note = after; labeled = true; } }
-    out.push({ date, start: st, end: en, note, labeled });
-  });
-  if (!out.length) return toast('No valid shifts found — check the time format');
-  let added = 0, skipped = 0; const days = new Set();
-  out.forEach(o => {
-    if (shifts.some(s => s.date === o.date && s.startTime === o.start && s.endTime === o.end)) { skipped++; return; }
-    const h = holidayFor(o.date);
-    shifts.push({ id: Date.now() + added + Math.floor(Math.random() * 999), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: h ? h.mult : 1, gross: 0, breakMin: 0 });
-    days.add(o.date); added++;
+  if (!_ioParsed.length) _ioParsed = parseScheduleText(raw);
+  const picked = _ioParsed.filter(x => x.checked);
+  if (!picked.length) return toast(_ioParsed.length ? 'Select at least one shift to import' : 'No valid shifts found — check the time format');
+  const td = today(), days = new Set();
+  picked.forEach((o, idx) => {
+    shifts.push({ id: Date.now() + idx + Math.floor(Math.random() * 999), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: o.mult, gross: 0, breakMin: 0, status: o.date > td ? 'scheduled' : 'worked' });
+    days.add(o.date);
   });
   days.forEach(recalcDay);
-  if (added) selKey = periodOf([...days].sort().pop()).key;
-  $('io-text').value = ''; persistShifts(); render(); closeSheet('io-sheet');
-  toast(added ? `Imported ${added} shift${added > 1 ? 's' : ''}${skipped ? ` · ${skipped} duplicate${skipped > 1 ? 's' : ''} skipped` : ''}` : 'Those shifts are already logged');
+  selKey = periodOf([...days].sort().pop()).key;
+  $('io-text').value = ''; _ioParsed = []; $('io-prev-wrap').classList.add('hidden');
+  persistShifts(); render(); closeSheet('io-sheet');
+  toast(`Imported ${picked.length} shift${picked.length > 1 ? 's' : ''}`);
 }
 
 /* ================= settings screen ================= */
@@ -2632,21 +2947,61 @@ async function checkUpdates(manual) {
   btn.disabled = false; btn.textContent = 'Check for updates';
 }
 
-/* ================= backup / restore ================= */
-let bkMode = 'export';
+/* ================= backup / restore & silent auto-backup ================= */
+let bkMode = 'export', _abT = 0;
+const hasNativeAutoBk = () => !!(window.AndroidBridge && typeof AndroidBridge.saveAutoBackup === 'function');
 const backupJSON = () => JSON.stringify({ app: 'SweldoPulse', version: APP_VERSION, exportedAt: new Date().toISOString(), settings, shifts, gigs, expenses }, null, 1);
+function scheduleAutoBackup() {
+  if (!hasNativeAutoBk() || settings.autoBackup === false) return;
+  if (Date.now() - (+settings.lastAutoBk || 0) < 12 * 3600000) return;
+  clearTimeout(_abT);
+  _abT = setTimeout(() => runAutoBackup(false), 2500);
+}
+function runAutoBackup(manual) {
+  if (!hasNativeAutoBk()) { if (manual) toast('Auto-backup works in the Android app'); return false; }
+  try {
+    const ok = AndroidBridge.saveAutoBackup(backupJSON());
+    if (ok) {
+      settings.lastAutoBk = Date.now();
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); localStorage.setItem(BK_KEY, Date.now()); } catch (e) {}
+      syncBackupStatus();
+      if (manual) toast('Saved to Documents/SweldoPulse');
+    } else if (manual) toast('Could not write auto-backup');
+    return ok;
+  } catch (e) { if (manual) toast('Auto-backup failed'); return false; }
+}
+function toggleAutoBackup() {
+  settings.autoBackup = $('autobk-on') ? $('autobk-on').checked : true;
+  persistSettings(); syncBackupStatus();
+  if (settings.autoBackup && hasNativeAutoBk()) runAutoBackup(true);
+  else toast(settings.autoBackup ? 'Auto-backup enabled' : 'Auto-backup paused');
+}
+async function restoreAutoBackup() {
+  if (!window.AndroidBridge || typeof AndroidBridge.readAutoBackup !== 'function') return toast('No auto-backup available here');
+  const txt = AndroidBridge.readAutoBackup();
+  if (!txt || txt.length < 10) return toast('No auto-backup file found yet');
+  $('bk-text').value = txt;
+  await restoreFromText();
+}
 function csvText() {
-  const q = v => { v = String(v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return `"${v.replace(/"/g, '""')}"`; },  rows = ['date,start,end,label,break_min,day_multiplier,regular_h,night_h,overtime_h,gross_php,cutoff'];
-  [...shifts].sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || '')).forEach(s => rows.push([s.date, s.startTime, s.endTime, q(s.note || ''), s.breakMin || 0, s.multiplier, s.reg, s.nd, s.ot, s.gross.toFixed(2), q(periodOf(s.date).label)].join(',')));
+  const q = v => { v = String(v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return `"${v.replace(/"/g, '""')}"`; };
+  const rows = ['type,date,status,start,end,label,rate_php,break_min,day_multiplier,regular_h,night_h,overtime_h,gross_php,cutoff'];
+  [...shifts].sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || '')).forEach(s => {
+    const st = shiftStatusOf(s), g = st === 'cancelled' ? 0 : s.gross;
+    rows.push(['shift', s.date, st, s.startTime, s.endTime, q(s.note || ''), (+s.hourlyRate || settings.hourlyRate).toFixed(2), s.breakMin || 0, s.multiplier, st === 'cancelled' ? 0 : s.reg, st === 'cancelled' ? 0 : s.nd, st === 'cancelled' ? 0 : s.ot, g.toFixed(2), q(periodOf(s.date).label)].join(','));
+  });
+  [...gigs].sort((a, b) => a.date.localeCompare(b.date)).forEach(g => {
+    rows.push(['side_gig', g.date, g.status || 'paid', '', '', q(g.title ? `${g.stream}: ${g.title}` : g.stream), '', 0, 1, 0, 0, 0, g.amount.toFixed(2), q(periodOf(g.date).label)].join(','));
+  });
   return rows.join('\n');
 }
 function openBackup(mode) {
   bkMode = mode; const ta = $('bk-text'), ex = mode !== 'restore', csv = mode === 'csv';
   $('bk-title').textContent = csv ? 'Export as CSV' : (ex ? 'Back up your data' : 'Restore from backup');
-  $('bk-sub').textContent = csv ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'} · opens in Excel / Sheets` : (ex ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'} + settings` : 'Replaces everything on this device');
+  $('bk-sub').textContent = csv ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'}${gigs.length ? ` + ${gigs.length} gigs` : ''} · opens in Excel / Sheets` : (ex ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'} + settings` : 'Replaces everything on this device');
   ta.value = csv ? csvText() : (ex ? backupJSON() : ''); ta.readOnly = ex; ta.placeholder = ex ? '' : 'Paste your backup text here…';
   $('bk-export').classList.toggle('hidden', !ex); $('bk-restore').classList.toggle('hidden', ex);
-  $('blk-note').textContent = csv ? 'Copy it into a spreadsheet, or tap Save / share to send the .csv file.' : ex ? 'Tip: tap Copy, then paste it into Notes, Drive or a Messenger chat to yourself.' : 'Pick the backup file, or open it in any app, copy all the text and paste it above.';
+  $('bk-note').textContent = csv ? 'Copy it into a spreadsheet, or tap Save / share to send the .csv file.' : ex ? 'Tip: tap Copy, then paste it into Notes, Drive or a Messenger chat to yourself.' : 'Pick the backup file, or open it in any app, copy all the text and paste it above.';
   openSheet('backup-sheet');
 }
 const markBackup = () => { if (bkMode === 'csv') return render(); try { localStorage.setItem(BK_KEY, Date.now()); } catch (e) {} render(); syncBackupStatus(); };
@@ -2666,10 +3021,19 @@ async function restoreFromText() {
   const list = normalizeShifts(d && d.shifts);
   if (!d || d.app !== 'SweldoPulse' || !Array.isArray(d.shifts) || (d.shifts.length && !list.length)) return toast('Not a SweldoPulse backup');
   if (!await askConfirm({ title: 'Replace all data?', body: `This replaces everything on this device with the backup (<b>${list.length}</b> shifts). This cannot be undone.`, ok: 'Restore', danger: true })) return;
-  settings = { ...settings, ...(d.settings || {}) }; if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!Array.isArray(settings.customPresets)) settings.customPresets = []; if (!Array.isArray(settings.vaults)) settings.vaults = []; shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); _pm.clear(); selKey = ''; ui.calDay = '';
+  settings = { ...settings, ...(d.settings || {}) }; if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!Array.isArray(settings.customPresets)) settings.customPresets = []; if (!Array.isArray(settings.vaults)) settings.vaults = []; if (!Array.isArray(settings.bills)) settings.bills = []; shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); _pm.clear(); selKey = ''; ui.calDay = '';
   persistSettings(); persistShifts(); persistGigs(); persistExpenses(); syncNativeReminder(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts${gigs.length ? ' + ' + gigs.length + ' gigs' : ''}`);
 }
-function syncBackupStatus() { const lb = +localStorage.getItem(BK_KEY) || 0; $('backup-status').textContent = lb ? 'Last backup: ' + new Date(lb).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never backed up'; }
+function syncBackupStatus() {
+  const lb = +localStorage.getItem(BK_KEY) || 0;
+  $('backup-status').textContent = lb ? 'Last backup: ' + new Date(lb).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never backed up';
+  if ($('autobk-on')) $('autobk-on').checked = settings.autoBackup !== false;
+  if ($('autobk-actions')) $('autobk-actions').classList.toggle('hidden', !hasNativeAutoBk());
+  if ($('autobk-sub')) {
+    const ab = +settings.lastAutoBk || 0;
+    $('autobk-sub').textContent = !hasNativeAutoBk() ? 'Android app feature' : (ab ? 'Last saved: ' + new Date(ab).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Saves daily to Documents/SweldoPulse');
+  }
+}
 
 /* ================= payslip copy / image ================= */
 function payslipText() {
@@ -2705,20 +3069,64 @@ async function viewPayslip() {
   x.textAlign = 'left'; x.fillStyle = '#8A8AA8'; x.font = '600 28px Inter, sans-serif'; x.fillText('NET TAKE-HOME', 72, y + 50);
   x.fillStyle = gold; x.font = '700 92px Inter, sans-serif'; x.fillText(peso(D.net), 72, y + 150);
   x.fillStyle = '#5E6180'; x.font = '500 22px Inter, sans-serif'; x.fillText('Estimate by SweldoPulse · ' + new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }) + ' · not an official payslip', 72, H - 44);
-  window.__payslipCanvas = c; $('payslip-img').src = c.toDataURL('image/png'); $('payslip-modal').classList.add('on');
+  window.__payslipCanvas = c; window.__payslipName = `SweldoPulse-payslip-${today()}.png`; $('payslip-img').src = c.toDataURL('image/png'); $('payslip-modal').classList.add('on');
+}
+async function viewInsightsCard() {
+  try { await document.fonts.load('700 40px Inter'); await document.fonts.load('500 40px Inter'); } catch (e) {}
+  const D = _insCache || computeYearData(ui.insYear), W = 1080, H = 1320;
+  const allMode = settings.incomeScope === 'all' && D.totGigs > 0;
+  const yearNet = allMode ? r2(D.totNet + D.totGigs) : D.totNet;
+  const eff = D.totHrs > 0 ? r2(D.totGross / D.totHrs) : 0;
+  const statTot = r2(D.st.sss + D.st.ph + D.st.pi + D.st.tax);
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#161B33'); g.addColorStop(1, '#07090F'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const gold = x.createLinearGradient(0, 0, W, 0); gold.addColorStop(0, '#FFE08A'); gold.addColorStop(.5, '#F5A524'); gold.addColorStop(1, '#F0643C');
+  x.save(); x.translate(72, 68); x.scale(2.4, 2.4); x.fillStyle = '#0B0F1E'; x.beginPath(); if (x.roundRect) x.roundRect(0, 0, 64, 64, 16); else x.rect(0, 0, 64, 64); x.fill();
+  x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = gold; x.lineWidth = 4.4; x.beginPath(); x.arc(32, 32, 19, 0, 7); x.stroke();
+  const pl = () => { x.beginPath(); x.moveTo(7, 34); x.lineTo(22, 34); x.lineTo(27, 22); x.lineTo(33, 46); x.lineTo(38, 34); x.lineTo(57, 34); };
+  x.strokeStyle = '#0B0F1E'; x.lineWidth = 10; pl(); x.stroke(); x.strokeStyle = '#fff'; x.lineWidth = 4; pl(); x.stroke(); x.fillStyle = '#F5A524'; x.beginPath(); x.arc(57, 34, 2.8, 0, 7); x.fill(); x.restore();
+  x.fillStyle = '#fff'; x.font = '700 50px Inter, sans-serif'; x.fillText('SweldoPulse', 256, 118);
+  x.fillStyle = '#94A3B8'; x.font = '500 28px Inter, sans-serif'; x.fillText(`${D.yr} Year-in-Review`, 256, 160);
+  x.fillStyle = '#94A3B8'; x.font = '600 26px Inter, sans-serif'; x.fillText(allMode ? 'TOTAL NET INCOME (PAYROLL + GIGS)' : 'TOTAL NET PAYROLL', 72, 290);
+  x.fillStyle = gold; x.font = '700 88px Inter, sans-serif'; x.fillText(peso(yearNet), 72, 388);
+  const kpis = [
+    ['Effective Rate', eff > 0 ? `${peso(eff)}/hr` : '—'],
+    ['Hours Worked', `${fh(D.totHrs)} (${D.totShifts} sh)`],
+    ['13th-Month YTD', peso(D.basicYr / 12)],
+    ['Statutory Total', peso(statTot)]
+  ];
+  kpis.forEach((k, i) => {
+    const bx = 72 + (i % 2) * 484, by = 438 + Math.floor(i / 2) * 144;
+    x.fillStyle = 'rgba(255,255,255,.06)'; x.beginPath(); if (x.roundRect) x.roundRect(bx, by, 452, 120, 24); else x.rect(bx, by, 452, 120); x.fill();
+    x.fillStyle = '#94A3B8'; x.font = '600 24px Inter, sans-serif'; x.fillText(k[0], bx + 28, by + 44);
+    x.fillStyle = '#FFFFFF'; x.font = '700 38px Inter, sans-serif'; x.fillText(k[1], bx + 28, by + 94);
+  });
+  x.fillStyle = '#94A3B8'; x.font = '600 26px Inter, sans-serif'; x.fillText('MONTHLY NET TREND', 72, 785);
+  const vals = D.months.map(m => allMode ? r2(m.net + m.gigs) : m.net), maxV = Math.max(1, ...vals);
+  vals.forEach((v, i) => {
+    const cx = 72 + i * 79, bh = Math.max(14, Math.round((v / maxV) * 230));
+    x.fillStyle = v > 0 ? '#6366F1' : 'rgba(255,255,255,.1)';
+    x.beginPath(); if (x.roundRect) x.roundRect(cx, 1045 - bh, 52, bh, 12); else x.rect(cx, 1045 - bh, 52, bh); x.fill();
+    x.fillStyle = '#94A3B8'; x.font = '600 22px Inter, sans-serif'; x.textAlign = 'center'; x.fillText(MON[i][0], cx + 26, 1085);
+  });
+  x.textAlign = 'left';
+  if (D.totGigs > 0) { x.fillStyle = '#34D399'; x.font = '600 26px Inter, sans-serif'; x.fillText(`Includes ${peso(D.totGigs)} from side gigs`, 72, 1155); }
+  x.fillStyle = '#64748B'; x.font = '500 22px Inter, sans-serif'; x.fillText('Generated by SweldoPulse v' + APP_VERSION + ' · ' + new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }), 72, H - 56);
+  window.__payslipCanvas = c; window.__payslipName = `SweldoPulse-insights-${D.yr}.png`;
+  $('payslip-img').src = c.toDataURL('image/png'); $('payslip-modal').classList.add('on');
 }
 function closePayslip() { $('payslip-modal').classList.remove('on'); }
 async function savePayslipImage() {
-  const c = window.__payslipCanvas; if (!c) return; const name = `SweldoPulse-payslip-${today()}.png`;
+  const c = window.__payslipCanvas; if (!c) return; const name = window.__payslipName || `SweldoPulse-payslip-${today()}.png`;
   if (window.AndroidBridge) { toast(AndroidBridge.saveImage(c.toDataURL('image/png'), name) ? 'Saved to Pictures/SweldoPulse' : 'Could not save — allow storage permission and retry'); return; }
   const blob = await new Promise(r => c.toBlob(r, 'image/png'));
   try { const f = new File([blob], name, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; } } catch (e) { if (e.name === 'AbortError') return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast('Payslip image saved');
 }
 
-/* ================= app lock (lock-first) ================= */
+/* ================= app lock (upgraded glass PIN screen, 4/6-digit, live timer) ================= */
 const lockCfg = () => { try { return JSON.parse(localStorage.getItem(LOCK_KEY) || 'null'); } catch (e) { return null; } };
-let pinBuf = '', pinMode = '', pinTmp = '', hiddenAt = 0, fpPurpose = '';
+let pinBuf = '', pinMode = '', pinTmp = '', pinLen = 4, hiddenAt = 0, fpPurpose = '', lockTimer = 0;
 async function hashPin(p, salt) {
   const s = salt + ':' + p;
   if (window.crypto && crypto.subtle) { const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join(''); }
@@ -2726,42 +3134,96 @@ async function hashPin(p, salt) {
 }
 const hasFp = () => { const c = lockCfg(); try { return !!(window.AndroidBridge && c && c.fp && AndroidBridge.fpAvailable()); } catch (e) { return false; } };
 const lockVisible = () => root.classList.contains('locked') || root.classList.contains('pin-open');
-function drawDots() { setHTML($('pin-dots'), [0, 1, 2, 3].map(i => `<span class="pin-dot${i < pinBuf.length ? ' f' : ''}"></span>`).join('')); }
-function lockUI(title, sub, open) {
-  setText($('lock-title'), title); setText($('lock-sub'), sub || ''); pinBuf = ''; drawDots();
-  $('lock-forgot').classList.toggle('hidden', pinMode !== 'unlock'); $('lock-cancel').classList.toggle('hidden', pinMode === 'unlock');
-  const fp = pinMode === 'unlock' && hasFp(); $('pin-fp').style.visibility = fp ? 'visible' : 'hidden';
-  if (open) { if (pinMode === 'unlock') root.classList.add('locked'); else root.classList.add('pin-open'); }
-  if (fp && open) setTimeout(tryFingerprint, 300);
+function activePinLen() {
+  if (pinMode === 'set1' || pinMode === 'set2') return pinLen === 6 ? 6 : 4;
+  const c = lockCfg();
+  return (c && c.len === 6) ? 6 : 4;
 }
-function lockNow(sub) { pinMode = 'unlock'; lockUI('Enter PIN', sub || 'SweldoPulse is locked', true); }
-function unlockDone() { root.classList.remove('locked', 'pin-open', 'veil'); if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} fpPurpose = ''; }
+function setPinLen(n) {
+  pinLen = n === 6 ? 6 : 4; pinBuf = '';
+  $$('#pin-len-seg button').forEach(b => b.classList.toggle('on', +b.dataset.pl === pinLen));
+  setText($('lock-sub'), `${pinLen} digits to protect your pay data`);
+  drawDots();
+}
+function drawDots() {
+  const n = activePinLen();
+  let h = '';
+  for (let i = 0; i < n; i++) h += `<span class="pin-dot${i < pinBuf.length ? ' f' : ''}"></span>`;
+  setHTML($('pin-dots'), h);
+}
+function startLockCountdown() {
+  clearInterval(lockTimer);
+  const tick = () => {
+    const until = +localStorage.getItem('sp_lock_until') || 0;
+    const rem = Math.ceil((until - Date.now()) / 1000);
+    if (rem > 0 && pinMode === 'unlock' && lockVisible()) {
+      setText($('lock-sub'), `Too many tries — wait ${rem}s`);
+      setText($('lock-pill-txt'), `Locked (${rem}s)`);
+    } else {
+      clearInterval(lockTimer); lockTimer = 0;
+      if (pinMode === 'unlock' && lockVisible()) { setText($('lock-sub'), 'Enter your PIN to unlock'); setText($('lock-pill-txt'), 'Secured'); }
+    }
+  };
+  tick();
+  lockTimer = setInterval(tick, 1000);
+}
+function lockUI(title, sub, open) {
+  setText($('lock-title'), title); setText($('lock-sub'), sub || ''); pinBuf = '';
+  const pillMap = { unlock: 'Secured', set1: 'Step 1 of 2', set2: 'Step 2 of 2', 'verify-change': 'Verify PIN', 'verify-remove': 'Confirm removal' };
+  setText($('lock-pill-txt'), pillMap[pinMode] || 'Secured');
+  if ($('pin-len-seg')) {
+    $('pin-len-seg').classList.toggle('hidden', pinMode !== 'set1');
+    $$('#pin-len-seg button').forEach(b => b.classList.toggle('on', +b.dataset.pl === pinLen));
+  }
+  drawDots();
+  $('lock-forgot').classList.toggle('hidden', pinMode !== 'unlock'); $('lock-cancel').classList.toggle('hidden', pinMode === 'unlock');
+  const fp = pinMode === 'unlock' && hasFp();
+  $('pin-fp').style.visibility = fp ? 'visible' : 'hidden';
+  if ($('lock-fp-pill')) $('lock-fp-pill').classList.toggle('hidden', !fp);
+  if (open) { if (pinMode === 'unlock') root.classList.add('locked'); else root.classList.add('pin-open'); }
+  const until = +localStorage.getItem('sp_lock_until') || 0;
+  if (pinMode === 'unlock' && Date.now() < until) startLockCountdown();
+  if (fp && open && Date.now() >= until) setTimeout(tryFingerprint, 280);
+}
+function lockNow(sub) { pinMode = 'unlock'; lockUI('Welcome back', sub || 'Enter your PIN to unlock', true); }
+function unlockDone() { clearInterval(lockTimer); lockTimer = 0; root.classList.remove('locked', 'pin-open', 'veil'); if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} fpPurpose = ''; }
 const fails = () => +localStorage.getItem('sp_pin_fails') || 0;
 async function pinKey(k) {
   const until = +localStorage.getItem('sp_lock_until') || 0;
-  if (pinMode === 'unlock' && Date.now() < until) { setText($('lock-sub'), `Too many tries — wait ${Math.ceil((until - Date.now()) / 1000)}s`); return; }
-  if (k === '⌫') pinBuf = pinBuf.slice(0, -1); else if (pinBuf.length < 4) pinBuf += k;
-  drawDots(); if (pinBuf.length < 4) return;
+  if (pinMode === 'unlock' && Date.now() < until) { startLockCountdown(); return; }
+  const targetLen = activePinLen();
+  if (k === '⌫') pinBuf = pinBuf.slice(0, -1); else if (pinBuf.length < targetLen) pinBuf += k;
+  drawDots(); if (pinBuf.length < targetLen) return;
   const cfg = lockCfg(), p = pinBuf;
-  if (pinMode === 'set1') { pinTmp = p; pinMode = 'set2'; return setTimeout(() => lockUI('Confirm PIN', 'Enter it once more'), 150); }
+  if (pinMode === 'set1') { pinTmp = p; pinMode = 'set2'; return setTimeout(() => lockUI('Confirm PIN', `Re-enter your ${pinLen}-digit PIN`), 140); }
   if (pinMode === 'set2') {
-    if (p !== pinTmp) { pinMode = 'set1'; return failPin('PINs did not match — start again', 'Create PIN'); }
+    if (p !== pinTmp) { pinMode = 'set1'; return failPin('PINs did not match — try again', 'Create PIN'); }
     const salt = Math.random().toString(36).slice(2), old = cfg || {};
-    localStorage.setItem(LOCK_KEY, JSON.stringify({ salt, hash: await hashPin(p, salt), auto: old.auto ?? 30, fp: old.fp }));
-    unlockDone(); renderSecurity(); toast('PIN lock enabled'); return;
+    localStorage.setItem(LOCK_KEY, JSON.stringify({ salt, hash: await hashPin(p, salt), len: pinLen, auto: old.auto ?? 30, fp: old.fp }));
+    unlockDone(); renderSecurity(); toast(`${pinLen}-digit PIN lock enabled`); return;
   }
   if (!cfg) { unlockDone(); return; }
   const ok = (await hashPin(p, cfg.salt)) === cfg.hash;
-  if (!ok) { const n = fails() + 1; localStorage.setItem('sp_pin_fails', n); if (n >= 5) localStorage.setItem('sp_lock_until', Date.now() + 30000 * Math.min(8, n - 4)); return failPin(n >= 5 ? 'Too many tries — locked briefly' : 'Wrong PIN'); }
+  if (!ok) {
+    const n = fails() + 1; localStorage.setItem('sp_pin_fails', n);
+    if (n >= 5) { localStorage.setItem('sp_lock_until', Date.now() + 30000 * Math.min(8, n - 4)); failPin('Too many tries — locked briefly'); setTimeout(startLockCountdown, 380); return; }
+    return failPin(`Wrong PIN (${5 - n} attempt${5 - n === 1 ? '' : 's'} left)`);
+  }
   localStorage.removeItem('sp_pin_fails'); localStorage.removeItem('sp_lock_until');
   if (pinMode === 'unlock') unlockDone();
-  else if (pinMode === 'verify-change') { pinMode = 'set1'; lockUI('Create new PIN', '4 digits'); }
+  else if (pinMode === 'verify-change') { pinLen = (cfg && cfg.len === 6) ? 6 : 4; pinMode = 'set1'; lockUI('Create new PIN', `${pinLen} digits to protect your pay data`); }
   else if (pinMode === 'verify-remove') { localStorage.removeItem(LOCK_KEY); unlockDone(); renderSecurity(); toast('PIN lock removed'); }
 }
-function failPin(msg, retitle) { const d = $('pin-dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); if (navigator.vibrate) navigator.vibrate(60); setTimeout(() => lockUI(retitle || $('lock-title').textContent, msg), 350); }
-function lockSetupFlow() { if (lockCfg()) { pinMode = 'verify-change'; lockUI('Enter current PIN', '', true); } else { pinMode = 'set1'; lockUI('Create PIN', '4 digits to protect your pay data', true); } }
-function lockRemoveFlow() { pinMode = 'verify-remove'; lockUI('Enter PIN to remove', '', true); }
-function lockCancel() { if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} root.classList.remove('pin-open'); }
+function failPin(msg, retitle) { const d = $('pin-dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); if (navigator.vibrate) navigator.vibrate(60); setTimeout(() => lockUI(retitle || $('lock-title').textContent, msg), 340); }
+function lockSetupFlow() { const c = lockCfg(); if (c) { pinMode = 'verify-change'; lockUI('Enter current PIN', 'Verify before changing', true); } else { pinLen = 4; pinMode = 'set1'; lockUI('Create PIN', '4 digits to protect your pay data', true); } }
+function lockRemoveFlow() { pinMode = 'verify-remove'; lockUI('Enter PIN to remove', 'Verify your current PIN', true); }
+function lockCancel() { clearInterval(lockTimer); lockTimer = 0; if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} root.classList.remove('pin-open'); }
+document.addEventListener('keydown', e => {
+  if (!lockVisible()) return;
+  if (/^[0-9]$/.test(e.key)) { e.preventDefault(); pinKey(e.key); }
+  else if (e.key === 'Backspace') { e.preventDefault(); pinKey('⌫'); }
+  else if (e.key === 'Escape' && pinMode !== 'unlock') { e.preventDefault(); lockCancel(); }
+});
 function lockSetAuto(v) { const c = lockCfg(); if (c) { c.auto = +v; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); } }
 async function lockForgot() {
   if (!await askConfirm({ title: 'Reset PIN?', body: 'Resetting the PIN <b>erases all shifts and settings</b> on this device — your PIN is what guards your data. You can restore from a backup afterwards.', ok: 'Erase & reset' })) return;
@@ -2859,6 +3321,7 @@ function boot() {
   // after an update: show what's new once (not on a fresh install); then quietly look for newer releases every 6 hours
   try { const seen = localStorage.getItem('sp_seen_version'); if (seen !== APP_VERSION) { localStorage.setItem('sp_seen_version', APP_VERSION); if (seen && !lockVisible()) setTimeout(showWhatsNew, 900); } } catch (e) {}
   setTimeout(() => { if (!lockVisible() && navigator.onLine !== false && Date.now() - (settings.lastUpd || 0) > 216e5) checkUpdates(false); }, 4500);
+  setTimeout(() => { if (shifts.length && hasNativeAutoBk() && settings.autoBackup !== false && Date.now() - (+settings.lastAutoBk || 0) > 864e5) runAutoBackup(false); }, 6500);
   window.onShortcutTab = function (tab) { if (!lockVisible() && VIEWS[tab]) go(tab); };
   if (location.hash === '#log-shift') setTimeout(() => openShift(), 300);
   if (location.hash === '#deductions' || location.hash === '#payslip') setTimeout(() => { if (!lockVisible()) go('deductions'); }, 250);

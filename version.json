@@ -1,7 +1,7 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
-  "apkName": "SweldoPulse-v2.0.0.apk",
+  "apkName": "SweldoPulse-v2.1.0.apk",
   "apkSize": "Latest Build",
-  "notes": "SweldoPulse 2.0: Home Screen Widget & App Shortcuts, Actionable Budget (Expenses + Savings Vaults), Multi-Stream Side Gigs, Weekly Roster Bulk-Logger & Shift Status, Yearly Insights & Statutory Contributions Ledger."
+  "notes": "SweldoPulse 2.1: Resizable & Theme-Synced Home Widget, Upgraded Glass PIN Screen (4/6-digit + live lockout), Recurring Bills Checklist, Smart Roster Importer with Preview, Silent Auto-Backup, Pay Goal Planner & Shareable Insights Card."
 }

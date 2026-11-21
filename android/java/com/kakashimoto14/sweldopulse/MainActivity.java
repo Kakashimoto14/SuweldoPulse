@@ -11,6 +11,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -24,6 +25,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
@@ -41,6 +43,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -521,6 +524,158 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void updateWidgetV2(String json) {
+            SweldoWidgetProvider.saveJsonAndRefresh(MainActivity.this, json);
+        }
+
+        @JavascriptInterface
+        public boolean saveAutoBackup(String json) {
+            if (json == null || json.length() < 10) return false;
+            boolean ok = false;
+            byte[] data;
+            try {
+                data = json.getBytes("UTF-8");
+            } catch (Throwable t) {
+                return false;
+            }
+            // Always save internal rolling mirror for instant 1-tap restore
+            try {
+                File f = new File(getFilesDir(), "SweldoPulse-auto-backup.json");
+                FileOutputStream fos = new FileOutputStream(f);
+                fos.write(data);
+                fos.flush();
+                fos.close();
+                ok = true;
+            } catch (Throwable ignored) { }
+
+            // Also persist to Documents/SweldoPulse on Android 10+ (survives uninstall, zero permissions)
+            if (Build.VERSION.SDK_INT >= 29) {
+                try {
+                    ContentResolver cr = getContentResolver();
+                    Uri filesUri = MediaStore.Files.getContentUri("external");
+                    String fileName = "SweldoPulse-auto-backup.json";
+                    Uri existing = null;
+                    Cursor cur = null;
+                    try {
+                        cur = cr.query(
+                            filesUri,
+                            new String[]{"_id"},
+                            "_display_name=? AND relative_path LIKE ?",
+                            new String[]{fileName, "Documents/SweldoPulse%"},
+                            null
+                        );
+                        if (cur != null && cur.moveToFirst()) {
+                            long id = cur.getLong(0);
+                            existing = Uri.withAppendedPath(filesUri, String.valueOf(id));
+                        }
+                    } catch (Throwable ignored) {
+                    } finally {
+                        if (cur != null) try { cur.close(); } catch (Throwable ignored) { }
+                    }
+                    if (existing != null) {
+                        OutputStream os = null;
+                        try {
+                            os = cr.openOutputStream(existing, "wt");
+                            if (os != null) {
+                                os.write(data);
+                                os.flush();
+                                ok = true;
+                            }
+                        } finally {
+                            if (os != null) try { os.close(); } catch (Throwable ignored) { }
+                        }
+                    } else {
+                        ContentValues cv = new ContentValues();
+                        cv.put("_display_name", fileName);
+                        cv.put("mime_type", "application/json");
+                        cv.put("relative_path", "Documents/SweldoPulse");
+                        cv.put("is_pending", 1);
+                        Uri uri = cr.insert(filesUri, cv);
+                        if (uri != null) {
+                            OutputStream os = null;
+                            try {
+                                os = cr.openOutputStream(uri);
+                                if (os != null) {
+                                    os.write(data);
+                                    os.flush();
+                                    ok = true;
+                                }
+                            } finally {
+                                if (os != null) try { os.close(); } catch (Throwable ignored) { }
+                            }
+                            ContentValues done = new ContentValues();
+                            done.put("is_pending", 0);
+                            cr.update(uri, done, null, null);
+                        }
+                    }
+                } catch (Throwable ignored) { }
+            } else {
+                try {
+                    File dir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+                    if (dir != null) {
+                        if (!dir.exists()) dir.mkdirs();
+                        File f = new File(dir, "SweldoPulse-auto-backup.json");
+                        FileOutputStream fos = new FileOutputStream(f);
+                        fos.write(data);
+                        fos.flush();
+                        fos.close();
+                        ok = true;
+                    }
+                } catch (Throwable ignored) { }
+            }
+            return ok;
+        }
+
+        @JavascriptInterface
+        public String readAutoBackup() {
+            // Try internal rolling mirror first
+            try {
+                File f = new File(getFilesDir(), "SweldoPulse-auto-backup.json");
+                if (f.isFile() && f.length() > 10) {
+                    FileInputStream fis = new FileInputStream(f);
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = fis.read(buf)) != -1) bos.write(buf, 0, n);
+                    fis.close();
+                    return bos.toString("UTF-8");
+                }
+            } catch (Throwable ignored) { }
+            // Fallback: try MediaStore Documents/SweldoPulse on Android 10+
+            if (Build.VERSION.SDK_INT >= 29) {
+                Cursor cur = null;
+                InputStream is = null;
+                try {
+                    ContentResolver cr = getContentResolver();
+                    Uri filesUri = MediaStore.Files.getContentUri("external");
+                    cur = cr.query(
+                        filesUri,
+                        new String[]{"_id"},
+                        "_display_name=? AND relative_path LIKE ?",
+                        new String[]{"SweldoPulse-auto-backup.json", "Documents/SweldoPulse%"},
+                        null
+                    );
+                    if (cur != null && cur.moveToFirst()) {
+                        Uri u = Uri.withAppendedPath(filesUri, String.valueOf(cur.getLong(0)));
+                        is = cr.openInputStream(u);
+                        if (is != null) {
+                            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                            byte[] buf = new byte[8192];
+                            int n;
+                            while ((n = is.read(buf)) != -1) bos.write(buf, 0, n);
+                            return bos.toString("UTF-8");
+                        }
+                    }
+                } catch (Throwable ignored) {
+                } finally {
+                    if (is != null) try { is.close(); } catch (Throwable ignored) { }
+                    if (cur != null) try { cur.close(); } catch (Throwable ignored) { }
+                }
+            }
+            return "";
+        }
+
+        @JavascriptInterface
         public int getVersionCode() {
             return getInstalledVersionCode();
         }
@@ -601,7 +756,6 @@ public class MainActivity extends Activity {
             try {
                 if ("ready".equals(updState) && verifyApkFile(updateApkFile()) != null) {
                     cleanupStaleUpdate();
-        setupAppShortcuts();
                 }
                 JSONObject o = new JSONObject();
                 o.put("state", updState);
