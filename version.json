@@ -1,7 +1,7 @@
 {
-  "version": "1.16.0",
+  "version": "1.17.0",
   "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
-  "apkName": "SweldoPulse-v1.16.0.apk",
+  "apkName": "SweldoPulse-v1.17.0.apk",
   "apkSize": "Latest Build",
-  "notes": "Payslip reconciliation, per-cutoff allowances & deductions, smart station presets, calendar view, 6-cutoff trend, native back button & background shift reminders."
+  "notes": "In-app auto-updater with 4-layer APK verification (no browser stalls or parsing errors), Android 13+ notifications, native backup/CSV file sharing, MediaStore payslip saving, status bar theme sync, and quick jump to current cutoff."
 }

@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import java.util.Calendar;
 
@@ -84,6 +85,7 @@ public class ReminderReceiver extends BroadcastReceiver {
 
     static void showNotification(Context ctx, String title, String body) {
         try {
+            if (Build.VERSION.SDK_INT >= 33 && ctx.checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) return;
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm == null) return;
             Notification.Builder nb = new Notification.Builder(ctx);

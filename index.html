@@ -18,8 +18,13 @@
  var m=s.themeMode||(raw?(s.darkMode?'dark':'light'):'system');
  var dark=m==='dark'||m==='amoled'||(m==='system'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
  if(dark)d.classList.add('dark');if(m==='amoled')d.classList.add('amoled');
+ if(window.AndroidBridge&&AndroidBridge.setSystemBars){AndroidBridge.setSystemBars(m==='amoled'?'#000000':(dark?'#090D16':'#F6F7FB'),dark);}
 }catch(e){}
-if(window.AndroidBridge){window.Notification=function(t,o){AndroidBridge.notify(t,(o&&o.body)||"")};Notification.permission="granted";Notification.requestPermission=function(){return Promise.resolve("granted")};}
+if(window.AndroidBridge){
+ window.Notification=function(t,o){AndroidBridge.notify(t,(o&&o.body)||"")};
+ Object.defineProperty(Notification,"permission",{get:function(){try{return(!AndroidBridge.hasNotifPermission||AndroidBridge.hasNotifPermission())?"granted":"default";}catch(e){return"granted";}}});
+ Notification.requestPermission=function(){return new Promise(function(res){try{if(!AndroidBridge.requestNotifPermission||AndroidBridge.hasNotifPermission())return res("granted");window.__notifPermRes=res;AndroidBridge.requestNotifPermission();}catch(e){res("granted");}});};
+}
 })();
 </script>
 <style>
@@ -395,6 +400,16 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .pin-x{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:99px;font-size:13px;line-height:1;opacity:.7;margin-right:-4px}
 .pin-x:active{background:var(--bad-soft);color:var(--bad);opacity:1}
 
+/* ---------- v1.17: in-app updater, progress bar, current cutoff pill ---------- */
+.upd-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:16px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);color:var(--accent-text)}
+.upd-banner .ub-t{font-size:13px;font-weight:700;line-height:1.25}
+.upd-banner .ub-s{font-size:11px;opacity:.85;margin-top:2px}
+.upd-prog-wrap{margin:10px 0}
+.upd-prog{height:7px;border-radius:99px;background:var(--subtle);border:1px solid var(--line);overflow:hidden}
+.upd-prog i{display:block;height:100%;width:100%;border-radius:99px;background:var(--accent);transform-origin:left;transform:scaleX(0);transition:transform .16s linear}
+.upd-prog-meta{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:600;color:var(--t3);margin-top:5px}
+.cur-pill{height:38px;padding:0 11px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);color:var(--accent-text);font-size:12px;font-weight:700;white-space:nowrap;flex:none}
+
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
 @media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.hero{padding:16px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
 @media (prefers-reduced-motion:reduce){.wallet::before,.wallet::after{animation:none}.spark{transition:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -475,7 +490,13 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="switcher" data-switcher>
         <button type="button" class="icon-btn press" onclick="stepPeriod(-1)" aria-label="Previous cutoff"><svg class="ic"><use href="#i-l"/></svg></button>
         <div class="mid"><span data-period-label>—</span><svg class="ic sm muted"><use href="#i-d"/></svg><select data-period-select onchange="selectPeriod(this.value)" aria-label="Choose cutoff"></select></div>
+        <button type="button" class="cur-pill press hidden" data-jump-cur onclick="jumpCurrent()">Current</button>
         <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
+      </div>
+
+      <div class="upd-banner hidden" id="upd-home-banner">
+        <div class="grow" style="min-width:0"><p class="ub-t" id="uhb-title">Update ready</p><p class="ub-s" id="uhb-sub">Verified and ready to install</p></div>
+        <button type="button" class="btn primary sm press" id="uhb-btn" onclick="handleHomeUpdateBtn()">Install</button>
       </div>
 
       <div class="wallet press" id="hero" onclick="go('deductions')">
@@ -550,6 +571,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="switcher" data-switcher>
         <button type="button" class="icon-btn press" onclick="stepPeriod(-1)" aria-label="Previous cutoff"><svg class="ic"><use href="#i-l"/></svg></button>
         <div class="mid"><span data-period-label>—</span><svg class="ic sm muted"><use href="#i-d"/></svg><select data-period-select onchange="selectPeriod(this.value)" aria-label="Choose cutoff"></select></div>
+        <button type="button" class="cur-pill press hidden" data-jump-cur onclick="jumpCurrent()">Current</button>
         <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
       </div>
       <div class="row" style="gap:8px">
@@ -569,6 +591,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="switcher" data-switcher>
         <button type="button" class="icon-btn press" onclick="stepPeriod(-1)" aria-label="Previous cutoff"><svg class="ic"><use href="#i-l"/></svg></button>
         <div class="mid"><span data-period-label>—</span><svg class="ic sm muted"><use href="#i-d"/></svg><select data-period-select onchange="selectPeriod(this.value)" aria-label="Choose cutoff"></select></div>
+        <button type="button" class="cur-pill press hidden" data-jump-cur onclick="jumpCurrent()">Current</button>
         <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
       </div>
 
@@ -683,13 +706,21 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       </div>
 
       <div class="card">
-        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">v1.13.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
-        <div id="upd-box" class="hidden" style="margin-top:12px"><div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div><p class="note" id="upd-notes" style="margin:4px 0 10px"></p><a id="upd-link" href="#" target="_blank" rel="noopener" class="btn primary block sm press">Download update</a></div>
+        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 1.17.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
+        <div id="upd-box" class="hidden" style="margin-top:12px">
+          <div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div>
+          <p class="note" id="upd-notes" style="margin:4px 0 10px"></p>
+          <div id="upd-prog-wrap" class="upd-prog-wrap hidden"><div class="upd-prog"><i id="upd-prog-fill"></i></div><div class="upd-prog-meta num"><span id="upd-prog-txt">Downloading…</span><span id="upd-prog-pct">0%</span></div></div>
+          <div class="row" style="gap:8px"><button type="button" id="upd-act-btn" class="btn primary grow sm press" onclick="handleUpdateAction()">Download update</button><button type="button" id="upd-cancel-btn" class="btn ghost sm press hidden" onclick="cancelInAppUpdate()">Cancel</button></div>
+        </div>
         <p id="upd-diag" class="note hidden" style="margin-top:10px"></p>
         <div class="grid2" style="margin-top:12px"><button type="button" class="btn soft sm press" id="upd-btn" onclick="checkUpdates(true)">Check for updates</button><a id="upd-rel" href="#" target="_blank" rel="noopener" class="btn ghost sm press">Releases page</a></div>
+        <div class="divider" style="margin:12px 0"></div>
+        <div class="setting" style="min-height:42px"><div><p class="k" style="font-size:13.5px">Auto-download updates</p><p class="d">Download &amp; verify new APKs in the background</p></div><span class="switch"><input type="checkbox" id="upd-auto-dl" onchange="saveUpdOpts()"><i></i></span></div>
+        <div class="setting" id="upd-wifi-row" style="min-height:42px"><div><p class="k" style="font-size:13.5px">Wi-Fi only</p><p class="d">Wait for Wi-Fi before auto-downloading</p></div><span class="switch"><input type="checkbox" id="upd-wifi-only" onchange="saveUpdOpts()"><i></i></span></div>
         <details class="fold" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)"><summary><span class="k" style="font-weight:600">Update source &amp; help</span><svg class="ic sm"><use href="#i-d"/></svg></summary>
           <div class="body stack" style="gap:10px"><div><label class="lbl" for="upd-repo">GitHub repository (owner/name)</label><input id="upd-repo" class="field" style="font-weight:500" autocapitalize="off" autocorrect="off" spellcheck="false" onchange="saveRepo(this.value)"></div>
-          <p class="note">The repo must be public and have a published release with the APK attached. If the app says "package conflicts" on install, the APK was signed with a different key or has the same or a lower version than the one installed.</p>
+          <p class="note">Updates download directly inside the app and pass size, archive, and Android package verification before installing so broken downloads never trigger parsing errors.</p>
           <div class="grid2"><button type="button" class="btn ghost sm press" onclick="startTour(false)">Replay tour</button><button type="button" class="btn ghost sm press" onclick="showWhatsNew()">What's new</button></div></div></details>
       </div>
     </section>
@@ -761,13 +792,12 @@ LOBBY
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">1.16</span></h2><p class="card-s">Smarter payslips, presets &amp; native Android upgrades</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">1.17</span></h2><p class="card-s">Seamless in-app updates &amp; Android polish</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:12px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Actual Pay Check on Payslip — compare what you received against SweldoPulse's estimate to spot short pay immediately.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Per-cutoff Allowances &amp; Deductions — cash advances, allowances, and manual deductions stay locked to each cutoff.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Smart Station Chips &amp; Pinned Presets inside Log Shift for 1-tap logging.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">Calendar View on Shifts (with shift-type dots) and a 6-Cutoff Trend chart on Home.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Android</span><span class="sub">Hardware Back closes sheets/tabs cleanly, and daily reminders now fire in the background even when the app is closed.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">In-App Auto-Updater — downloads &amp; verifies updates inside SweldoPulse with live progress, notifies you when ready, and closes cleanly to install. No more browser stalls or parsing errors.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Fixed</span><span class="sub">Android 13+ notification permissions are now requested properly so daily shift reminders and update alerts always show up.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Android</span><span class="sub">Real native file sharing for JSON backups and CSV exports, plus permission-free payslip saving to Pictures/SweldoPulse.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Polish</span><span class="sub">System status &amp; navigation bars now match Light, Dark, and Black themes, plus a 1-tap Current pill to jump back from past cutoffs.</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
   </div>
@@ -798,7 +828,7 @@ LOBBY
 </div>
 
 <script>
-const APP_VERSION = '1.16.0';
+const APP_VERSION = '1.17.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -834,7 +864,8 @@ let settings = {
   accentTheme: 'indigo', darkMode: false, themeMode: '', budgetNeeds: 70, budgetWants: 20, budgetSavings: 10,
   notifEnabled: false, notifTime: '22:00', lastNotifDate: '', goal: 0, deductMode: 'split', mwe: false, autoDeduct: null, hide: false, payLag: 0, repo: '', lastUpd: 0,
   last: { start: '16:00', end: '22:00', brk: 0 },
-  cutoffData: {}, customPresets: []
+  cutoffData: {}, customPresets: [],
+  autoDownloadUpd: true, updWifiOnly: true
 };
 let selKey = '', periodKeys = [], curView = 'home';
 const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '' };
@@ -875,8 +906,13 @@ function normalizeShifts(arr) {
   }));
 }
 let dv = 0, _idx = null, _idxV = -1; const _pdc = new Map();
-const persistShifts = () => { dv++;  try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} };
-const persistSettings = () => { dv++;  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} };
+let _psT = 0;
+const persistShifts = () => { dv++; try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} };
+const persistSettings = () => { dv++; if (_psT) { clearTimeout(_psT); _psT = 0; } try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} };
+const persistSettingsDebounced = () => { dv++; clearTimeout(_psT); _psT = setTimeout(() => { _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }, 220); };
+const flushSettings = () => { if (_psT) { clearTimeout(_psT); _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} } };
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushSettings(); });
+window.addEventListener('pagehide', flushSettings);
 
 /* ================= theme ================= */
 const mq = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
@@ -889,7 +925,9 @@ function applyTheme(first) {
   st.setProperty('--accent', dark && P.ad ? P.ad : P.a); st.setProperty('--accent-hover', P.h);
   st.setProperty('--accent-soft', dark ? P.sd : P.sl); st.setProperty('--accent-soft-border', dark ? P.bd : P.bl);
   st.setProperty('--accent-text', dark ? P.td : P.tl); st.setProperty('--accent-glow', P.g);
-  const m = $('meta-theme'); if (m) m.setAttribute('content', settings.themeMode === 'amoled' ? '#000000' : (dark ? '#090D16' : '#F6F7FB'));
+  const barBg = settings.themeMode === 'amoled' ? '#000000' : (dark ? '#090D16' : '#F6F7FB');
+  const m = $('meta-theme'); if (m) m.setAttribute('content', barBg);
+  if (window.AndroidBridge && typeof AndroidBridge.setSystemBars === 'function') { try { AndroidBridge.setSystemBars(barBg, dark); } catch (e) {} }
   const cut = $('moon-cutout'); if (cut) { cut.setAttribute('cx', dark ? '16.5' : '24'); cut.setAttribute('cy', dark ? '8.5' : '4'); cut.setAttribute('r', dark ? '5.2' : '0'); }
   $$('#theme-seg button').forEach(b => b.classList.toggle('on', b.dataset.m === settings.themeMode));
   $$('.theme-sw').forEach(b => b.classList.toggle('on', b.dataset.theme === settings.accentTheme));
@@ -959,7 +997,9 @@ function buildPeriods() {
   const P = periodFromKey(selKey);
   $$('[data-period-select]').forEach(sel => { setHTML(sel, html); sel.value = selKey; });
   $$('[data-period-label]').forEach(el => setText(el, P.label));
+  $$('[data-jump-cur]').forEach(el => el.classList.toggle('hidden', selKey === cur.key));
 }
+function jumpCurrent() { const k = curPeriod().key; if (selKey === k) return; selKey = k; ui.limit = 60; ui.calDay = ''; render(); replayEnter(); }
 function selectPeriod(k) { selKey = k; ui.limit = 60; ui.calDay = ''; render(); replayEnter(); }
 function stepPeriod(dir) {
   const i = periodKeys.indexOf(selKey), j = i - dir;
@@ -1387,7 +1427,7 @@ function setDedMode(auto) {
 function saveManual() {
   const k = selKey || curPeriod().key, v = id => Math.max(0, parseFloat($(id).value) || 0);
   ensureCutoffExtra(k).manual = { sss: v('in-sss'), ph: v('in-ph'), pi: v('in-pi'), tax: v('in-tax') };
-  persistSettings(); render();
+  persistSettingsDebounced(); render();
 }
 function saveCutoffExtras() {
   const k = selKey || curPeriod().key, rec = ensureCutoffExtra(k);
@@ -1396,7 +1436,7 @@ function saveCutoffExtras() {
   rec.otherDed = v('in-oth');
   const rawAct = $('in-actual') ? $('in-actual').value.trim() : '';
   rec.actualNet = rawAct === '' ? null : Math.max(0, parseFloat(rawAct) || 0);
-  persistSettings(); render();
+  persistSettingsDebounced(); render();
 }
 function clearActualPay() {
   const k = selKey || curPeriod().key;
@@ -1624,7 +1664,11 @@ function syncSettingsUI() {
   $('set-rate').value = settings.hourlyRate; $('set-area').value = settings.calabarzonArea || '73.75'; $('set-sched').value = settings.schedule;
   $('set-goal').value = settings.goal || ''; $('set-lag').value = settings.payLag || ''; $('upd-repo').value = repoName(); $('upd-rel').href = `https://github.com/${repoName()}/releases`; $('notif-on').checked = !!settings.notifEnabled; $('notif-time').value = settings.notifTime || '22:00';
   $('bi-n').value = settings.budgetNeeds; $('bi-w').value = settings.budgetWants; $('bi-s').value = settings.budgetSavings; budgetInput();
-  $('ver-label').textContent = `Version ${APP_VERSION}`; notifSub(); syncDedUI(); applyTheme(); renderSecurity();
+  $('ver-label').textContent = `Version ${APP_VERSION}`;
+  if ($('upd-auto-dl')) $('upd-auto-dl').checked = settings.autoDownloadUpd !== false;
+  if ($('upd-wifi-only')) $('upd-wifi-only').checked = settings.updWifiOnly !== false;
+  if ($('upd-wifi-row')) $('upd-wifi-row').classList.toggle('hidden', settings.autoDownloadUpd === false);
+  notifSub(); syncDedUI(); applyTheme(); renderSecurity(); syncUpdateUI();
 }
 function applyArea() { const v = $('set-area').value; settings.calabarzonArea = v; if (v !== 'custom') { $('set-rate').value = v; settings.hourlyRate = parseFloat(v); } persistSettings(); render(); toast(`Rate set to ${peso(settings.hourlyRate)}/hr · applies to new shifts`); }
 function onRateInput() {
@@ -1645,10 +1689,16 @@ function syncNativeReminder() {
     AndroidBridge.scheduleReminder(!!settings.notifEnabled, isFinite(h) ? h : 22, isFinite(m) ? m : 0);
   } catch (e) {}
 }
+window.onNotifPermission = function (granted) {
+  const r = window.__notifPermRes; window.__notifPermRes = null;
+  if (r) r(granted ? 'granted' : 'denied');
+  notifSub();
+};
 window.onReminderTap = function () { if (!lockVisible()) openShift(); };
 function notifSub() {
   const el = $('notif-sub'); if (!('Notification' in window)) { el.textContent = 'Not supported here'; return; }
-  el.textContent = Notification.permission === 'denied' ? 'Blocked in Android settings' : (settings.notifEnabled ? `Daily at ${t12(settings.notifTime || '22:00')}${hasNativeAlarm() ? ' · works in background' : ''}` : 'Daily alert to log your shift');
+  const nativeDenied = window.AndroidBridge && typeof AndroidBridge.hasNotifPermission === 'function' && settings.notifEnabled && !AndroidBridge.hasNotifPermission();
+  el.textContent = (Notification.permission === 'denied' || nativeDenied) ? 'Allow notifications in Android settings' : (settings.notifEnabled ? `Daily at ${t12(settings.notifTime || '22:00')}${hasNativeAlarm() ? ' · works in background' : ''}` : 'Daily alert to log your shift');
 }
 async function toggleNotif() {
   const cb = $('notif-on');
@@ -1677,18 +1727,41 @@ function checkReminder() {
   if (n >= r && n <= r + 90) { settings.lastNotifDate = k; persistSettings(); triggerReminder(); }
 }
 
-/* ---- updates ---- */
+/* ---- updates (in-app auto-downloader + 4-layer verification) ---- */
 const semver = (a, b) => { const x = String(a).replace(/^v/i, '').split('.').map(n => +n || 0), y = String(b).replace(/^v/i, '').split('.').map(n => +n || 0); for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d > 0 ? 1 : -1; } return 0; };
 const repoName = () => (settings.repo || DEFAULT_REPO).trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '').replace(/^\/+|\/+$/g, '');
+const hasNativeUpdater = () => !!(window.AndroidBridge && typeof AndroidBridge.downloadUpdate === 'function');
+const fmtBytes = b => b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : (b >= 1024 ? Math.round(b / 1024) + ' KB' : (b || 0) + ' B');
+let latestRel = null, updState = { state: 'idle', version: '', progress: 0, downloaded: 0, total: 0, error: '', canInstall: true };
 function saveRepo(v) { v = String(v).trim(); settings.repo = (v && v !== DEFAULT_REPO) ? v : ''; persistSettings(); $('upd-repo').value = repoName(); $('upd-rel').href = `https://github.com/${repoName()}/releases`; toast('Update source saved'); }
+function saveUpdOpts() {
+  settings.autoDownloadUpd = $('upd-auto-dl') ? $('upd-auto-dl').checked : true;
+  settings.updWifiOnly = $('upd-wifi-only') ? $('upd-wifi-only').checked : true;
+  if ($('upd-wifi-row')) $('upd-wifi-row').classList.toggle('hidden', !settings.autoDownloadUpd);
+  persistSettings();
+  if (settings.autoDownloadUpd && window.AndroidBridge && typeof AndroidBridge.hasNotifPermission === 'function' && !AndroidBridge.hasNotifPermission()) {
+    Notification.requestPermission();
+  }
+  toast(settings.autoDownloadUpd ? (settings.updWifiOnly ? 'Auto-download on (Wi-Fi only)' : 'Auto-download on') : 'Auto-download off');
+}
 async function ghGet(url, ms = 9000) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
   try { const r = await fetch(url, { cache: 'no-store', signal: c.signal }); return { ok: r.ok, status: r.status, r }; }
   catch (e) { return { ok: false, status: 0, why: e.name === 'AbortError' ? 'timed out' : 'blocked / no connection' }; }
   finally { clearTimeout(t); }
 }
-const parseRelease = j => { const apk = (j.assets || []).find(a => /\.apk$/i.test(a.name || '')); return { v: j.tag_name || j.name || '', notes: j.body || '', url: apk ? apk.browser_download_url : j.html_url, size: apk ? (apk.size / 1048576).toFixed(1) + ' MB' : '', pre: !!j.prerelease }; };
-// Tries 3 sources so one failure doesn't mean "can't connect": releases/latest -> releases list (also finds pre-releases) -> version.json in the repo.
+const parseRelease = j => {
+  const apk = (j.assets || []).find(a => /\.apk$/i.test(a.name || '') && a.browser_download_url);
+  return {
+    v: j.tag_name || j.name || '',
+    notes: j.body || '',
+    apkUrl: apk ? apk.browser_download_url : '',
+    apkBytes: apk ? (+apk.size || 0) : 0,
+    releaseUrl: j.html_url || `https://github.com/${repoName()}/releases/latest`,
+    size: apk ? (apk.size / 1048576).toFixed(2) + ' MB' : '',
+    pre: !!j.prerelease
+  };
+};
 async function findLatestRelease() {
   const repo = repoName(), log = []; let rel = null;
   let r = await ghGet(`https://api.github.com/repos/${repo}/releases/latest`); log.push(`latest ${r.status || r.why}`);
@@ -1696,7 +1769,7 @@ async function findLatestRelease() {
   if (!rel) { r = await ghGet(`https://api.github.com/repos/${repo}/releases?per_page=8`); log.push(`list ${r.status || r.why}`);
     if (r.ok) { try { const a = (await r.r.json()).filter(x => !x.draft); if (a.length) rel = parseRelease(a.sort((p, q) => semver(q.tag_name, p.tag_name))[0]); } catch (e) {} } }
   if (!rel) { r = await ghGet(`https://raw.githubusercontent.com/${repo}/HEAD/version.json`); log.push(`file ${r.status || r.why}`);
-    if (r.ok) { try { const j = await r.r.json(); if (j.version) rel = { v: j.version, notes: j.notes || '', url: `https://github.com/${repo}/releases/latest`, size: '', fromFile: true }; } catch (e) {} } }
+    if (r.ok) { try { const j = await r.r.json(); if (j.version) rel = { v: j.version, notes: j.notes || '', apkUrl: '', apkBytes: 0, releaseUrl: `https://github.com/${repo}/releases/latest`, size: '', fromFile: true }; } catch (e) {} } }
   return { rel, log };
 }
 function updFailText(log) {
@@ -1705,22 +1778,196 @@ function updFailText(log) {
   if (st.some(s => s === '403')) return 'GitHub is rate-limiting this network. Try again in a few minutes, or use the Releases page.';
   return `GitHub answered, but found no release for “${repoName()}”. Make sure the repo name is right and public, and that a release (not just a tag) is published. Edit it under “Update source”.`;
 }
+function syncNativeUpdateStatus() {
+  if (!hasNativeUpdater()) return;
+  try {
+    const j = JSON.parse(AndroidBridge.getUpdateStatus() || '{}');
+    if (j && j.state) updState = { ...updState, ...j };
+  } catch (e) {}
+  syncUpdateUI();
+}
+function syncUpdateUI() {
+  const rel = latestRel, newer = !!(rel && semver(rel.v, APP_VERSION) > 0);
+  const ready = updState.state === 'ready' && (!updState.version || semver(updState.version, APP_VERSION) > 0);
+  const dl = updState.state === 'downloading';
+  const err = updState.state === 'error' && updState.error;
+  const ver = (ready && updState.version) || (rel && rel.v) || updState.version || '';
+  // Home banner: show when verified update is ready to install or actively downloading
+  const hb = $('upd-home-banner');
+  if (hb) {
+    if (ready) {
+      hb.classList.remove('hidden');
+      setText($('uhb-title'), `SweldoPulse ${ver} is ready`);
+      setText($('uhb-sub'), 'Verified in app · closes briefly to install');
+      setText($('uhb-btn'), 'Install'); $('uhb-btn').disabled = false;
+    } else if (dl) {
+      hb.classList.remove('hidden');
+      setText($('uhb-title'), `Downloading ${ver || 'update'}…`);
+      setText($('uhb-sub'), updState.total ? `${fmtBytes(updState.downloaded)} / ${fmtBytes(updState.total)}` : 'Downloading in background');
+      setText($('uhb-btn'), `${updState.progress}%`); $('uhb-btn').disabled = true;
+    } else if (newer && rel && rel.apkUrl) {
+      hb.classList.remove('hidden');
+      setText($('uhb-title'), `Update ${rel.v} available`);
+      setText($('uhb-sub'), rel.size ? `${rel.size} · tap to download in app` : 'Tap to download in app');
+      setText($('uhb-btn'), 'Download'); $('uhb-btn').disabled = false;
+    } else {
+      hb.classList.add('hidden');
+    }
+  }
+  // Settings update card
+  const box = $('upd-box'), badge = $('upd-badge'), diag = $('upd-diag'), pw = $('upd-prog-wrap'), act = $('upd-act-btn'), can = $('upd-cancel-btn');
+  if (!box || !act) return;
+  const showBox = !!(ready || dl || rel || err);
+  box.classList.toggle('hidden', !showBox);
+  if (!showBox) return;
+  setText($('upd-title'), ready ? `Ready to install · ${ver}` : dl ? `Downloading · ${ver}` : (newer ? `Update available · ${ver}` : `You're up to date · ${ver || APP_VERSION}`));
+  setText($('upd-size'), ready && updState.total ? fmtBytes(updState.total) : (rel && rel.size ? rel.size : ''));
+  setText($('upd-notes'), rel && rel.notes ? String(rel.notes).replace(/[#*`>]/g, '').slice(0, 160) : (ready ? 'APK verified (size, header & package check passed). Tap below to install and restart.' : ''));
+  pw.classList.toggle('hidden', !dl);
+  if (dl) {
+    $('upd-prog-fill').style.transform = `scaleX(${Math.max(0.03, (updState.progress || 0) / 100)})`;
+    setText($('upd-prog-txt'), updState.total ? `${fmtBytes(updState.downloaded)} / ${fmtBytes(updState.total)}` : 'Downloading APK…');
+    setText($('upd-prog-pct'), `${updState.progress || 0}%`);
+  }
+  can.classList.toggle('hidden', !dl);
+  if (ready) {
+    setText(badge, 'Ready to install'); badge.className = 'chip ok';
+    setText(act, `Install ${ver} & restart`); act.className = 'btn primary grow sm press'; act.disabled = false;
+    diag.classList.add('hidden');
+  } else if (dl) {
+    setText(badge, `Downloading ${updState.progress || 0}%`); badge.className = 'chip';
+    setText(act, 'Downloading…'); act.className = 'btn soft grow sm press'; act.disabled = true;
+    diag.classList.add('hidden');
+  } else if (err) {
+    setText(badge, 'Retry needed'); badge.className = 'chip bad';
+    setText(act, 'Retry download'); act.className = 'btn primary grow sm press'; act.disabled = false;
+    diag.textContent = updState.error; diag.classList.remove('hidden');
+  } else if (newer) {
+    setText(badge, 'Update ready'); badge.className = 'chip warn';
+    if (rel && rel.apkUrl) {
+      setText(act, rel.size ? `Download update (${rel.size})` : 'Download update');
+      act.className = 'btn primary grow sm press'; act.disabled = false;
+      diag.classList.add('hidden');
+    } else {
+      setText(act, 'Open release page'); act.className = 'btn ghost grow sm press'; act.disabled = false;
+      diag.textContent = `Release ${rel.v} was found, but no .apk file is attached yet (GitHub Actions may still be building it).`;
+      diag.classList.remove('hidden');
+    }
+  } else if (rel) {
+    setText(badge, 'Up to date'); badge.className = 'chip ok';
+    setText(act, 'Open release page'); act.className = 'btn ghost grow sm press'; act.disabled = false;
+  }
+}
+function handleHomeUpdateBtn() {
+  if (updState.state === 'ready') return promptInstallUpdate();
+  if (latestRel && latestRel.apkUrl) return startInAppDownload(false);
+  go('settings');
+}
+function handleUpdateAction() {
+  if (updState.state === 'ready') return triggerNativeInstall();
+  if (updState.state === 'downloading') return;
+  if (latestRel && semver(latestRel.v, APP_VERSION) > 0 && latestRel.apkUrl) {
+    if (hasNativeUpdater()) return startInAppDownload(false);
+    window.open(latestRel.apkUrl, '_blank', 'noopener');
+    return;
+  }
+  const url = (latestRel && latestRel.releaseUrl) || `https://github.com/${repoName()}/releases`;
+  window.open(url, '_blank', 'noopener');
+}
+function startInAppDownload(autoNotify) {
+  if (!latestRel || !latestRel.apkUrl) return toast('No APK file attached to this release yet');
+  if (!hasNativeUpdater()) { window.open(latestRel.apkUrl, '_blank', 'noopener'); return; }
+  updState = { ...updState, state: 'downloading', version: latestRel.v, progress: 0, downloaded: 0, total: latestRel.apkBytes || 0, error: '' };
+  syncUpdateUI();
+  const ok = AndroidBridge.downloadUpdate(latestRel.apkUrl, latestRel.v, latestRel.apkBytes || 0, !!autoNotify);
+  if (!ok) { updState.state = 'error'; updState.error = 'Could not start download.'; syncUpdateUI(); }
+  else if (!autoNotify) toast(`Downloading ${latestRel.v} in app…`);
+}
+function cancelInAppUpdate() {
+  if (hasNativeUpdater()) AndroidBridge.cancelUpdate();
+}
+async function promptInstallUpdate() {
+  syncNativeUpdateStatus();
+  if (updState.state !== 'ready') { go('settings'); return; }
+  const ver = updState.version || (latestRel && latestRel.v) || 'new version';
+  const ok = await askConfirm({
+    title: `Install SweldoPulse ${ver}?`,
+    body: 'The update has been verified. The app will close briefly so Android can finish installing — all your shifts and settings stay safe.',
+    ok: 'Install now',
+    danger: false
+  });
+  if (ok) triggerNativeInstall();
+}
+function triggerNativeInstall() {
+  if (!hasNativeUpdater()) return;
+  const res = AndroidBridge.installDownloadedUpdate();
+  if (res === 'started') {
+    toast('Opening Android installer…');
+  } else if (res === 'need_permission') {
+    toast('Allow "Install unknown apps" for SweldoPulse, then return here');
+  } else if (res && res.startsWith('error:')) {
+    updState = { ...updState, state: 'error', error: res.slice(6) };
+    syncUpdateUI();
+    toast('Update file invalid — tap Retry download');
+  }
+}
+window.onUpdateProgress = function (pct, dl, tot) {
+  updState.state = 'downloading'; updState.progress = pct; updState.downloaded = dl; updState.total = tot;
+  syncUpdateUI();
+};
+window.onUpdateReady = function (ver, bytes) {
+  updState = { ...updState, state: 'ready', version: ver || updState.version, progress: 100, downloaded: bytes || 0, total: bytes || 0, error: '' };
+  syncUpdateUI();
+  if (!lockVisible()) toast(`SweldoPulse ${updState.version} ready to install`, { label: 'Install', fn: () => promptInstallUpdate() });
+};
+window.onUpdateError = function (msg) {
+  updState = { ...updState, state: 'error', error: msg || 'Download failed. Tap Retry.' };
+  syncUpdateUI();
+  toast('Update download failed');
+};
+window.onUpdateCancelled = function () {
+  updState = { ...updState, state: 'idle', progress: 0, downloaded: 0, error: '' };
+  syncUpdateUI();
+  toast('Download cancelled');
+};
+window.onInstallPermResult = function (ok) {
+  if (ok) { triggerNativeInstall(); }
+  else { toast('Permission needed to install updates inside the app'); }
+};
+window.onUpdateNotifTap = function () {
+  syncNativeUpdateStatus();
+  if (!lockVisible()) promptInstallUpdate();
+};
 async function checkUpdates(manual) {
-  const btn = $('upd-btn'), badge = $('upd-badge'), box = $('upd-box'), diag = $('upd-diag');
+  const btn = $('upd-btn'), badge = $('upd-badge'), diag = $('upd-diag');
+  syncNativeUpdateStatus();
   if (manual) { btn.disabled = true; btn.textContent = 'Checking…'; badge.textContent = 'Checking'; badge.className = 'chip mute'; diag.classList.add('hidden'); }
   const { rel, log } = await findLatestRelease();
   settings.lastUpd = Date.now(); persistSettings();
-  let newer = false;
-  if (rel) newer = semver(rel.v, APP_VERSION) > 0;
-  if (!manual) { if (newer) { badge.textContent = 'Update ready'; badge.className = 'chip warn'; toast(`Update ${rel.v} is available`, { label: 'View', fn: () => go('settings') }); fillUpdate(rel, newer); } return; }
-  if (!rel) { badge.textContent = 'Unavailable'; badge.className = 'chip bad'; diag.textContent = updFailText(log) + `  [${log.join(' · ')}]`; diag.classList.remove('hidden'); box.classList.add('hidden'); toast("Couldn't check for updates"); }
-  else { fillUpdate(rel, newer); badge.textContent = newer ? 'Update ready' : 'Up to date'; badge.className = 'chip ' + (newer ? 'warn' : 'ok'); toast(newer ? `Version ${rel.v} is available` : "You're on the latest version"); }
+  latestRel = rel;
+  const newer = !!(rel && semver(rel.v, APP_VERSION) > 0);
+  if (!manual) {
+    syncUpdateUI();
+    if (newer && rel.apkUrl) {
+      if (updState.state === 'ready' && updState.version === rel.v) return;
+      if (hasNativeUpdater() && settings.autoDownloadUpd !== false) {
+        const wifiOk = settings.updWifiOnly === false || !AndroidBridge.isOnWifi || AndroidBridge.isOnWifi();
+        if (wifiOk) { startInAppDownload(true); return; }
+      }
+      toast(`Update ${rel.v} is available`, { label: 'View', fn: () => go('settings') });
+    }
+    return;
+  }
+  if (!rel) {
+    badge.textContent = 'Unavailable'; badge.className = 'chip bad';
+    diag.textContent = updFailText(log) + `  [${log.join(' · ')}]`; diag.classList.remove('hidden');
+    $('upd-box').classList.add('hidden'); toast("Couldn't check for updates");
+  } else {
+    syncUpdateUI();
+    if (updState.state === 'ready' && updState.version === rel.v) toast(`Version ${rel.v} is already downloaded & ready`);
+    else toast(newer ? `Version ${rel.v} is available` : "You're on the latest version");
+  }
   btn.disabled = false; btn.textContent = 'Check for updates';
-}
-function fillUpdate(rel, newer) {
-  $('upd-box').classList.remove('hidden'); $('upd-title').textContent = newer ? `Update available · ${rel.v}` : `You're up to date · ${rel.v}`;
-  $('upd-size').textContent = rel.size; $('upd-notes').textContent = String(rel.notes).replace(/[#*`>]/g, '').slice(0, 150);
-  $('upd-link').href = rel.url; $('upd-link').textContent = newer ? 'Download update' : 'Open release page'; $('upd-link').classList.toggle('primary', newer); $('upd-link').classList.toggle('ghost', !newer);
 }
 
 /* ================= backup / restore ================= */
@@ -1745,7 +1992,10 @@ async function copyBackup() { if (await copyText($('bk-text').value)) { markBack
 async function saveBackupFile() {
   const csv = bkMode === 'csv', name = csv ? `SweldoPulse-shifts-${today()}.csv` : `SweldoPulse-backup-${today()}.json`, text = $('bk-text').value, mime = csv ? 'text/csv' : 'application/json';
   try { const f = new File([text], name, { type: mime }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); markBackup(); return; } } catch (e) { if (e.name === 'AbortError') return; }
-  if (window.AndroidBridge) { if (await copyText(text)) { markBackup(); toast('Saved to clipboard — paste it into Notes or Drive'); } return; }
+  if (window.AndroidBridge) {
+    if (typeof AndroidBridge.shareFile === 'function' && AndroidBridge.shareFile(name, text, mime)) { markBackup(); toast('Opening share sheet…'); return; }
+    if (await copyText(text)) { markBackup(); toast('Saved to clipboard — paste it into Notes or Drive'); } return;
+  }
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); markBackup(); toast('Backup file saved');
 }
 function restoreFromFile(inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const r = new FileReader(); r.onload = () => { $('bk-text').value = r.result; restoreFromText(); }; r.readAsText(f); }
@@ -1798,7 +2048,7 @@ async function viewPayslip() {
 function closePayslip() { $('payslip-modal').classList.remove('on'); }
 async function savePayslipImage() {
   const c = window.__payslipCanvas; if (!c) return; const name = `SweldoPulse-payslip-${today()}.png`;
-  if (window.AndroidBridge) { toast(AndroidBridge.saveImage(c.toDataURL('image/png'), name) ? 'Saved to Pictures' : 'Allow storage permission, then tap Save again'); return; }
+  if (window.AndroidBridge) { toast(AndroidBridge.saveImage(c.toDataURL('image/png'), name) ? 'Saved to Pictures/SweldoPulse' : 'Could not save — allow storage permission and retry'); return; }
   const blob = await new Promise(r => c.toBlob(r, 'image/png'));
   try { const f = new File([blob], name, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; } } catch (e) { if (e.name === 'AbortError') return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast('Payslip image saved');
@@ -1940,14 +2190,15 @@ window.handleAndroidBack = function () {
 };
 function boot() {
   populateTimes(); loadState(); buildFilters(); applyTheme(true);
-  syncSettingsUI(); syncNativeReminder(); go('home'); renderNow(); initBrand();
+  syncSettingsUI(); syncNativeReminder(); syncNativeUpdateStatus(); go('home'); renderNow(); initBrand();
   if (lockCfg() && !root.classList.contains('locked') && !root.classList.contains('pin-open')) lockNow();
   else if (root.classList.contains('locked')) { pinMode = 'unlock'; lockUI('Enter PIN', 'SweldoPulse is locked'); }
   setInterval(checkReminder, 20000);
-  // after an update: show what's new once (not on a fresh install); then quietly look for newer releases once a day
+  // after an update: show what's new once (not on a fresh install); then quietly look for newer releases every 6 hours
   try { const seen = localStorage.getItem('sp_seen_version'); if (seen !== APP_VERSION) { localStorage.setItem('sp_seen_version', APP_VERSION); if (seen && !lockVisible()) setTimeout(showWhatsNew, 900); } } catch (e) {}
-  setTimeout(() => { if (!lockVisible() && navigator.onLine !== false && Date.now() - (settings.lastUpd || 0) > 864e5) checkUpdates(false); }, 6000);
+  setTimeout(() => { if (!lockVisible() && navigator.onLine !== false && Date.now() - (settings.lastUpd || 0) > 216e5) checkUpdates(false); }, 4500);
   if (location.hash === '#log-shift') setTimeout(() => openShift(), 300);
+  if (location.hash === '#install-update') setTimeout(() => { if (!lockVisible()) promptInstallUpdate(); }, 500);
   // roll the cutoff over automatically if the app stays open past midnight
   let lastCur = curPeriod().key, lastDay = today();
   const tickDay = () => { if (today() === lastDay) return; lastDay = today(); const nk = curPeriod().key; if (nk !== lastCur) { if (selKey === lastCur) selKey = nk; lastCur = nk; } if (curView === 'home') setText($('hdr-sub'), greet()); render(); };
