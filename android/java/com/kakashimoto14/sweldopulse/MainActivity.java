@@ -16,6 +16,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Icon;
 import android.hardware.fingerprint.FingerprintManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -43,6 +44,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
@@ -71,6 +74,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         cleanupStaleUpdate();
+        setupAppShortcuts();
         web = new WebView(this);
         web.setBackgroundColor(0xFF07090F);
         setContentView(web);
@@ -103,8 +107,10 @@ public class MainActivity extends Activity {
         });
         String hash = "";
         if (getIntent() != null) {
+            String tab = getIntent().getStringExtra("open_tab");
             if (getIntent().getBooleanExtra("open_update_install", false)) hash = "#install-update";
             else if (getIntent().getBooleanExtra("open_log_shift", false)) hash = "#log-shift";
+            else if (tab != null && tab.length() > 0) hash = "#" + tab;
         }
         web.loadUrl("https://" + HOST + "/index.html" + hash);
     }
@@ -114,10 +120,13 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         if (intent == null) return;
+        String tab = intent.getStringExtra("open_tab");
         if (intent.getBooleanExtra("open_update_install", false)) {
             js("window.onUpdateNotifTap&&onUpdateNotifTap()");
         } else if (intent.getBooleanExtra("open_log_shift", false)) {
             js("window.onReminderTap&&onReminderTap()");
+        } else if (tab != null && tab.length() > 0) {
+            js("window.onShortcutTab&&onShortcutTab(" + jsStr(tab) + ")");
         }
     }
 
@@ -199,7 +208,7 @@ public class MainActivity extends Activity {
         if (f == null || !f.isFile() || f.length() < 65536L) {
             return "Downloaded APK is incomplete or too small.";
         }
-        // Layer 1: ZIP/APK magic bytes (PK)
+        // Layer 1: ZIP/APK magic bytes (PK 0x03 0x04)
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(f);
@@ -229,6 +238,50 @@ public class MainActivity extends Activity {
             return "Android could not parse the downloaded APK.";
         }
         return null;
+    }
+
+    void setupAppShortcuts() {
+        if (Build.VERSION.SDK_INT < 25) return;
+        try {
+            Class<?> smClass = Class.forName("android.content.pm.ShortcutManager");
+            Object sm = getSystemService(smClass);
+            if (sm == null) return;
+            Class<?> builderClass = Class.forName("android.content.pm.ShortcutInfo$Builder");
+            List<Object> list = new ArrayList<Object>();
+            Icon icon = Icon.createWithResource(this, R.mipmap.ic_launcher);
+
+            Intent i1 = new Intent(this, MainActivity.class);
+            i1.setAction("com.kakashimoto14.sweldopulse.SHORTCUT_LOG");
+            i1.putExtra("open_log_shift", true);
+            Object b1 = builderClass.getConstructor(Context.class, String.class).newInstance(this, "log_shift");
+            builderClass.getMethod("setShortLabel", CharSequence.class).invoke(b1, "Log shift");
+            builderClass.getMethod("setLongLabel", CharSequence.class).invoke(b1, "Log a new shift");
+            builderClass.getMethod("setIcon", Icon.class).invoke(b1, icon);
+            builderClass.getMethod("setIntent", Intent.class).invoke(b1, i1);
+            list.add(builderClass.getMethod("build").invoke(b1));
+
+            Intent i2 = new Intent(this, MainActivity.class);
+            i2.setAction("com.kakashimoto14.sweldopulse.SHORTCUT_PAYSLIP");
+            i2.putExtra("open_tab", "deductions");
+            Object b2 = builderClass.getConstructor(Context.class, String.class).newInstance(this, "payslip");
+            builderClass.getMethod("setShortLabel", CharSequence.class).invoke(b2, "Payslip");
+            builderClass.getMethod("setLongLabel", CharSequence.class).invoke(b2, "Open cutoff payslip");
+            builderClass.getMethod("setIcon", Icon.class).invoke(b2, icon);
+            builderClass.getMethod("setIntent", Intent.class).invoke(b2, i2);
+            list.add(builderClass.getMethod("build").invoke(b2));
+
+            Intent i3 = new Intent(this, MainActivity.class);
+            i3.setAction("com.kakashimoto14.sweldopulse.SHORTCUT_INSIGHTS");
+            i3.putExtra("open_tab", "insights");
+            Object b3 = builderClass.getConstructor(Context.class, String.class).newInstance(this, "insights");
+            builderClass.getMethod("setShortLabel", CharSequence.class).invoke(b3, "Insights");
+            builderClass.getMethod("setLongLabel", CharSequence.class).invoke(b3, "Yearly insights & ledger");
+            builderClass.getMethod("setIcon", Icon.class).invoke(b3, icon);
+            builderClass.getMethod("setIntent", Intent.class).invoke(b3, i3);
+            list.add(builderClass.getMethod("build").invoke(b3));
+
+            smClass.getMethod("setDynamicShortcuts", List.class).invoke(sm, list);
+        } catch (Throwable t) { }
     }
 
     void cleanupStaleUpdate() {
@@ -279,7 +332,7 @@ public class MainActivity extends Activity {
             String vLabel = (version != null && version.length() > 0) ? (version.startsWith("v") ? version : "v" + version) : "Update";
             nb.setSmallIcon(R.mipmap.ic_launcher)
               .setContentTitle("SweldoPulse " + vLabel + " ready")
-              .setContentText("Verified and downloaded — tap to install now.")
+              .setContentText("Verified and downloaded \u2014 tap to install now.")
               .setContentIntent(pi)
               .setAutoCancel(true);
             nm.notify(NOTIF_UPDATE_ID, nb.build());
@@ -463,6 +516,11 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void updateWidget(String netText, String badgeText, String metaText, String periodText) {
+            SweldoWidgetProvider.saveAndRefresh(MainActivity.this, netText, badgeText, metaText, periodText);
+        }
+
+        @JavascriptInterface
         public int getVersionCode() {
             return getInstalledVersionCode();
         }
@@ -543,6 +601,7 @@ public class MainActivity extends Activity {
             try {
                 if ("ready".equals(updState) && verifyApkFile(updateApkFile()) != null) {
                     cleanupStaleUpdate();
+        setupAppShortcuts();
                 }
                 JSONObject o = new JSONObject();
                 o.put("state", updState);

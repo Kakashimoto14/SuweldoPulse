@@ -1,7 +1,7 @@
 {
-  "version": "1.17.0",
+  "version": "2.0.0",
   "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
-  "apkName": "SweldoPulse-v1.17.0.apk",
+  "apkName": "SweldoPulse-v2.0.0.apk",
   "apkSize": "Latest Build",
-  "notes": "In-app auto-updater with 4-layer APK verification (no browser stalls or parsing errors), Android 13+ notifications, native backup/CSV file sharing, MediaStore payslip saving, status bar theme sync, and quick jump to current cutoff."
+  "notes": "SweldoPulse 2.0: Home Screen Widget & App Shortcuts, Actionable Budget (Expenses + Savings Vaults), Multi-Stream Side Gigs, Weekly Roster Bulk-Logger & Shift Status, Yearly Insights & Statutory Contributions Ledger."
 }

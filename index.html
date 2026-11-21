@@ -410,6 +410,48 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .upd-prog-meta{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:600;color:var(--t3);margin-top:5px}
 .cur-pill{height:38px;padding:0 11px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);color:var(--accent-text);font-size:12px;font-weight:700;white-space:nowrap;flex:none}
 
+/* ---------- v2.0: stream scope, shift status, bulk week, budget envelopes/vaults, insights ---------- */
+.w-scope{height:24px;padding:0 9px;border-radius:99px;background:rgba(255,255,255,.16);color:#fff;font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.w-scope.all{background:rgba(167,243,208,.24);color:#D1FAE5}
+.shift.cancelled{opacity:.52}.shift.cancelled .t{text-decoration:line-through}
+.shift .tag.gig{background:var(--ok-soft);color:var(--ok)}
+.dot-b.sc{background:transparent;border:1px solid var(--accent-soft-border);color:var(--accent-text)}
+.dot-b.cx{background:var(--bad-soft);color:var(--bad)}
+.dot-b.gg{background:var(--ok-soft);color:var(--ok)}
+.env-bar{height:6px;border-radius:99px;background:var(--subtle);overflow:hidden;margin-top:6px}
+.env-bar i{display:block;height:100%;width:100%;border-radius:99px;transform-origin:left;transition:transform .32s var(--ease)}
+.env-bar i.ok{background:var(--ok)}.env-bar i.needs{background:#6366F1}.env-bar i.wants{background:#F59E0B}.env-bar i.warn{background:var(--warn)}.env-bar i.bad{background:var(--bad)}
+.exp-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.exp-dot{width:10px;height:10px;border-radius:99px;flex:none}
+.vault-card{padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.wday{height:52px;border-radius:12px;background:var(--subtle);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:var(--t2);position:relative}
+.wday b{font-size:14px;font-weight:700;color:var(--t1)}
+.wday.on{background:var(--accent);border-color:var(--accent);color:rgba(255,255,255,.85)}
+.wday.on b{color:#fff}
+.wday .hdot{width:4px;height:4px;border-radius:9px;background:var(--ok);position:absolute;top:5px;right:5px}
+.wday.on .hdot{background:#fff}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{padding:12px 13px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.kpi .kl{font-size:11px;font-weight:600;color:var(--t3)}
+.kpi .kv{font-size:18px;font-weight:700;letter-spacing:-.02em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .ks{font-size:11px;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-bars{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;align-items:end;padding-top:6px}
+.m-col{display:flex;flex-direction:column;align-items:center;gap:4px;padding:3px 1px;border-radius:8px;min-width:0}
+.m-track{width:100%;height:72px;display:flex;align-items:flex-end;justify-content:center}
+.m-bar{width:100%;max-width:16px;height:100%;border-radius:5px 5px 2px 2px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);transform-origin:bottom;transition:transform .28s var(--ease)}
+.m-col.zero .m-bar{background:var(--subtle);border-color:var(--line)}
+.m-col.sel .m-bar{background:var(--accent);border-color:var(--accent)}
+.m-lbl{font-size:9.5px;font-weight:700;color:var(--t3)}
+.m-col.sel .m-lbl{color:var(--accent-text)}
+.stat-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.stat-tbl th{text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--t3);padding:0 4px 8px;border-bottom:1px solid var(--line)}
+.stat-tbl th:first-child,.stat-tbl td:first-child{text-align:left;padding-left:0}
+.stat-tbl td{text-align:right;padding:8px 4px;border-bottom:1px solid var(--line);font-weight:600;font-variant-numeric:tabular-nums}
+.stat-tbl tr:last-child td{border-bottom:0;font-weight:700;color:var(--t1)}
+.rank-row{display:flex;flex-direction:column;gap:4px}
+.rank-row+.rank-row{margin-top:10px}
+
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
 @media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.hero{padding:16px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
 @media (prefers-reduced-motion:reduce){.wallet::before,.wallet::after{animation:none}.spark{transition:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -452,6 +494,9 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
 <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5M9 10.8a2 2 0 0 1-1.1 1.8L6 13.5V15h12v-1.5l-1.9-.9a2 2 0 0 1-1.1-1.8V6h1V4H8v2h1z"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5zM2 13l10 5 10-5M2 18l10 5 10-5"/></symbol>
+<symbol id="i-brief" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
 </defs></svg>
 
 <div id="sp-splash" onclick="dismissSplash()" role="presentation"><svg class="sp-tile" viewBox="0 0 64 64" role="img" aria-label="SweldoPulse"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path class="sp-a" pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path class="sp-k" pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path class="sp-b" pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg><div class="sp-word">Sweldo<span>Pulse</span></div></div>
@@ -502,7 +547,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="wallet press" id="hero" onclick="go('deductions')">
         <div class="w-top">
           <div class="w-lbl"><span class="w-live" id="w-live"></span><span id="w-label">2nd cutoff</span></div>
-          <button type="button" class="w-eye" id="eye-btn" onclick="event.stopPropagation();toggleHide()" aria-label="Show or hide amounts"><svg class="ic" id="eye-ic"><use href="#i-eye"/></svg></button>
+          <div class="row" style="gap:6px"><button type="button" class="w-scope press hidden" id="w-scope-btn" onclick="event.stopPropagation();toggleIncomeScope()">Payroll</button><button type="button" class="w-eye" id="eye-btn" onclick="event.stopPropagation();toggleHide()" aria-label="Show or hide amounts"><svg class="ic" id="eye-ic"><use href="#i-eye"/></svg></button></div>
         </div>
         <div class="w-main">
           <div style="min-width:0"><div class="w-amt" id="hero-amt"><span class="cur">₱</span><span class="int" id="amt-int">0</span><span class="dec" id="amt-dec">.00</span></div>
@@ -516,8 +561,8 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
       <div class="qa">
         <button type="button" class="qa-i" onclick="openShift()"><span class="qa-ic primary"><svg class="ic"><use href="#i-plus"/></svg></span>Log shift</button>
-        <button type="button" class="qa-i" id="qa-2" onclick="repeatLast()"><span class="qa-ic"><svg class="ic"><use href="#i-repeat"/></svg></span><span id="qa-2t">Repeat</span></button>
-        <button type="button" class="qa-i" onclick="go('deductions')"><span class="qa-ic"><svg class="ic"><use href="#i-receipt"/></svg></span>Payslip</button>
+        <button type="button" class="qa-i" onclick="openBulkSheet()"><span class="qa-ic"><svg class="ic"><use href="#i-layers"/></svg></span>Bulk week</button>
+        <button type="button" class="qa-i" onclick="go('insights')"><span class="qa-ic"><svg class="ic"><use href="#i-chart"/></svg></span>Insights</button>
         <button type="button" class="qa-i" onclick="go('budget')"><span class="qa-ic"><svg class="ic"><use href="#i-pie"/></svg></span>Budget</button>
       </div>
 
@@ -529,6 +574,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
           <div><span class="bc-l"><i class="c-wants"></i>Wants <em id="bc-pw">20%</em></span><b class="num" id="bc-aw">₱0.00</b></div>
           <div><span class="bc-l"><i class="c-save"></i>Savings <em id="bc-ps">10%</em></span><b class="num" id="bc-as" style="color:var(--ok)">₱0.00</b></div>
         </div>
+        <p class="card-s num hidden" id="bc-spent-line" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"></p>
       </button>
 
       <div class="sec-h"><span class="eyebrow" id="recent-h">Recent shifts</span><button type="button" class="link" onclick="go('shifts')">See all</button></div>
@@ -543,26 +589,102 @@ input[type=search]::-webkit-search-cancel-button{display:none}
     <!-- ================= BUDGET ================= -->
     <section id="view-budget" class="view">
       <div class="row between"><button type="button" class="btn ghost sm press" onclick="go('home')"><svg class="ic sm"><use href="#i-back"/></svg>Home</button><span class="chip num" id="bud-net">Net: ₱0.00</span></div>
-      <div class="card">
-        <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Cutoff allocation</p><p class="card-s" id="bud-period">Splits your net pay</p></div></div>
-        <div class="donut"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="d-tr" cx="60" cy="60" r="46"/><circle class="d-seg d-n" id="dn" cx="60" cy="60" r="46"/><circle class="d-seg d-w" id="dw" cx="60" cy="60" r="46"/><circle class="d-seg d-s" id="ds" cx="60" cy="60" r="46"/></svg><div class="d-c"><span class="eyebrow">Net pay</span><b class="num" id="d-net">₱0.00</b><small id="bud-period2">this cutoff</small></div></div>
-        <div class="stack" style="margin-top:16px;gap:10px">
-          <div class="row between"><div class="row"><i class="c-needs" style="width:11px;height:11px;border-radius:9px"></i><div><p style="font-weight:600">Needs</p><p class="card-s num" id="bp-n">70%</p></div></div><b class="num" id="ba-n">₱0.00</b></div>
-          <div class="row between"><div class="row"><i class="c-wants" style="width:11px;height:11px;border-radius:9px"></i><div><p style="font-weight:600">Wants</p><p class="card-s num" id="bp-w">20%</p></div></div><b class="num" id="ba-w">₱0.00</b></div>
-          <div class="row between"><div class="row"><i class="c-save" style="width:11px;height:11px;border-radius:9px"></i><div><p style="font-weight:600">Savings</p><p class="card-s num" id="bp-s">10%</p></div></div><b class="num" id="ba-s" style="color:var(--ok)">₱0.00</b></div>
+      <div class="seg" id="bud-tabs">
+        <button type="button" data-bt="overview" class="on" onclick="setBudTab('overview')">Overview</button>
+        <button type="button" data-bt="expenses" onclick="setBudTab('expenses')">Expenses</button>
+        <button type="button" data-bt="vaults" onclick="setBudTab('vaults')">Vaults</button>
+      </div>
+
+      <div id="bud-p-overview" class="stack">
+        <div class="card">
+          <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Cutoff envelopes</p><p class="card-s" id="bud-period">Splits your net pay</p></div><button type="button" class="btn soft sm press" onclick="openExpSheet()">+ Spend</button></div>
+          <div class="donut"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="d-tr" cx="60" cy="60" r="46"/><circle class="d-seg d-n" id="dn" cx="60" cy="60" r="46"/><circle class="d-seg d-w" id="dw" cx="60" cy="60" r="46"/><circle class="d-seg d-s" id="ds" cx="60" cy="60" r="46"/></svg><div class="d-c"><span class="eyebrow" id="d-lbl">Net pay</span><b class="num" id="d-net">₱0.00</b><small id="bud-period2">this cutoff</small></div></div>
+          <div class="stack" style="margin-top:14px;gap:12px">
+            <div>
+              <div class="row between"><div class="row"><i class="c-needs" style="width:10px;height:10px;border-radius:9px"></i><div><p style="font-weight:600">Needs</p><p class="card-s num" id="bp-n">70% share</p></div></div><div style="text-align:right"><b class="num" id="ba-n">₱0.00</b><p class="card-s num" id="br-n">₱0.00 left</p></div></div>
+              <div class="env-bar"><i class="needs" id="eb-n" style="transform:scaleX(0)"></i></div>
+            </div>
+            <div>
+              <div class="row between"><div class="row"><i class="c-wants" style="width:10px;height:10px;border-radius:9px"></i><div><p style="font-weight:600">Wants</p><p class="card-s num" id="bp-w">20% share</p></div></div><div style="text-align:right"><b class="num" id="ba-w">₱0.00</b><p class="card-s num" id="br-w">₱0.00 left</p></div></div>
+              <div class="env-bar"><i class="wants" id="eb-w" style="transform:scaleX(0)"></i></div>
+            </div>
+            <div class="row between" style="padding-top:4px"><div class="row"><i class="c-save" style="width:10px;height:10px;border-radius:9px"></i><div><p style="font-weight:600">Savings</p><p class="card-s num" id="bp-s">10% share</p></div></div><div style="text-align:right"><b class="num" id="ba-s" style="color:var(--ok)">₱0.00</b><p class="card-s num" id="br-s">Move to Vaults</p></div></div>
+          </div>
+        </div>
+        <details class="card fold">
+          <summary><div><p class="card-t">Customize split</p><p class="card-s">Adjust Needs / Wants / Savings ratio</p></div><span class="chip ok num" id="bud-total">100%</span></summary>
+          <div class="body">
+            <div class="presets wrap" style="margin-bottom:14px">
+              <button type="button" class="fchip" onclick="budgetPreset(70,20,10)">70 / 20 / 10</button><button type="button" class="fchip" onclick="budgetPreset(50,30,20)">50 / 30 / 20</button><button type="button" class="fchip" onclick="budgetPreset(60,15,25)">60 / 15 / 25</button><button type="button" class="fchip" onclick="budgetPreset(80,10,10)">80 / 10 / 10</button>
+            </div>
+            <div class="grid3">
+              <div><label class="lbl" for="bi-n">Needs %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-n" oninput="budgetInput()"></div>
+              <div><label class="lbl" for="bi-w">Wants %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-w" oninput="budgetInput()"></div>
+              <div><label class="lbl" for="bi-s">Savings %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-s" oninput="budgetInput()"></div>
+            </div>
+            <button type="button" class="btn primary block press" id="bud-save" style="margin-top:16px" onclick="saveBudget()">Save split</button>
+          </div>
+        </details>
+      </div>
+
+      <div id="bud-p-expenses" class="stack hidden">
+        <div class="card">
+          <div class="row between"><div><p class="card-t">Cutoff spending</p><p class="card-s num" id="exp-sub">₱0.00 spent</p></div><button type="button" class="btn primary sm press" onclick="openExpSheet()">+ Log expense</button></div>
+        </div>
+        <div class="list" id="exp-list"></div>
+      </div>
+
+      <div id="bud-p-vaults" class="stack hidden">
+        <div class="card">
+          <div class="row between"><div><p class="card-t">Savings vaults</p><p class="card-s num" id="vault-total-sub">₱0.00 saved across vaults</p></div><button type="button" class="btn primary sm press" onclick="openVaultSheet()">+ New vault</button></div>
+        </div>
+        <div class="list" id="vault-list"></div>
+      </div>
+    </section>
+
+    <!-- ================= INSIGHTS ================= -->
+    <section id="view-insights" class="view">
+      <div class="row between">
+        <button type="button" class="btn ghost sm press" onclick="go('home')"><svg class="ic sm"><use href="#i-back"/></svg>Home</button>
+        <div class="row" style="gap:6px">
+          <button type="button" class="icon-btn press" style="width:34px;height:34px;border-radius:11px" onclick="stepInsightYear(-1)" aria-label="Previous year"><svg class="ic sm"><use href="#i-l"/></svg></button>
+          <span class="chip num" id="ins-year-lbl" style="height:34px;padding:0 14px">2026</span>
+          <button type="button" class="icon-btn press" style="width:34px;height:34px;border-radius:11px" onclick="stepInsightYear(1)" aria-label="Next year"><svg class="ic sm"><use href="#i-r"/></svg></button>
         </div>
       </div>
-      <div class="card">
-        <div class="card-h"><p class="card-t">Customize split</p><span class="chip ok num" id="bud-total">100%</span></div>
-        <div class="presets wrap" style="margin-bottom:14px">
-          <button type="button" class="fchip" onclick="budgetPreset(70,20,10)">70 / 20 / 10</button><button type="button" class="fchip" onclick="budgetPreset(50,30,20)">50 / 30 / 20</button><button type="button" class="fchip" onclick="budgetPreset(60,15,25)">60 / 15 / 25</button><button type="button" class="fchip" onclick="budgetPreset(80,10,10)">80 / 10 / 10</button>
+      <div class="seg" id="ins-tabs">
+        <button type="button" data-it="overview" class="on" onclick="setInsTab('overview')">Overview</button>
+        <button type="button" data-it="statutory" onclick="setInsTab('statutory')">Statutory ledger</button>
+      </div>
+
+      <div id="ins-p-overview" class="stack">
+        <div class="kpi-grid">
+          <div class="kpi"><p class="kl">Year net pay</p><p class="kv num" id="ins-net">₱0.00</p><p class="ks num" id="ins-net-sub">0 cutoffs</p></div>
+          <div class="kpi"><p class="kl">Effective rate</p><p class="kv num" id="ins-eff">₱0.00/hr</p><p class="ks num" id="ins-eff-sub">vs base rate</p></div>
+          <div class="kpi"><p class="kl">Hours worked</p><p class="kv num" id="ins-hrs">0h</p><p class="ks num" id="ins-hrs-sub">0 shifts</p></div>
+          <div class="kpi"><p class="kl">13th-month YTD</p><p class="kv num pos-ok" id="ins-13th">₱0.00</p><p class="ks num" id="ins-gigs-sub">Basic ÷ 12</p></div>
         </div>
-        <div class="grid3">
-          <div><label class="lbl" for="bi-n">Needs %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-n" oninput="budgetInput()"></div>
-          <div><label class="lbl" for="bi-w">Wants %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-w" oninput="budgetInput()"></div>
-          <div><label class="lbl" for="bi-s">Savings %</label><input class="field num" style="text-align:center;padding:0 4px" type="number" inputmode="decimal" id="bi-s" oninput="budgetInput()"></div>
+        <div class="card">
+          <div class="card-h" style="margin-bottom:8px"><div><p class="card-t">Monthly net pay</p><p class="card-s num" id="ins-mo-detail">Tap a month to inspect</p></div></div>
+          <div class="m-bars" id="ins-mbars"></div>
         </div>
-        <button type="button" class="btn primary block press" id="bud-save" style="margin-top:16px" onclick="saveBudget()">Save split</button>
+        <div class="card">
+          <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Top stations &amp; streams</p><p class="card-s">Highest earners this year</p></div></div>
+          <div id="ins-stations"></div>
+        </div>
+      </div>
+
+      <div id="ins-p-statutory" class="stack hidden">
+        <div class="kpi-grid">
+          <div class="kpi"><p class="kl">SSS total</p><p class="kv num neg" id="st-sss">₱0.00</p><p class="ks">My.SSS check</p></div>
+          <div class="kpi"><p class="kl">PhilHealth total</p><p class="kv num neg" id="st-ph">₱0.00</p><p class="ks">Member portal</p></div>
+          <div class="kpi"><p class="kl">Pag-IBIG total</p><p class="kv num neg" id="st-pi">₱0.00</p><p class="ks">Virtual Pag-IBIG</p></div>
+          <div class="kpi"><p class="kl">Withholding tax</p><p class="kv num neg" id="st-tax">₱0.00</p><p class="ks">BIR Form 2316</p></div>
+        </div>
+        <div class="card">
+          <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Monthly remittances</p><p class="card-s">Cross-check against employer postings</p></div><button type="button" class="btn soft sm press" onclick="copyStatutoryLedger()">Copy</button></div>
+          <div style="overflow-x:auto"><table class="stat-tbl" id="st-table"></table></div>
+        </div>
       </div>
     </section>
 
@@ -610,6 +732,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="ps-row"><span class="k">Withholding tax</span><span class="v neg" id="ps-tax">₱0.00</span></div>
         <div class="ps-row"><span class="k">Other / cash advance</span><span class="v neg" id="ps-oth">₱0.00</span></div>
         <div class="ps-net"><div><p class="eyebrow" style="color:var(--accent-text);opacity:.8">Net take-home</p><p class="ps-net-sub num hidden" id="ps-net-recon"></p></div><span class="v num" id="ps-net">₱0.00</span></div>
+        <p class="note hidden" id="ps-gig-note" style="margin-top:10px"></p>
       </div>
 
       <div class="grid2">
@@ -739,11 +862,13 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 </div>
 
 <!-- ================= SHEETS ================= -->
-<div id="shift-sheet" class="scrim" onclick="if(event.target===this)closeSheet('shift-sheet')">
+<div id="shift-sheet" class="scrim" onclick="if(event.target===this)closeShift()">
   <div class="sheet">
     <div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t" id="shift-title">Log shift</h2><p class="card-s num" id="shift-hint">—</p></div><button type="button" class="icon-btn press" onclick="closeSheet('shift-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <div class="stack" style="gap:14px">
+    <div class="sheet-h"><div><h2 class="sheet-t" id="shift-title">Log shift</h2><p class="card-s num" id="shift-hint">—</p></div><button type="button" class="icon-btn press" onclick="closeShift()" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="seg" id="m-kind" style="margin-bottom:14px"><button type="button" data-k="shift" class="on" onclick="setLogKind('shift')">Hourly shift</button><button type="button" data-k="gig" onclick="setLogKind('gig')">Side gig</button></div>
+
+    <div id="m-shift-form" class="stack" style="gap:14px">
       <div class="presets" id="m-presets"></div>
       <div class="grid2">
         <div><label class="lbl" for="m-start">Start</label><select id="m-start" class="field" onchange="updatePreview()"></select></div>
@@ -753,19 +878,101 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div><div class="row between" style="margin-bottom:6px"><label class="lbl" for="m-date" style="margin:0">Date</label></div><input type="date" id="m-date" class="field" onchange="onDateChange()"></div>
         <div><label class="lbl" for="m-mult">Day type</label><select id="m-mult" class="field" onchange="updatePreview()"><option value="1.00">Regular day</option><option value="1.30">Special / rest day</option><option value="1.50">Special day on rest day</option><option value="2.00">Regular holiday</option><option value="2.60">Holiday on rest day</option></select></div>
       </div>
-      <div><label class="lbl">Unpaid break</label><div class="seg" id="m-break"><button type="button" data-b="0" onclick="setBreak(0)">None</button><button type="button" data-b="30" onclick="setBreak(30)">30 min</button><button type="button" data-b="60" onclick="setBreak(60)">1 hour</button></div></div>
+      <div class="grid2">
+        <div><label class="lbl">Unpaid break</label><div class="seg" id="m-break"><button type="button" data-b="0" onclick="setBreak(0)">None</button><button type="button" data-b="30" onclick="setBreak(30)">30m</button><button type="button" data-b="60" onclick="setBreak(60)">1h</button></div></div>
+        <div><label class="lbl">Status</label><div class="seg" id="m-status"><button type="button" data-s="worked" onclick="setShiftStatus('worked')">Worked</button><button type="button" data-s="scheduled" onclick="setShiftStatus('scheduled')">Plan</button><button type="button" data-s="cancelled" onclick="setShiftStatus('cancelled')">Off</button></div></div>
+      </div>
       <div id="m-holiday" class="chip ok hidden" style="height:auto;padding:7px 12px;white-space:normal"></div>
       <div><div class="row between" style="margin-bottom:6px"><label class="lbl" for="m-note" style="margin:0">Station / label (optional)</label><button type="button" class="link" style="padding:0;font-size:12px" onclick="pinCurrentPreset()">+ Pin preset</button></div><input id="m-note" class="field" style="font-weight:500" placeholder="e.g. Lobby, Grill, Prepping" autocomplete="off" oninput="syncStationHighlight()"><div class="st-chips" id="m-stations"></div></div>
-      <div class="preview"><div><p class="eyebrow" style="color:inherit;opacity:.75">Gross pay</p><p class="big num" id="m-gross">₱0.00</p></div><div style="text-align:right;font-size:12px" class="num" id="m-cut"></div></div>
+      <div class="preview"><div><p class="eyebrow" style="color:inherit;opacity:.75" id="m-gross-lbl">Gross pay</p><p class="big num" id="m-gross">₱0.00</p></div><div style="text-align:right;font-size:12px" class="num" id="m-cut"></div></div>
       <div class="row"><button type="button" class="btn ghost press hidden" id="m-del" onclick="deleteFromSheet()" aria-label="Delete shift"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="m-save" onclick="saveShift()">Save shift</button></div>
+    </div>
+
+    <div id="m-gig-form" class="stack hidden" style="gap:14px">
+      <div class="grid2">
+        <div><label class="lbl" for="g-amt">Amount earned</label><label class="money-field"><span>₱</span><input id="g-amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00"></label></div>
+        <div><label class="lbl" for="g-date">Date</label><input type="date" id="g-date" class="field"></div>
+      </div>
+      <div><label class="lbl" for="g-stream">Income stream</label><input id="g-stream" class="field" style="font-weight:500" placeholder="e.g. Catering, Freelance, Sound System" autocomplete="off" oninput="syncGigChips()"><div class="st-chips" id="g-streams"></div></div>
+      <div><label class="lbl" for="g-title">Event / description (optional)</label><input id="g-title" class="field" style="font-weight:500" placeholder="e.g. Weekend event, Website fix" autocomplete="off"></div>
+      <div><label class="lbl">Payment status</label><div class="seg" id="g-status"><button type="button" data-gs="paid" class="on" onclick="setGigStatus('paid')">Paid</button><button type="button" data-gs="pending" onclick="setGigStatus('pending')">Pending</button></div></div>
+      <div class="row"><button type="button" class="btn ghost press hidden" id="g-del" onclick="deleteGigFromSheet()" aria-label="Delete gig"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="g-save" onclick="saveGig()">Save side gig</button></div>
     </div>
   </div>
 </div>
 
 <div id="menu-sheet" class="scrim" onclick="if(event.target===this)closeSheet('menu-sheet')">
   <div class="sheet"><div class="grab"></div>
+    <button type="button" class="menu-it" onclick="closeSheet('menu-sheet');setTimeout(openBulkSheet,180)"><span class="ico"><svg class="ic"><use href="#i-layers"/></svg></span>Bulk log weekly roster</button>
     <button type="button" class="menu-it" onclick="closeSheet('menu-sheet');setTimeout(openIO,180)"><span class="ico"><svg class="ic"><use href="#i-swap"/></svg></span>Import / export schedule</button>
     <button type="button" class="menu-it bad" onclick="closeSheet('menu-sheet');setTimeout(clearCutoff,180)"><span class="ico"><svg class="ic"><use href="#i-trash"/></svg></span>Clear this cutoff</button>
+  </div>
+</div>
+
+<div id="bulk-sheet" class="scrim" onclick="if(event.target===this)closeSheet('bulk-sheet')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">Bulk log week</h2><p class="card-s num" id="bk-week-lbl">Select duty days</p></div><button type="button" class="icon-btn press" onclick="closeSheet('bulk-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:12px">
+      <div class="row between">
+        <button type="button" class="icon-btn press" style="width:36px;height:36px;border-radius:11px" onclick="stepBulkWeek(-1)" aria-label="Previous week"><svg class="ic sm"><use href="#i-l"/></svg></button>
+        <span class="chip mute num" id="bk-week-range">—</span>
+        <button type="button" class="icon-btn press" style="width:36px;height:36px;border-radius:11px" onclick="stepBulkWeek(1)" aria-label="Next week"><svg class="ic sm"><use href="#i-r"/></svg></button>
+      </div>
+      <div class="week-strip" id="bk-days"></div>
+      <div class="presets" id="bk-presets"></div>
+      <div class="grid2">
+        <div><label class="lbl" for="bk-start">Start</label><select id="bk-start" class="field" onchange="updateBulkPreview()"></select></div>
+        <div><label class="lbl" for="bk-end">End</label><select id="bk-end" class="field" onchange="updateBulkPreview()"></select></div>
+      </div>
+      <div class="grid2">
+        <div><label class="lbl">Unpaid break</label><div class="seg" id="bk-break"><button type="button" data-bb="0" class="on" onclick="setBulkBreak(0)">None</button><button type="button" data-bb="30" onclick="setBulkBreak(30)">30m</button><button type="button" data-bb="60" onclick="setBulkBreak(60)">1h</button></div></div>
+        <div><label class="lbl" for="blk-note">Station</label><input id="blk-note" class="field" style="font-weight:500" placeholder="e.g. Lobby" autocomplete="off"></div>
+      </div>
+      <div class="preview"><div><p class="eyebrow" style="color:inherit;opacity:.75">Estimated total</p><p class="big num" id="bk-gross">₱0.00</p></div><div style="text-align:right;font-size:12px" class="num" id="bk-summary">0 days selected</div></div>
+      <button type="button" class="btn primary block press" id="bk-save-btn" onclick="saveBulkShifts()">Add shifts</button>
+    </div>
+  </div>
+</div>
+
+<div id="exp-sheet" class="scrim" onclick="if(event.target===this)closeSheet('exp-sheet')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">Log expense</h2><p class="card-s" id="exp-sheet-sub">Tracked in this cutoff</p></div><button type="button" class="icon-btn press" onclick="closeSheet('exp-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:12px">
+      <div class="grid2">
+        <div><label class="lbl" for="ex-amt">Amount</label><label class="money-field"><span>₱</span><input id="ex-amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00"></label></div>
+        <div><label class="lbl" for="ex-date">Date</label><input type="date" id="ex-date" class="field"></div>
+      </div>
+      <div><label class="lbl">Envelope</label><div class="seg" id="ex-cat"><button type="button" data-ec="needs" class="on" onclick="setExpCat('needs')">Needs</button><button type="button" data-ec="wants" onclick="setExpCat('wants')">Wants</button></div></div>
+      <div><label class="lbl" for="ex-note">What for?</label><input id="ex-note" class="field" style="font-weight:500" placeholder="e.g. Fare, Lunch, Load" autocomplete="off">
+        <div class="st-chips" id="ex-tags">
+          <button type="button" class="schip press" onclick="pickExpTag('Fare','needs')">Fare</button>
+          <button type="button" class="schip press" onclick="pickExpTag('Food','needs')">Food</button>
+          <button type="button" class="schip press" onclick="pickExpTag('Bills','needs')">Bills</button>
+          <button type="button" class="schip press" onclick="pickExpTag('Load / Data','needs')">Load / Data</button>
+          <button type="button" class="schip press" onclick="pickExpTag('Date / Treats','wants')">Date / Treats</button>
+          <button type="button" class="schip press" onclick="pickExpTag('Shopping','wants')">Shopping</button>
+        </div>
+      </div>
+      <button type="button" class="btn primary block press" onclick="saveExpense()">Save expense</button>
+    </div>
+  </div>
+</div>
+
+<div id="vault-sheet" class="scrim" onclick="if(event.target===this)closeSheet('vault-sheet')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t" id="vlt-title">New savings vault</h2><p class="card-s" id="vlt-sub">Track persistent goals across cutoffs</p></div><button type="button" class="icon-btn press" onclick="closeSheet('vault-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:12px">
+      <div><label class="lbl" for="v-name">Goal name</label><input id="v-name" class="field" style="font-weight:500" placeholder="e.g. Emergency Fund, Tuition, Upgrade" autocomplete="off"></div>
+      <div class="grid2">
+        <div><label class="lbl" for="v-target">Target amount</label><label class="money-field"><span>₱</span><input id="v-target" type="number" inputmode="decimal" min="0" step="any" placeholder="5000"></label></div>
+        <div><label class="lbl" for="v-saved">Saved so far</label><label class="money-field"><span>₱</span><input id="v-saved" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label></div>
+      </div>
+      <button type="button" class="btn soft sm press hidden" id="v-add-cutoff-btn" onclick="addCutoffSavingsToVault()">+ Add this cutoff's savings</button>
+      <div class="row"><button type="button" class="btn ghost press hidden" id="v-del" onclick="deleteVaultFromSheet()" aria-label="Delete vault"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="v-save" onclick="saveVault()">Save vault</button></div>
+    </div>
   </div>
 </div>
 
@@ -792,12 +999,13 @@ LOBBY
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">1.17</span></h2><p class="card-s">Seamless in-app updates &amp; Android polish</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <div class="stack" style="gap:12px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">New</span><span class="sub">In-App Auto-Updater — downloads &amp; verifies updates inside SweldoPulse with live progress, notifies you when ready, and closes cleanly to install. No more browser stalls or parsing errors.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Fixed</span><span class="sub">Android 13+ notification permissions are now requested properly so daily shift reminders and update alerts always show up.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Android</span><span class="sub">Real native file sharing for JSON backups and CSV exports, plus permission-free payslip saving to Pictures/SweldoPulse.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Polish</span><span class="sub">System status &amp; navigation bars now match Light, Dark, and Black themes, plus a 1-tap Current pill to jump back from past cutoffs.</span></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.0</span></h2><p class="card-s">Your complete paycheck &amp; cash-flow hub</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:11px;font-size:13.5px">
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Widget</span><span class="sub">Native Home Screen Widget showing live net pay &amp; 1-tap + logging, plus long-press app icon shortcuts.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Budget</span><span class="sub">Actionable Budget hub with Cutoff Expense Envelopes and persistent Savings Vaults.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Gigs</span><span class="sub">Multi-Stream Income — log Catering, Freelance, or Sound System side gigs cleanly separate from main payroll.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Roster</span><span class="sub">Weekly Roster Bulk-Logger &amp; Shift Status (Worked, Planned, Cancelled) for instant weekly entry.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Insights</span><span class="sub">Yearly Analytics dashboard &amp; month-by-month SSS, PhilHealth, Pag-IBIG &amp; Tax Ledger.</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
   </div>
@@ -828,9 +1036,9 @@ LOBBY
 </div>
 
 <script>
-const APP_VERSION = '1.17.0';
+const APP_VERSION = '2.0.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
-const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
+const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const root = document.documentElement;
 const p2 = n => String(n).padStart(2, '0');
@@ -858,18 +1066,18 @@ const t12 = t => { const [h, m] = t.split(':'); const H = +h; return `${H % 12 =
 const fmtDay = ds => { const d = pd(ds); return `${DOW[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`; };
 
 /* ================= state ================= */
-let shifts = [];
+let shifts = [], gigs = [], expenses = [];
 let settings = {
   hourlyRate: 73.75, calabarzonArea: '73.75', schedule: 'semi', sss: 0, philhealth: 0, pagibig: 0, tax: 0, otherDed: 0,
   accentTheme: 'indigo', darkMode: false, themeMode: '', budgetNeeds: 70, budgetWants: 20, budgetSavings: 10,
   notifEnabled: false, notifTime: '22:00', lastNotifDate: '', goal: 0, deductMode: 'split', mwe: false, autoDeduct: null, hide: false, payLag: 0, repo: '', lastUpd: 0,
   last: { start: '16:00', end: '22:00', brk: 0 },
-  cutoffData: {}, customPresets: [],
+  cutoffData: {}, customPresets: [], vaults: [], incomeScope: 'all',
   autoDownloadUpd: true, updWifiOnly: true
 };
 let selKey = '', periodKeys = [], curView = 'home';
-const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '' };
-let editingId = null, modalBrk = 0, budNet = 0;
+const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '', budTab: 'overview', insTab: 'overview', insYear: new Date().getFullYear(), insMonth: new Date().getMonth() };
+let editingId = null, editingGigId = null, editingVaultId = null, modalKind = 'shift', modalBrk = 0, modalStatus = 'worked', modalGigStatus = 'paid', expCat = 'needs', budNet = 0;
 
 const ACCENTS = {
   midnight: { a: '#1E3A8A', ad: '#3556B8', h: '#1E40AF', sl: '#EAF0FF', bl: '#BCCBF5', tl: '#1E3A8A', sd: 'rgba(59,91,184,.22)', bd: 'rgba(96,130,220,.4)', td: '#A9BEF5', g: 'rgba(30,58,138,.38)' },
@@ -894,20 +1102,43 @@ function loadState() {
   const hadCutoffData = raw && JSON.parse(raw || '{}').cutoffData !== undefined;
   if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {};
   if (!Array.isArray(settings.customPresets)) settings.customPresets = [];
+  if (!Array.isArray(settings.vaults)) settings.vaults = [];
+  if (settings.incomeScope !== 'payroll' && settings.incomeScope !== 'all') settings.incomeScope = 'all';
   if (!hadCutoffData && +settings.otherDed > 0) { const ck = curPeriod().key; settings.cutoffData[ck] = { ...(settings.cutoffData[ck] || {}), otherDed: +settings.otherDed }; settings.otherDed = 0; }
-  try { const s = JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]'); shifts = normalizeShifts(s); } catch (e) { shifts = []; }
+  try { shifts = normalizeShifts(JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]')); } catch (e) { shifts = []; }
+  try { gigs = normalizeGigs(JSON.parse(localStorage.getItem(GIGS_KEY) || '[]')); } catch (e) { gigs = []; }
+  try { expenses = normalizeExpenses(JSON.parse(localStorage.getItem(EXP_KEY) || '[]')); } catch (e) { expenses = []; }
 }
 function normalizeShifts(arr) {
   if (!Array.isArray(arr)) return [];
   return arr.filter(s => s && /^\d{4}-\d{2}-\d{2}$/.test(s.date) && isFinite(s.gross)).map((s, i) => ({
     id: s.id || (Date.now() + i), date: s.date, startTime: s.startTime || '', endTime: s.endTime || '', note: s.note || '',
     hourlyRate: +s.hourlyRate || settings.hourlyRate, reg: +s.reg || 0, nd: +s.nd || 0, ot: +s.ot || 0, multiplier: +s.multiplier || 1,
-    gross: +s.gross || 0, ndPay: s.ndPay === undefined ? undefined : +s.ndPay, breakMin: +s.breakMin || 0
+    gross: +s.gross || 0, ndPay: s.ndPay === undefined ? undefined : +s.ndPay, breakMin: +s.breakMin || 0,
+    status: (s.status === 'worked' || s.status === 'scheduled' || s.status === 'cancelled') ? s.status : ''
   }));
 }
-let dv = 0, _idx = null, _idxV = -1; const _pdc = new Map();
+function normalizeGigs(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(g => g && /^\d{4}-\d{2}-\d{2}$/.test(g.date) && isFinite(g.amount)).map((g, i) => ({
+    id: g.id || (Date.now() + 5000 + i), date: g.date, stream: String(g.stream || 'Side Gig').trim() || 'Side Gig',
+    title: String(g.title || '').trim(), amount: r2(Math.max(0, +g.amount || 0)), status: g.status === 'pending' ? 'pending' : 'paid'
+  }));
+}
+function normalizeExpenses(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && isFinite(x.amount)).map((x, i) => ({
+    id: x.id || (Date.now() + 9000 + i), date: x.date, cat: x.cat === 'wants' ? 'wants' : 'needs',
+    note: String(x.note || '').trim() || 'Expense', amount: r2(Math.max(0, +x.amount || 0))
+  }));
+}
+const shiftStatusOf = s => s.status || (s.date > today() ? 'scheduled' : 'worked');
+const isShiftActive = s => shiftStatusOf(s) !== 'cancelled';
+let dv = 0, _idx = null, _idxV = -1, _gidx = null, _gidxV = -1, _eidx = null, _eidxV = -1; const _pdc = new Map();
 let _psT = 0;
 const persistShifts = () => { dv++; try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} };
+const persistGigs = () => { dv++; try { localStorage.setItem(GIGS_KEY, JSON.stringify(gigs)); } catch (e) {} };
+const persistExpenses = () => { dv++; try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses)); } catch (e) {} };
 const persistSettings = () => { dv++; if (_psT) { clearTimeout(_psT); _psT = 0; } try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} };
 const persistSettingsDebounced = () => { dv++; clearTimeout(_psT); _psT = setTimeout(() => { _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }, 220); };
 const flushSettings = () => { if (_psT) { clearTimeout(_psT); _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} } };
@@ -983,11 +1214,20 @@ function shiftsIn(key) {
   if (_idxV !== dv || !_idx) { _idx = new Map(); shifts.forEach(s => { const k = periodOf(s.date).key; (_idx.get(k) || _idx.set(k, []).get(k)).push(s); }); _idxV = dv; _pdc.clear(); }
   return (_idx.get(key) || []).slice();
 }
+function gigsIn(key) {
+  if (_gidxV !== dv || !_gidx) { _gidx = new Map(); gigs.forEach(g => { const k = periodOf(g.date).key; (_gidx.get(k) || _gidx.set(k, []).get(k)).push(g); }); _gidxV = dv; }
+  return (_gidx.get(key) || []).slice();
+}
+function expensesIn(key) {
+  if (_eidxV !== dv || !_eidx) { _eidx = new Map(); expenses.forEach(e => { const k = periodOf(e.date).key; (_eidx.get(k) || _eidx.set(k, []).get(k)).push(e); }); _eidxV = dv; }
+  return (_eidx.get(key) || []).slice();
+}
 function buildPeriods() {
   const cur = curPeriod();
   if (!selKey) selKey = cur.key;
   let hi = cur, lo = cur;
   shifts.forEach(s => { const p = periodOf(s.date); if (p.sort > hi.sort) hi = p; if (p.sort < lo.sort) lo = p; });
+  gigs.forEach(g => { const p = periodOf(g.date); if (p.sort > hi.sort) hi = p; if (p.sort < lo.sort) lo = p; });
   const sp = periodFromKey(selKey); if (sp.sort > hi.sort) hi = sp; if (sp.sort < lo.sort) lo = sp;
   const keys = []; let p = hi, guard = 0;
   while (guard++ < 80) { keys.push(p.key); if (p.sort <= lo.sort) break; p = periodOf(dstr(addDays(p.start, -1))); }
@@ -1045,14 +1285,17 @@ function recalcDay(date) {
   const list = shifts.filter(s => s.date === date && s.startTime && s.endTime).sort((a, b) => tmin(a.startTime) - tmin(b.startTime) || a.id - b.id);
   let prior = 0;
   list.forEach(s => {
-    const r = calcPay({ start: s.startTime, end: s.endTime, mult: s.multiplier, rate: s.hourlyRate, brk: s.breakMin || 0, prior });
-    if (!r) return; s.reg = r.reg; s.ot = r.ot; s.nd = r.nd; s.ndPay = r.ndPay; s.gross = r.gross; prior += r.paid;
+    const active = isShiftActive(s);
+    const r = calcPay({ start: s.startTime, end: s.endTime, mult: s.multiplier, rate: s.hourlyRate, brk: s.breakMin || 0, prior: active ? prior : 0 });
+    if (!r) return; s.reg = r.reg; s.ot = r.ot; s.nd = r.nd; s.ndPay = r.ndPay; s.gross = r.gross;
+    if (active) prior += r.paid;
   });
 }
 const ndPayOf = s => s.ndPay !== undefined ? s.ndPay : s.nd * s.hourlyRate * s.multiplier * 0.10;
 function totals(list) {
-  const t = { gross: 0, basic: 0, nd: 0, otp: 0, reg: 0, ndH: 0, otH: 0, n: list.length };
-  list.forEach(s => { t.gross += s.gross; t.basic += s.reg * s.hourlyRate; t.nd += ndPayOf(s); t.reg += s.reg; t.ndH += s.nd; t.otH += s.ot; });
+  const active = list.filter(isShiftActive);
+  const t = { gross: 0, basic: 0, nd: 0, otp: 0, reg: 0, ndH: 0, otH: 0, n: active.length };
+  active.forEach(s => { t.gross += s.gross; t.basic += s.reg * s.hourlyRate; t.nd += ndPayOf(s); t.reg += s.reg; t.ndH += s.nd; t.otH += s.ot; });
   t.gross = r2(t.gross); t.basic = r2(t.basic); t.nd = r2(t.nd); t.otp = r2(Math.max(0, t.gross - t.basic - t.nd)); t.hrs = t.reg + t.otH; return t;
 }
 
@@ -1060,7 +1303,7 @@ function totals(list) {
 function estimateStatutory(key, gross) {
   const sch = settings.schedule, perMonth = sch === 'monthly' ? 1 : (sch === 'weekly' ? 52 / 12 : 2);
   const ym = dstr(periodFromKey(key).start).slice(0, 7);
-  const monthActual = shifts.filter(s => s.date.startsWith(ym)).reduce((a, s) => a + s.gross, 0);
+  const monthActual = shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.gross, 0);
   const monthly = Math.max(monthActual, gross * perMonth);
   const msc = Math.min(35000, Math.max(5000, Math.floor((monthly + 250) / 500) * 500));
   const sssM = msc * 0.05;
@@ -1102,14 +1345,19 @@ function deductionsFor(key, gross, allow = 0) {
 }
 function periodData(key) {
   const list = shiftsIn(key); if (_pdc.has(key)) return _pdc.get(key);
+  const gList = gigsIn(key);
   const t = totals(list), allow = getAllowance(key), grossAll = r2(t.gross + allow), d = deductionsFor(key, t.gross, allow), actual = getActualNet(key);
-  const r = { list, t, allow, grossAll, d, net: r2(Math.max(0, grossAll - d.total)), actual };
+  const net = r2(Math.max(0, grossAll - d.total));
+  const gigPaid = r2(gList.filter(g => g.status !== 'pending').reduce((a, g) => a + g.amount, 0));
+  const gigPending = r2(gList.filter(g => g.status === 'pending').reduce((a, g) => a + g.amount, 0));
+  const gigTotal = r2(gigPaid + gigPending);
+  const r = { list, gList, t, allow, grossAll, d, net, actual, gigPaid, gigPending, gigTotal, netAll: r2(net + gigPaid) };
   _pdc.set(key, r); return r;
 }
 
 /* ================= navigation ================= */
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'Still up?' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
-const VIEWS = { home: ['Home', 'Cutoff overview', 0], budget: ['Budget', 'Split your pay', 0], shifts: ['Shifts', 'History & search', 1], deductions: ['Payslip', 'Breakdown & net pay', 3], settings: ['Settings', 'Pay, security & more', 4] };
+const VIEWS = { home: ['Home', 'Cutoff overview', 0], budget: ['Budget', 'Envelopes, spend & vaults', 0], insights: ['Insights', 'Yearly analytics & ledger', 0], shifts: ['Shifts', 'History & search', 1], deductions: ['Payslip', 'Breakdown & net pay', 3], settings: ['Settings', 'Pay, security & more', 4] };
 function replayEnter() { ['recent-list', 'shift-list'].forEach(id => { const el = $(id); if (!el) return; el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); }); clearTimeout(replayEnter.t); replayEnter.t = setTimeout(() => ['recent-list', 'shift-list'].forEach(id => $(id) && $(id).classList.remove('enter')), 900); }
 function go(v) {
   const m = VIEWS[v]; if (!m) return;
@@ -1121,7 +1369,7 @@ function go(v) {
   }
   curView = v; renderView(v);
   $('nav-pill').style.transform = `translate3d(${m[2] * 100}%,0,0)`;
-  const tab = v === 'budget' ? 'home' : v;
+  const tab = (v === 'budget' || v === 'insights') ? 'home' : v;
   $$('.nav-it').forEach(b => b.classList.toggle('on', b.id === 'nav-' + tab));
   setText($('hdr-title'), m[0]); setText($('hdr-sub'), v === 'home' ? greet() : m[1]);
 }
@@ -1173,15 +1421,25 @@ function toggleHide() {
 }
 function shiftLabel(s) { return s.note || (s.multiplier >= 2 ? 'Holiday shift' : s.multiplier > 1 ? 'Special day shift' : 'Shift'); }
 function shiftRow(s, del) {
-  const grouped = !!del, d = pd(s.date), range = s.startTime && s.endTime ? `${t12(s.startTime)} – ${t12(s.endTime)}` : fh(s.reg + s.ot);
+  const grouped = !!del, d = pd(s.date), st = shiftStatusOf(s), range = s.startTime && s.endTime ? `${t12(s.startTime)} – ${t12(s.endTime)}` : fh(s.reg + s.ot);
   const b = [];
-  if (s.nd > 0) b.push(`<span class="dot-b nd">${fh(s.nd)} ND</span>`);
-  if (s.ot > 0) b.push(`<span class="dot-b ot">${fh(s.ot)} OT</span>`);
-  if (s.multiplier > 1) b.push(`<span class="dot-b hl">${s.multiplier}×</span>`);
-  if (s.date > today()) b.push(`<span class="dot-b up">Upcoming</span>`);
-  return `<div class="shift press" role="button" tabindex="0" onclick="openShift(${s.id})"><div class="tag${s.multiplier > 1 ? ' hol' : ''}">${grouped ? `<b>${+(s.reg + s.ot).toFixed(1)}</b><small>hrs</small>` : `<b>${d.getDate()}</b><small>${DOW[d.getDay()]}</small>`}</div>
+  if (st === 'cancelled') b.push(`<span class="dot-b cx">Cancelled</span>`);
+  else {
+    if (s.nd > 0) b.push(`<span class="dot-b nd">${fh(s.nd)} ND</span>`);
+    if (s.ot > 0) b.push(`<span class="dot-b ot">${fh(s.ot)} OT</span>`);
+    if (s.multiplier > 1) b.push(`<span class="dot-b hl">${s.multiplier}×</span>`);
+    if (st === 'scheduled') b.push(`<span class="dot-b sc">Planned</span>`);
+  }
+  return `<div class="shift press${st === 'cancelled' ? ' cancelled' : ''}" role="button" tabindex="0" onclick="openShift(${s.id})"><div class="tag${s.multiplier > 1 ? ' hol' : ''}">${grouped ? `<b>${+(s.reg + s.ot).toFixed(1)}</b><small>hrs</small>` : `<b>${d.getDate()}</b><small>${DOW[d.getDay()]}</small>`}</div>
   <div class="grow"><p class="t">${esc(shiftLabel(s))}</p><p class="s num"><span>${range}</span>${b.join('')}</p></div>
-  <span class="amt num">${peso(s.gross)}</span>${del ? `<button type="button" class="trash" onclick="event.stopPropagation();deleteShift(${s.id})" aria-label="Delete shift"><svg class="ic sm"><use href="#i-trash"/></svg></button>` : ''}</div>`;
+  <span class="amt num">${st === 'cancelled' ? '₱0.00' : peso(s.gross)}</span>${del ? `<button type="button" class="trash" onclick="event.stopPropagation();deleteShift(${s.id})" aria-label="Delete shift"><svg class="ic sm"><use href="#i-trash"/></svg></button>` : ''}</div>`;
+}
+function gigRow(g, del) {
+  const d = pd(g.date), b = [`<span class="dot-b gg">${esc(g.stream)}</span>`];
+  if (g.status === 'pending') b.push('<span class="dot-b sc">Pending</span>');
+  return `<div class="shift press" role="button" tabindex="0" onclick="openGig(${g.id})"><div class="tag gig"><b>${d.getDate()}</b><small>${DOW[d.getDay()]}</small></div>
+  <div class="grow"><p class="t">${esc(g.title || g.stream)}</p><p class="s num">${b.join('')}</p></div>
+  <span class="amt num pos-ok">+${peso(g.amount)}</span>${del ? `<button type="button" class="trash" onclick="event.stopPropagation();deleteGig(${g.id})" aria-label="Delete side gig"><svg class="ic sm"><use href="#i-trash"/></svg></button>` : ''}</div>`;
 }
 const sortShifts = (a, b) => b.date.localeCompare(a.date) || (b.startTime || '').localeCompare(a.startTime || '') || b.id - a.id;
 function dayRange(P) { const out = []; for (let d = P.start; dstr(d) <= P.endStr; d = addDays(d, 1)) out.push(dstr(d)); return out; }
@@ -1203,18 +1461,47 @@ function renderSpark(P, list, ti, W) {
   el.setAttribute('viewBox', `0 0 ${W} ${H}`); el.innerHTML = html;
   el.classList.remove('in'); void el.getBoundingClientRect(); requestAnimationFrame(() => el.classList.add('in'));
 }
+const activeNetOf = D => (settings.incomeScope === 'all' && gigs.length > 0) ? D.netAll : D.net;
+function toggleIncomeScope() {
+  settings.incomeScope = settings.incomeScope === 'all' ? 'payroll' : 'all';
+  persistSettings(); render();
+  toast(settings.incomeScope === 'all' ? 'Showing Payroll + Side gigs' : 'Showing Main payroll only');
+}
+function syncWidget() {
+  if (!window.AndroidBridge || typeof AndroidBridge.updateWidget !== 'function') return;
+  try {
+    const cur = curPeriod(), D = periodData(cur.key), td = today();
+    const left = Math.max(0, dayNum(cur.endStr) - dayNum(td));
+    const dispNet = activeNetOf(D);
+    const netText = money(dispNet);
+    const badgeText = `${cur.badge} · ${left === 0 ? 'ends today' : left + 'd left'}`;
+    const gigPart = (settings.incomeScope === 'all' && D.gigPaid > 0 && !settings.hide) ? ` · +${peso(D.gigPaid)} gigs` : '';
+    const metaText = `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n === 1 ? '' : 's'}${gigPart}`;
+    AndroidBridge.updateWidget(netText, badgeText, metaText, cur.label);
+  } catch (e) {}
+}
 function renderHome() {
   const P = periodFromKey(selKey), D = periodData(selKey), cur = curPeriod(), isCur = P.key === cur.key, isPast = P.sort < cur.sort, td = today();
+  const allMode = settings.incomeScope === 'all' && gigs.length > 0;
+  const dispNet = allMode ? D.netAll : D.net;
+  const scBtn = $('w-scope-btn');
+  if (scBtn) {
+    scBtn.classList.toggle('hidden', !gigs.length);
+    scBtn.classList.toggle('all', allMode);
+    setText(scBtn, allMode ? 'All income' : 'Payroll');
+  }
   setText($('w-label'), P.badge + (isCur ? '' : (isPast ? ' · past' : ' · upcoming')));
   $('w-live').style.display = isCur ? '' : 'none';
-  setAmt(D.net);
-  // sub line: payday + still-to-come
-  const up = D.list.filter(s => s.date > td), upSum = up.reduce((a, s) => a + s.gross, 0), lag = Math.max(0, +settings.payLag || 0), parts = [];
+  setAmt(dispNet);
+  // sub line: payday + planned + side gigs
+  const planned = D.list.filter(s => shiftStatusOf(s) === 'scheduled'), planSum = planned.reduce((a, s) => a + s.gross, 0), lag = Math.max(0, +settings.payLag || 0), parts = [];
   if (lag > 0) { const pdte = addDays(P.end, lag), diff = dayNum(dstr(pdte)) - dayNum(td); parts.push(`Payday ${MON[pdte.getMonth()]} ${pdte.getDate()}${diff >= 0 && diff <= 14 ? (diff === 0 ? ' · today' : ` · in ${diff}d`) : ''}`); }
-  if (upSum > 0) parts.push(settings.hide ? `${up.length} upcoming` : `${peso(upSum)} still to come`);
-  setText($('w-sub'), parts.join(' · ') || (D.t.n ? '' : 'No shifts in this cutoff yet'));
+  if (planSum > 0) parts.push(settings.hide ? `${planned.length} planned` : `${peso(planSum)} planned`);
+  if (allMode && D.gigPaid > 0) parts.push(settings.hide ? '+ side gigs' : `+${peso(D.gigPaid)} gigs`);
+  setText($('w-sub'), parts.join(' · ') || (D.t.n || D.gList.length ? '' : 'No shifts in this cutoff yet'));
   // strip
-  setText($('ws-g'), money(D.grossAll)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n > 1 ? 's' : ''}` : '0h');
+  const stripGross = allMode ? r2(D.grossAll + D.gigPaid) : D.grossAll;
+  setText($('ws-g'), money(stripGross)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n > 1 ? 's' : ''}` : '0h');
   // ring: cutoff progress
   const left = dayNum(P.endStr) - dayNum(td), total = dayNum(P.endStr) - dayNum(P.startStr) + 1;
   let f, n, u;
@@ -1225,21 +1512,21 @@ function renderHome() {
   $('ring').title = isCur ? `Cutoff ends ${MON[P.end.getMonth()]} ${P.end.getDate()}` : 'Cutoff status';
   // goal
   const goal = +settings.goal || 0; $('w-goal').classList.toggle('hidden', !(goal > 0));
-  if (goal > 0) { const pc = Math.min(100, Math.round(D.net / goal * 100)); setText($('g-txt'), settings.hide ? 'Goal' : (pc >= 100 ? 'Goal reached ✓' : `Goal ${pc}%`)); $('g-fill').style.transform = `scaleX(${pc / 100})`; }
+  if (goal > 0) { const pc = Math.min(100, Math.round(dispNet / goal * 100)); setText($('g-txt'), settings.hide ? 'Goal' : (pc >= 100 ? 'Goal reached ✓' : `Goal ${pc}%`)); $('g-fill').style.transform = `scaleX(${pc / 100})`; }
   // spark
   const W = Math.max(200, Math.min(document.documentElement.clientWidth || 360, innerWidth >= 600 ? 560 : 520) - (innerWidth >= 600 ? 76 : 60)), ti = isCur ? dayRange(P).indexOf(td) : (isPast ? dayRange(P).length - 1 : -1);
-  renderSpark(P, D.list, ti, W);
-  // quick action 2: repeat when there is history, otherwise import
-  const has = shifts.length > 0; $('qa-2').onclick = has ? repeatLast : openIO; setText($('qa-2t'), has ? 'Repeat' : 'Import');
-  $('qa-2').firstElementChild.firstElementChild.firstElementChild.setAttribute('href', has ? '#i-repeat' : '#i-swap');
-  // recent
-  const rec = [...D.list].sort(sortShifts).slice(0, 3);
-  setText($('recent-h'), D.list.length > 3 ? `Latest of ${D.list.length} shifts` : 'Shifts this cutoff');
-  setHTML($('recent-list'), rec.length ? rec.map(s => shiftRow(s, false)).join('') : `<div class="empty"><b>Nothing logged yet</b>Tap “Log shift” to see your pay build up.</div>`);
+  renderSpark(P, D.list.filter(isShiftActive), ti, W);
+  // recent shifts + side gigs combined
+  const recItems = [...D.list.map(s => ({ k: 's', date: s.date, id: s.id, st: s.startTime || '', o: s })), ...(allMode ? D.gList.map(g => ({ k: 'g', date: g.date, id: g.id, st: '23:59', o: g })) : [])]
+    .sort((a, b) => b.date.localeCompare(a.date) || b.st.localeCompare(a.st) || b.id - a.id);
+  const rec = recItems.slice(0, 3);
+  setText($('recent-h'), recItems.length > 3 ? `Latest of ${recItems.length} entries` : 'Activity this cutoff');
+  setHTML($('recent-list'), rec.length ? rec.map(x => x.k === 'g' ? gigRow(x.o, false) : shiftRow(x.o, false)).join('') : `<div class="empty"><b>Nothing logged yet</b>Tap “Log shift” or “Bulk week” to see your pay build up.</div>`);
   const lb = +localStorage.getItem(BK_KEY) || 0, nag = $('backup-nag'), need = shifts.length && (!lb || Date.now() - lb > 14 * 864e5);
   nag.classList.toggle('hidden', !need); if (need) setText(nag, `⚠ ${lb ? 'Last backup was over 2 weeks ago' : 'You have no backup yet'} — tap to back up`);
-  renderBudget(D.net);
+  renderBudget(dispNet);
   renderTrend();
+  syncWidget();
 }
 function shortPeso(v) {
   if (settings.hide) return '•••';
@@ -1257,8 +1544,8 @@ function renderTrend() {
   card.classList.remove('hidden');
   const cols = []; let p = periodFromKey(selKey);
   for (let i = 0; i < 6; i++) { cols.unshift({ P: p, D: periodData(p.key) }); p = periodOf(dstr(addDays(p.start, -1))); }
-  const max = Math.max(0, ...cols.map(c => c.D.net));
-  const curNet = cols[5].D.net, prevNet = cols[4].D.net, delta = $('trend-delta');
+  const max = Math.max(0, ...cols.map(c => activeNetOf(c.D)));
+  const curNet = activeNetOf(cols[5].D), prevNet = activeNetOf(cols[4].D), delta = $('trend-delta');
   if (prevNet > 0) {
     const pc = Math.round((curNet - prevNet) / prevNet * 100);
     setText(delta, settings.hide ? 'vs prev' : `${pc >= 0 ? '▲ +' : '▼ '}${pc}% vs prev`);
@@ -1267,7 +1554,7 @@ function renderTrend() {
     setText(delta, 'Last 6 cutoffs'); delta.className = 'chip mute num';
   }
   setHTML($('trend-bars'), cols.map(c => {
-    const isSel = c.P.key === selKey, v = c.D.net, sc = max > 0 ? Math.max(0.08, v / max) : 0.08;
+    const isSel = c.P.key === selKey, v = activeNetOf(c.D), sc = max > 0 ? Math.max(0.08, v / max) : 0.08;
     return `<button type="button" class="trend-col press${isSel ? ' cur' : ''}${v <= 0 ? ' zero' : ''}" onclick="selectPeriod('${c.P.key}')" title="${esc(c.P.label)}: ${peso(v)}">` +
       `<span class="trend-val num">${shortPeso(v)}</span>` +
       `<div class="trend-track"><div class="trend-bar" style="transform:scaleY(${sc.toFixed(3)})"></div></div>` +
@@ -1275,30 +1562,161 @@ function renderTrend() {
   }).join(''));
 }
 const DONUT_C = 2 * Math.PI * 46;
+function setBudTab(t) {
+  ui.budTab = t;
+  $$('#bud-tabs button').forEach(b => b.classList.toggle('on', b.dataset.bt === t));
+  ['overview', 'expenses', 'vaults'].forEach(k => { const el = $('bud-p-' + k); if (el) el.classList.toggle('hidden', k !== t); });
+  if (t === 'expenses') renderExpenses();
+  if (t === 'vaults') renderVaults();
+}
 function renderBudget(net) {
   budNet = net;
-  const n = +settings.budgetNeeds, w = +settings.budgetWants, s = +settings.budgetSavings, an = net * n / 100, aw = net * w / 100, as = net * s / 100;
+  const n = +settings.budgetNeeds, w = +settings.budgetWants, s = +settings.budgetSavings, an = r2(net * n / 100), aw = r2(net * w / 100), as = r2(net * s / 100);
+  const exList = expensesIn(selKey);
+  const spN = r2(exList.filter(e => e.cat === 'needs').reduce((a, e) => a + e.amount, 0));
+  const spW = r2(exList.filter(e => e.cat === 'wants').reduce((a, e) => a + e.amount, 0));
+  const spTot = r2(spN + spW), leftAll = r2(net - spTot);
   setText($('bc-save'), 'Save ' + money(as)); $('bc-bn').style.width = n + '%'; $('bc-bw').style.width = w + '%'; $('bc-bs').style.width = s + '%';
   setText($('bc-pn'), n + '%'); setText($('bc-pw'), w + '%'); setText($('bc-ps'), s + '%'); setText($('bc-an'), money(an)); setText($('bc-aw'), money(aw)); setText($('bc-as'), money(as));
+  const sl = $('bc-spent-line');
+  if (sl) {
+    sl.classList.toggle('hidden', !(spTot > 0));
+    if (spTot > 0) setText(sl, settings.hide ? `${exList.length} expenses logged` : `Spent ${peso(spTot)} · ${leftAll >= 0 ? peso(leftAll) + ' remaining' : peso(Math.abs(leftAll)) + ' over net'}`);
+  }
   let off = 0; [['dn', n], ['dw', w], ['ds', s]].forEach(([id, p]) => { const el = $(id), full = DONUT_C * p / 100, len = Math.max(0, full - (p > 0 && p < 100 ? 3 : 0)); el.style.strokeDasharray = `${len} ${DONUT_C - len}`; el.style.strokeDashoffset = String(-off); off += full; });
-  setText($('d-net'), money(net)); setText($('bud-period2'), periodFromKey(selKey).label);
-  setText($('bp-n'), `${n}% share`); setText($('bp-w'), `${w}% share`); setText($('bp-s'), `${s}% share`);
+  setText($('d-lbl'), spTot > 0 ? 'Remaining' : 'Net pay');
+  setText($('d-net'), money(spTot > 0 ? leftAll : net));
+  setText($('bud-period2'), periodFromKey(selKey).label);
+  const remN = r2(an - spN), remW = r2(aw - spW);
+  setText($('bp-n'), `${n}% · spent ${money(spN)}`); setText($('bp-w'), `${w}% · spent ${money(spW)}`); setText($('bp-s'), `${s}% target`);
   setText($('ba-n'), money(an)); setText($('ba-w'), money(aw)); setText($('ba-s'), money(as));
-  setText($('bud-net'), 'Net: ' + money(net)); setText($('bud-period'), 'Splitting net pay for ' + periodFromKey(selKey).label);
+  setText($('br-n'), remN >= 0 ? `${money(remN)} left` : `${money(Math.abs(remN))} over`);
+  setText($('br-w'), remW >= 0 ? `${money(remW)} left` : `${money(Math.abs(remW))} over`);
+  $('br-n').style.color = remN < 0 ? 'var(--bad)' : '';
+  $('br-w').style.color = remW < 0 ? 'var(--bad)' : '';
+  const rn = an > 0 ? Math.min(1, spN / an) : (spN > 0 ? 1 : 0), rw = aw > 0 ? Math.min(1, spW / aw) : (spW > 0 ? 1 : 0);
+  const ebn = $('eb-n'), ebw = $('eb-w');
+  if (ebn) { ebn.style.transform = `scaleX(${rn.toFixed(3)})`; ebn.className = spN > an ? 'bad' : (rn > 0.85 ? 'warn' : 'needs'); }
+  if (ebw) { ebw.style.transform = `scaleX(${rw.toFixed(3)})`; ebw.className = spW > aw ? 'bad' : (rw > 0.85 ? 'warn' : 'wants'); }
+  setText($('bud-net'), 'Net: ' + money(net));
+  setText($('bud-period'), (settings.incomeScope === 'all' && gigs.length ? 'All income · ' : 'Payroll · ') + periodFromKey(selKey).label);
+  if (curView === 'budget') {
+    if (ui.budTab === 'expenses') renderExpenses();
+    if (ui.budTab === 'vaults') renderVaults();
+  }
+}
+function renderExpenses() {
+  const list = expensesIn(selKey).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+  const tot = r2(list.reduce((a, e) => a + e.amount, 0));
+  setText($('exp-sub'), `${list.length} item${list.length === 1 ? '' : 's'} · ${money(tot)} spent in ${periodFromKey(selKey).label}`);
+  if (!list.length) {
+    setHTML($('exp-list'), '<div class="empty"><b>No expenses logged</b>Tap “+ Log expense” to track Needs &amp; Wants against this cutoff.</div>');
+    return;
+  }
+  setHTML($('exp-list'), list.map(e =>
+    `<div class="exp-row"><i class="exp-dot ${e.cat === 'wants' ? 'c-wants' : 'c-needs'}"></i>` +
+    `<div class="grow"><p style="font-weight:600">${esc(e.note)}</p><p class="card-s num">${fmtDay(e.date)} · ${e.cat === 'wants' ? 'Wants' : 'Needs'}</p></div>` +
+    `<b class="num neg">−${money(e.amount)}</b>` +
+    `<button type="button" class="trash" onclick="deleteExpense(${e.id})" aria-label="Delete expense"><svg class="ic sm"><use href="#i-trash"/></svg></button></div>`
+  ).join(''));
+}
+function setExpCat(c) { expCat = c; $$('#ex-cat button').forEach(b => b.classList.toggle('on', b.dataset.ec === c)); }
+function pickExpTag(lbl, cat) { $('ex-note').value = lbl; setExpCat(cat); }
+function openExpSheet() {
+  const P = periodFromKey(selKey), cur = curPeriod();
+  $('ex-amt').value = ''; $('ex-note').value = '';
+  $('ex-date').value = P.key === cur.key ? today() : P.endStr;
+  setExpCat('needs');
+  setText($('exp-sheet-sub'), `Tracked in ${P.label}`);
+  openSheet('exp-sheet');
+}
+function saveExpense() {
+  const amt = r2(Math.max(0, parseFloat($('ex-amt').value) || 0));
+  if (!(amt > 0)) return toast('Enter an amount');
+  const date = $('ex-date').value || today(), note = $('ex-note').value.trim() || (expCat === 'wants' ? 'Wants' : 'Needs');
+  expenses.push({ id: Date.now() + Math.floor(Math.random() * 999), date, cat: expCat, note, amount: amt });
+  persistExpenses(); closeSheet('exp-sheet'); render(); toast(`Logged ${peso(amt)} (${expCat})`);
+}
+function deleteExpense(id) {
+  const e = expenses.find(x => x.id === id); if (!e) return;
+  expenses = expenses.filter(x => x.id !== id); persistExpenses(); render();
+  toast('Expense removed', { label: 'Undo', fn: () => { expenses.push(e); persistExpenses(); render(); toast('Expense restored'); } });
+}
+function renderVaults() {
+  const list = Array.isArray(settings.vaults) ? settings.vaults : [];
+  const tot = r2(list.reduce((a, v) => a + (+v.saved || 0), 0));
+  setText($('vault-total-sub'), `${money(tot)} saved across ${list.length} vault${list.length === 1 ? '' : 's'}`);
+  if (!list.length) {
+    setHTML($('vault-list'), '<div class="empty"><b>No savings vaults yet</b>Create a vault (Emergency Fund, Tuition, Upgrade) to track your savings across cutoffs.</div>');
+    return;
+  }
+  setHTML($('vault-list'), list.map(v => {
+    const sv = r2(+v.saved || 0), tg = r2(+v.target || 0), pc = tg > 0 ? Math.min(100, Math.round(sv / tg * 100)) : 100;
+    return `<div class="vault-card">` +
+      `<div class="row between"><div class="grow" onclick="openVaultSheet(${v.id})" role="button" tabindex="0"><p class="card-t">${esc(v.name)}</p><p class="card-s num">${money(sv)}${tg > 0 ? ` of ${money(tg)} · ${pc}%` : ' saved'}</p></div>` +
+      `<div class="row" style="gap:6px"><button type="button" class="btn soft sm press" style="min-height:32px;padding:0 10px" onclick="quickVaultAdd(${v.id})">+ Add</button><button type="button" class="btn ghost sm press" style="min-height:32px;padding:0 10px" onclick="openVaultSheet(${v.id})">Edit</button></div></div>` +
+      `<div class="env-bar" style="margin-top:2px"><i class="ok" style="transform:scaleX(${(pc / 100).toFixed(3)})"></i></div></div>`;
+  }).join(''));
+}
+function openVaultSheet(id = null) {
+  editingVaultId = id;
+  const v = id !== null ? (settings.vaults || []).find(x => x.id === id) : null;
+  setText($('vlt-title'), v ? 'Edit vault' : 'New savings vault');
+  setText($('v-save'), v ? 'Update vault' : 'Create vault');
+  $('v-del').classList.toggle('hidden', !v);
+  $('v-name').value = v ? v.name : '';
+  $('v-target').value = v && v.target ? v.target : '';
+  $('v-saved').value = v && v.saved ? v.saved : '';
+  const cutSave = r2(budNet * (+settings.budgetSavings || 0) / 100), btn = $('v-add-cutoff-btn');
+  btn.classList.toggle('hidden', !(cutSave > 0));
+  if (cutSave > 0) setText(btn, `+ Add this cutoff's savings (${peso(cutSave)})`);
+  openSheet('vault-sheet');
+}
+function addCutoffSavingsToVault() {
+  const cutSave = r2(budNet * (+settings.budgetSavings || 0) / 100);
+  if (!(cutSave > 0)) return;
+  const cur = parseFloat($('v-saved').value) || 0;
+  $('v-saved').value = r2(cur + cutSave);
+  toast(`Added ${peso(cutSave)} — tap Save vault`);
+}
+function quickVaultAdd(id) {
+  const v = (settings.vaults || []).find(x => x.id === id); if (!v) return;
+  openVaultSheet(id);
+}
+function saveVault() {
+  const name = $('v-name').value.trim(); if (!name) return toast('Enter a vault name');
+  const target = r2(Math.max(0, parseFloat($('v-target').value) || 0));
+  const saved = r2(Math.max(0, parseFloat($('v-saved').value) || 0));
+  if (!Array.isArray(settings.vaults)) settings.vaults = [];
+  if (editingVaultId !== null) {
+    const v = settings.vaults.find(x => x.id === editingVaultId);
+    if (v) Object.assign(v, { name, target, saved });
+  } else {
+    settings.vaults.push({ id: Date.now() + Math.floor(Math.random() * 999), name, target, saved });
+  }
+  editingVaultId = null; persistSettings(); closeSheet('vault-sheet'); renderVaults(); toast('Vault saved');
+}
+async function deleteVaultFromSheet() {
+  const id = editingVaultId; if (id === null) return;
+  const v = (settings.vaults || []).find(x => x.id === id); if (!v) return;
+  closeSheet('vault-sheet'); editingVaultId = null;
+  const ok = await askConfirm({ title: 'Delete this vault?', body: `Remove <b>${esc(v.name)}</b>? Your shifts and pay data are not affected.`, ok: 'Delete' });
+  if (!ok) return;
+  settings.vaults = settings.vaults.filter(x => x.id !== id); persistSettings(); renderVaults(); toast('Vault deleted');
 }
 function budRead() { return ['bi-n', 'bi-w', 'bi-s'].map(id => Math.max(0, parseFloat($(id).value) || 0)); }
 function budgetInput() { const [a, b, c] = budRead(), t = Math.round((a + b + c) * 10) / 10, ok = Math.abs(t - 100) < .01, el = $('bud-total'); setText(el, ok ? '100% ✓' : `${t}% — must be 100`); el.className = 'chip num ' + (ok ? 'ok' : 'bad'); $('bud-save').disabled = !ok; }
 function budgetPreset(a, b, c) { $('bi-n').value = a; $('bi-w').value = b; $('bi-s').value = c; budgetInput(); }
 function saveBudget() { const [a, b, c] = budRead(); if (Math.abs(a + b + c - 100) >= .01) return; settings.budgetNeeds = a; settings.budgetWants = b; settings.budgetSavings = c; persistSettings(); render(); toast(`Budget saved (${a}/${b}/${c})`); }
 
-const FILTERS = [['all', 'All'], ['reg', 'Regular'], ['spc', 'Special'], ['hol', 'Holiday'], ['night', 'Night'], ['ot', 'Overtime']];
+const FILTERS = [['all', 'All'], ['reg', 'Regular'], ['spc', 'Special'], ['hol', 'Holiday'], ['night', 'Night'], ['ot', 'Overtime'], ['plan', 'Planned'], ['gigs', 'Side gigs']];
 function buildFilters() { $('shift-filters').innerHTML = FILTERS.map(([k, l]) => `<button type="button" class="fchip press" data-f="${k}" onclick="setFilter('${k}')">${l}</button>`).join(''); setFilter(ui.f, true); }
 function setFilter(k, quiet) { ui.f = k; ui.limit = 60; $$('#shift-filters .fchip').forEach(b => b.classList.toggle('on', b.dataset.f === k)); if (!quiet) renderShifts(); }
 function onSearch(v) { ui.q = v.trim().toLowerCase(); ui.limit = 60; $('q-clear').classList.toggle('hidden', !v); renderShifts(); }
 function clearSearch() { $('shift-q').value = ''; onSearch(''); }
 function moreShifts() { ui.limit += 60; renderShifts(); }
 function toggleSort() { ui.limit = 60; ui.sort = ui.sort === 'desc' ? 'asc' : 'desc'; setText($('sort-btn').lastElementChild, ui.sort === 'desc' ? 'Newest' : 'Oldest'); renderShifts(); }
-const FMATCH = { all: () => true, reg: s => s.multiplier === 1, spc: s => s.multiplier > 1 && s.multiplier < 2, hol: s => s.multiplier >= 2, night: s => s.nd > 0, ot: s => s.ot > 0 };
+const FMATCH = { all: () => true, reg: s => s.multiplier === 1 && isShiftActive(s), spc: s => s.multiplier > 1 && s.multiplier < 2 && isShiftActive(s), hol: s => s.multiplier >= 2 && isShiftActive(s), night: s => s.nd > 0 && isShiftActive(s), ot: s => s.ot > 0 && isShiftActive(s), plan: s => shiftStatusOf(s) === 'scheduled', gigs: () => false };
 function toggleCal() {
   ui.cal = !ui.cal; if (!ui.cal) ui.calDay = '';
   const btn = $('cal-toggle'); if (btn) { btn.classList.toggle('on', ui.cal); btn.setAttribute('aria-pressed', String(ui.cal)); }
@@ -1337,14 +1755,28 @@ function renderShifts() {
   const searching = !!ui.q;
   const dayBar = $('cal-day-bar');
   if (dayBar) { dayBar.classList.toggle('hidden', !ui.calDay || searching); if (ui.calDay) setText($('cal-day-txt'), `Showing ${fmtDay(ui.calDay)}`); }
+  if (ui.f === 'gigs') {
+    let gl = searching ? gigs : gigsIn(selKey);
+    if (!searching && ui.calDay) gl = gl.filter(g => g.date === ui.calDay);
+    if (searching) gl = gl.filter(g => (`${g.stream} ${g.title} ${g.date} ${fmtDay(g.date)}`).toLowerCase().includes(ui.q));
+    gl = [...gl].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id); if (ui.sort === 'asc') gl.reverse();
+    const gt = r2(gl.reduce((a, g) => a + g.amount, 0));
+    setText($('shift-sum'), gl.length ? `${searching ? 'All cutoffs · ' : ''}${gl.length} side gig${gl.length > 1 ? 's' : ''} · ${peso(gt)}` : '');
+    if (!gl.length) { setHTML($('shift-list'), `<div class="empty"><b>No side gigs${searching ? ' found' : ' in this cutoff'}</b>Tap + and choose Side gig to log flat-rate income.</div>`); return; }
+    const groups = []; gl.slice(0, ui.limit).forEach(g => { const gr = groups[groups.length - 1]; if (gr && gr.d === g.date) gr.l.push(g); else groups.push({ d: g.date, l: [g] }); });
+    setHTML($('shift-list'), groups.map(gr => `<div class="day-h"><span>${fmtDay(gr.d)}</span><span class="num">+${peso(gr.l.reduce((a, g) => a + g.amount, 0))}</span></div>` + gr.l.map(g => gigRow(g, true)).join('')).join(''));
+    return;
+  }
   let list = searching ? shifts : shiftsIn(selKey);
   if (!searching && ui.calDay) list = list.filter(s => s.date === ui.calDay);
-  list = list.filter(FMATCH[ui.f]);
+  list = list.filter(FMATCH[ui.f] || FMATCH.all);
   if (searching) list = list.filter(s => (`${s.note} ${s.date} ${fmtDay(s.date)} ${MONF[pd(s.date).getMonth()]}`).toLowerCase().includes(ui.q));
   list = [...list].sort(sortShifts); if (ui.sort === 'asc') list.reverse();
   const t = totals(list);
-  setText($('shift-sum'), list.length ? `${searching ? 'All cutoffs · ' : ''}${list.length} shift${list.length > 1 ? 's' : ''} · ${fh(t.hrs)} · ${peso(t.gross)}` : (searching ? 'Searching all cutoffs' : ''));
-  if (!list.length) {
+  const extraGigs = (ui.f === 'all' && !searching) ? gigsIn(selKey).filter(g => !ui.calDay || g.date === ui.calDay) : [];
+  const gigSum = r2(extraGigs.reduce((a, g) => a + g.amount, 0));
+  setText($('shift-sum'), list.length ? `${searching ? 'All cutoffs · ' : ''}${t.n} shift${t.n === 1 ? '' : 's'} · ${fh(t.hrs)} · ${peso(t.gross)}${extraGigs.length ? ` + ${extraGigs.length} gig${extraGigs.length > 1 ? 's' : ''}` : ''}` : (extraGigs.length ? `${extraGigs.length} side gig${extraGigs.length > 1 ? 's' : ''} · ${peso(gigSum)}` : (searching ? 'Searching all cutoffs' : '')));
+  if (!list.length && !extraGigs.length) {
     if (!searching && ui.calDay) {
       setHTML($('shift-list'), `<div class="empty"><b>No shift on ${fmtDay(ui.calDay)}</b>Forgot to log this day?<div style="margin-top:12px"><button type="button" class="btn soft sm press" onclick="openShiftOnDate('${ui.calDay}')">+ Log shift for ${fmtDay(ui.calDay)}</button></div></div>`); return;
     }
@@ -1353,7 +1785,8 @@ function renderShifts() {
   }
   const total = list.length, shown = list.slice(0, ui.limit);
   const groups = []; shown.forEach(s => { const g = groups[groups.length - 1]; if (g && g.d === s.date) g.l.push(s); else groups.push({ d: s.date, l: [s] }); });
-  setHTML($('shift-list'), groups.map(g => `<div class="day-h"><span>${fmtDay(g.d)}</span><span class="num">${peso(g.l.reduce((a, s) => a + s.gross, 0))}</span></div>` + g.l.map(s => shiftRow(s, true)).join('')).join('') + (total > shown.length ? `<button type="button" class="btn ghost block press" onclick="moreShifts()">Show ${Math.min(60, total - shown.length)} more · ${total - shown.length} left</button>` : ''));
+  const gigHtml = extraGigs.length ? `<div class="day-h"><span>Side gigs this cutoff</span><span class="num pos-ok">+${peso(gigSum)}</span></div>` + extraGigs.sort((a, b) => b.date.localeCompare(a.date)).map(g => gigRow(g, true)).join('') : '';
+  setHTML($('shift-list'), groups.map(g => `<div class="day-h"><span>${fmtDay(g.d)}</span><span class="num">${peso(g.l.filter(isShiftActive).reduce((a, s) => a + s.gross, 0))}</span></div>` + g.l.map(s => shiftRow(s, true)).join('')).join('') + (total > shown.length ? `<button type="button" class="btn ghost block press" onclick="moreShifts()">Show ${Math.min(60, total - shown.length)} more · ${total - shown.length} left</button>` : '') + gigHtml);
 }
 function renderPayslip() {
   const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d;
@@ -1392,7 +1825,12 @@ function renderPayslip() {
   const n = $('stat-note'), capNote = d.capped ? ' Deductions are limited to your total earnings for this cutoff.' : '';
   if (settings.autoDeduct && d.est) n.textContent = `Based on est. monthly pay ${peso(d.est.monthly)} · SSS credit ${peso(d.est.msc)} · ${settings.mwe ? 'tax-exempt (minimum wage)' : 'TRAIN tax'}. Estimates only — your employer's payslip is the final word.${capNote}`;
   else n.textContent = "Uses 2026 rules: SSS 5% of salary credit, PhilHealth 2.5%, Pag-IBIG 2% (max ₱200), TRAIN tax. Estimates only — your employer's payslip is the final word." + capNote;
-  const y = P.startStr.slice(0, 4), basicYear = shifts.filter(s => s.date.startsWith(y)).reduce((a, s) => a + s.reg * s.hourlyRate, 0);
+  const gn = $('ps-gig-note');
+  if (gn) {
+    gn.classList.toggle('hidden', !(D.gigTotal > 0));
+    if (D.gigTotal > 0) setText(gn, `Plus ${peso(D.gigPaid)} paid side gigs${D.gigPending > 0 ? ` (${peso(D.gigPending)} pending)` : ''} in this cutoff — kept separate from employer payroll deductions.`);
+  }
+  const y = P.startStr.slice(0, 4), basicYear = shifts.filter(s => s.date.startsWith(y) && isShiftActive(s)).reduce((a, s) => a + s.reg * s.hourlyRate, 0);
   setText($('t13-sub'), `Earned in ${y} so far`); setText($('t13-ytd'), peso(basicYear / 12));
   syncDedUI();
   calc13();
@@ -1400,10 +1838,10 @@ function renderPayslip() {
 function calc13() { const h = +$('t13-hrs').value || 0, m = +$('t13-mo').value || 12; setText($('t13-res'), peso(h * (52 / 12) * m * settings.hourlyRate / 12)); }
 let _lastRender = 0;
 let _rq = 0;
-const dirty = { home: true, shifts: true, deductions: true };
-const RENDERERS = { home: () => renderHome(), budget: () => renderHome(), shifts: () => renderShifts(), deductions: () => renderPayslip() };
+const dirty = { home: true, shifts: true, deductions: true, insights: true };
+const RENDERERS = { home: () => renderHome(), budget: () => renderHome(), shifts: () => renderShifts(), deductions: () => renderPayslip(), insights: () => renderInsights() };
 function renderView(v) { const k = v === 'budget' ? 'home' : v; if (!RENDERERS[v] || !dirty[k]) return; dirty[k] = false; RENDERERS[v](); }
-function doRender() { _rq = 0; buildPeriods(); dirty.home = dirty.shifts = dirty.deductions = true; renderView(curView); }
+function doRender() { _rq = 0; buildPeriods(); dirty.home = dirty.shifts = dirty.deductions = dirty.insights = true; renderView(curView); }
 function render() { if (!_rq) _rq = requestAnimationFrame(doRender); }
 function renderNow() { cancelAnimationFrame(_rq); doRender(); }
 
@@ -1454,11 +1892,11 @@ function setStatOpt() { settings.deductMode = $('stat-mode').value; settings.mwe
 /* ================= shift sheet ================= */
 function populateTimes() {
   let h = ''; for (let m = 0; m < 1440; m += 30) { const v = `${p2(Math.floor(m / 60))}:${p2(m % 60)}`; h += `<option value="${v}">${t12(v)}</option>`; }
-  ['m-start', 'm-end', 'notif-time'].forEach(id => { $(id).innerHTML = h; });
+  ['m-start', 'm-end', 'notif-time', 'bk-start', 'bk-end'].forEach(id => { if ($(id)) $(id).innerHTML = h; });
 }
 function setBreak(n) { modalBrk = n; $$('#m-break button').forEach(b => b.classList.toggle('on', +b.dataset.b === n)); updatePreview(); }
 function priorHours(date, startMin, excludeId) {
-  return shifts.filter(s => s.date === date && s.id !== excludeId && s.startTime && s.endTime && tmin(s.startTime) < startMin)
+  return shifts.filter(s => s.date === date && s.id !== excludeId && isShiftActive(s) && s.startTime && s.endTime && tmin(s.startTime) < startMin)
     .reduce((a, s) => { const r = calcPay({ start: s.startTime, end: s.endTime, mult: s.multiplier, rate: s.hourlyRate, brk: s.breakMin || 0 }); return a + (r ? r.paid : 0); }, 0);
 }
 function readModal() {
@@ -1467,34 +1905,104 @@ function readModal() {
   const r = calcPay({ start, end, mult, rate, brk: modalBrk, prior: priorHours(date, tmin(start), editingId) });
   return { date, start, end, mult, rate, brk: modalBrk, r };
 }
+function setLogKind(k) {
+  modalKind = k;
+  $$('#m-kind button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  $('m-shift-form').classList.toggle('hidden', k !== 'shift');
+  $('m-gig-form').classList.toggle('hidden', k !== 'gig');
+  if (k === 'gig') {
+    setText($('shift-title'), editingGigId !== null ? 'Edit side gig' : 'Log side gig');
+    setText($('shift-hint'), 'Flat-rate income · kept separate from payroll deductions');
+    renderGigStreams();
+  } else {
+    setText($('shift-title'), editingId !== null ? 'Edit shift' : 'Log shift');
+    updatePreview();
+  }
+}
+function setShiftStatus(st) { modalStatus = st; $$('#m-status button').forEach(b => b.classList.toggle('on', b.dataset.s === st)); updatePreview(); }
+function setGigStatus(st) { modalGigStatus = st; $$('#g-status button').forEach(b => b.classList.toggle('on', b.dataset.gs === st)); }
 function updatePreview() {
   const v = readModal();
   $('m-next').classList.toggle('hidden', !(tmin(v.end) < tmin(v.start)));
-  setText($('m-gross'), v.r ? peso(v.r.gross) : '₱0.00');
-  setText($('shift-hint'), v.r ? `${fh(v.r.reg)} regular · ${fh(v.r.nd)} night · ${fh(v.r.ot)} overtime` : 'End time must differ from start time');
+  setText($('m-gross-lbl'), modalStatus === 'cancelled' ? 'Cancelled shift' : (modalStatus === 'scheduled' ? 'Projected gross' : 'Gross pay'));
+  setText($('m-gross'), modalStatus === 'cancelled' ? '₱0.00' : (v.r ? peso(v.r.gross) : '₱0.00'));
+  setText($('shift-hint'), modalStatus === 'cancelled' ? 'Excluded from pay & hours (kept in log history)' : (v.r ? `${fh(v.r.reg)} regular · ${fh(v.r.nd)} night · ${fh(v.r.ot)} overtime` : 'End time must differ from start time'));
   const P = periodOf(v.date); setText($('m-cut'), `${P.badge}\n${P.label}`); $('m-cut').style.whiteSpace = 'pre-line';
 }
 function onDateChange(keepMult) {
   const date = $('m-date').value || today(), h = holidayFor(date), box = $('m-holiday');
   if (h) { box.textContent = `${h.name} · ${h.mult >= 2 ? 'Regular holiday (2×)' : 'Special day (1.3×)'}`; box.classList.remove('hidden'); if (!keepMult) $('m-mult').value = h.mult.toFixed(2); }
   else { box.classList.add('hidden'); if (!keepMult) $('m-mult').value = '1.00'; }
+  if (!keepMult) setShiftStatus(date > today() ? 'scheduled' : 'worked');
   updatePreview();
 }
 function openShift(id = null) {
-  editingId = id;
+  editingId = id; editingGigId = null;
   const s = id !== null ? shifts.find(x => x.id === id) : null;
-  $('shift-title').textContent = s ? 'Edit shift' : 'Log shift'; $('m-save').textContent = s ? 'Update shift' : 'Save shift';
+  $('m-kind').classList.toggle('hidden', !!s);
+  $('m-save').textContent = s ? 'Update shift' : 'Save shift';
   $('m-del').classList.toggle('hidden', !s);
+  $('g-del').classList.add('hidden'); $('g-save').textContent = 'Save side gig';
+  const cur = curPeriod(), P = periodFromKey(selKey);
+  $('g-date').value = P.key === cur.key ? today() : P.endStr; $('g-amt').value = ''; $('g-title').value = ''; $('g-stream').value = ''; setGigStatus('paid');
   if (s) {
     $('m-date').value = s.date; $('m-start').value = s.startTime || '16:00'; $('m-end').value = s.endTime || '22:00';
-    $('m-mult').value = s.multiplier.toFixed(2); if (!$('m-mult').value) $('m-mult').value = '1.00'; $('m-note').value = s.note || ''; modalBrk = s.breakMin || 0; onDateChange(true);
+    $('m-mult').value = s.multiplier.toFixed(2); if (!$('m-mult').value) $('m-mult').value = '1.00'; $('m-note').value = s.note || ''; modalBrk = s.breakMin || 0; modalStatus = shiftStatusOf(s); onDateChange(true);
   } else {
-    const L = settings.last, cur = curPeriod(), P = periodFromKey(selKey);
+    const L = settings.last;
     $('m-date').value = P.key === cur.key ? today() : P.endStr; $('m-start').value = L.start; $('m-end').value = L.end; $('m-note').value = ''; modalBrk = L.brk || 0; onDateChange(false);
   }
-  renderPresets(); renderStationChips(); setBreak(modalBrk); openSheet('shift-sheet');
+  setLogKind('shift'); setShiftStatus(modalStatus); renderPresets(); renderStationChips(); setBreak(modalBrk); openSheet('shift-sheet');
 }
-function closeShift() { closeSheet('shift-sheet'); editingId = null; }
+function openGig(id = null) {
+  editingId = null; editingGigId = id;
+  const g = id !== null ? gigs.find(x => x.id === id) : null;
+  $('m-kind').classList.toggle('hidden', !!g);
+  $('g-del').classList.toggle('hidden', !g); $('g-save').textContent = g ? 'Update side gig' : 'Save side gig';
+  const cur = curPeriod(), P = periodFromKey(selKey);
+  $('g-date').value = g ? g.date : (P.key === cur.key ? today() : P.endStr);
+  $('g-amt').value = g ? g.amount : '';
+  $('g-stream').value = g ? g.stream : '';
+  $('g-title').value = g ? g.title : '';
+  setGigStatus(g ? g.status : 'paid');
+  setLogKind('gig'); openSheet('shift-sheet');
+}
+function closeShift() { closeSheet('shift-sheet'); editingId = null; editingGigId = null; }
+let _gigStreamItems = [];
+function pickGigStreamIdx(i) { const n = _gigStreamItems[i]; if (n !== undefined) { $('g-stream').value = n; syncGigChips(); } }
+function renderGigStreams() {
+  const box = $('g-streams'); if (!box) return;
+  const seen = new Map();
+  gigs.forEach(g => { const k = g.stream.toLowerCase(); const cur = seen.get(k) || { n: g.stream, c: 0 }; cur.c++; seen.set(k, cur); });
+  const list = [...seen.values()].sort((a, b) => b.c - a.c).map(x => x.n).slice(0, 6);
+  ['Catering', 'Freelance', 'Sound System', 'Affiliate', 'Side Gig'].forEach(d => { if (!list.some(x => x.toLowerCase() === d.toLowerCase())) list.push(d); });
+  _gigStreamItems = list.slice(0, 7);
+  setHTML(box, _gigStreamItems.map((n, i) => `<button type="button" class="schip press" data-gs-chip="${esc(n.toLowerCase())}" onclick="pickGigStreamIdx(${i})">${esc(n)}</button>`).join(''));
+  syncGigChips();
+}
+function syncGigChips() { const v = ($('g-stream').value || '').trim().toLowerCase(); $$('#g-streams .schip').forEach(b => b.classList.toggle('on', b.dataset.gsChip === v)); }
+function saveGig() {
+  const amt = r2(Math.max(0, parseFloat($('g-amt').value) || 0));
+  if (!(amt > 0)) return toast('Enter an amount earned');
+  const date = $('g-date').value || today(), stream = $('g-stream').value.trim() || 'Side Gig', title = $('g-title').value.trim(), status = modalGigStatus;
+  const wasEdit = editingGigId !== null;
+  if (wasEdit) {
+    const g = gigs.find(x => x.id === editingGigId);
+    if (g) Object.assign(g, { date, stream, title, amount: amt, status });
+  } else {
+    gigs.push({ id: Date.now() + Math.floor(Math.random() * 999), date, stream, title, amount: amt, status });
+  }
+  persistGigs(); selKey = periodOf(date).key; closeShift(); render();
+  toast(wasEdit ? 'Side gig updated' : `Added ${peso(amt)} (${stream})`);
+}
+async function deleteGig(id) {
+  const g = gigs.find(x => x.id === id); if (!g) return;
+  const ok = await askConfirm({ title: 'Delete side gig?', body: `<b>${esc(g.title || g.stream)}</b><br>${fmtDay(g.date)} · ${peso(g.amount)}`, ok: 'Delete' });
+  if (!ok) return;
+  gigs = gigs.filter(x => x.id !== id); persistGigs(); render();
+  toast('Side gig deleted', { label: 'Undo', fn: () => { gigs.push(g); persistGigs(); render(); toast('Side gig restored'); } });
+}
+function deleteGigFromSheet() { const id = editingGigId; closeShift(); setTimeout(() => deleteGig(id), 200); }
 function shortT(t) { const [h, m] = t.split(':').map(Number); const H = h % 12 === 0 ? 12 : h % 12; return `${H}${m ? ':' + p2(m) : ''}${h >= 12 ? 'p' : 'a'}`; }
 let _presetItems = [], _stationItems = [];
 function applyPresetItem(i) { const p = _presetItems[i]; if (p) preset(p.start, p.end, p.label, p.brk, true); }
@@ -1559,25 +2067,179 @@ function syncStationHighlight() { const v = ($('m-note').value || '').trim().toL
 function preset(a, b, label, brk, forceLabel) { $('m-start').value = a; $('m-end').value = b; if (forceLabel || !$('m-note').value) $('m-note').value = label || ''; syncStationHighlight(); setBreak(brk || 0); }
 function extendEnd(h) { const e = $('m-end'); const n = (tmin(e.value) + h * 60) % 1440; e.value = `${p2(Math.floor(n / 60))}:${p2(n % 60)}`; updatePreview(); toast(`End time +${h}h`); }
 function overlaps(v) {
+  if (modalStatus === 'cancelled') return null;
   const base = dayNum(v.date) * 1440, a0 = base + tmin(v.start); let a1 = base + tmin(v.end); if (tmin(v.end) <= tmin(v.start)) a1 += 1440;
-  return shifts.find(s => { if (s.id === editingId || !s.startTime || !s.endTime) return false; const b = dayNum(s.date) * 1440; const b0 = b + tmin(s.startTime); let b1 = b + tmin(s.endTime); if (tmin(s.endTime) <= tmin(s.startTime)) b1 += 1440; return a0 < b1 && b0 < a1; });
+  return shifts.find(s => { if (s.id === editingId || !isShiftActive(s) || !s.startTime || !s.endTime) return false; const b = dayNum(s.date) * 1440; const b0 = b + tmin(s.startTime); let b1 = b + tmin(s.endTime); if (tmin(s.endTime) <= tmin(s.startTime)) b1 += 1440; return a0 < b1 && b0 < a1; });
 }
 async function saveShift() {
   const v = readModal();
   if (!v.r) return toast('End time must differ from start time');
   if (v.r.gross <= 0) return toast('Choose a valid time range');
-  if (v.r.paid > 16 && !await askConfirm({ title: 'Very long shift', body: `This shift is <b>${fh(v.r.paid)}</b> of paid time. Is that right?`, ok: 'Yes, save it', danger: false })) return;
+  if (modalStatus !== 'cancelled' && v.r.paid > 16 && !await askConfirm({ title: 'Very long shift', body: `This shift is <b>${fh(v.r.paid)}</b> of paid time. Is that right?`, ok: 'Yes, save it', danger: false })) return;
   const ov = overlaps(v);
   if (ov && !await askConfirm({ title: 'Overlapping shift', body: `This overlaps with <b>${esc(shiftLabel(ov))}</b> on ${fmtDay(ov.date)} (${t12(ov.startTime)} – ${t12(ov.endTime)}). Save anyway?`, ok: 'Save anyway', danger: false })) return;
   const note = $('m-note').value.trim(); let old = null;
   if (editingId !== null) {
     const s = shifts.find(x => x.id === editingId);
-    if (s) { old = s.date; Object.assign(s, { date: v.date, startTime: v.start, endTime: v.end, note, multiplier: v.mult, breakMin: v.brk }); }
-  } else shifts.push({ id: Date.now() + Math.floor(Math.random() * 999), date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: v.mult, gross: 0, breakMin: v.brk });
+    if (s) { old = s.date; Object.assign(s, { date: v.date, startTime: v.start, endTime: v.end, note, multiplier: v.mult, breakMin: v.brk, status: modalStatus }); }
+  } else shifts.push({ id: Date.now() + Math.floor(Math.random() * 999), date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: v.mult, gross: 0, breakMin: v.brk, status: modalStatus });
   recalcDay(v.date); if (old && old !== v.date) recalcDay(old);
   settings.last = { start: v.start, end: v.end, brk: v.brk }; persistSettings(); persistShifts();
   const P = periodOf(v.date); selKey = P.key; const wasEdit = editingId !== null;
   closeShift(); render(); toast(wasEdit ? `Updated in ${P.label}` : `Added to ${P.label}`);
+}
+/* ================= weekly roster bulk logger ================= */
+let bulkMon = null, bulkSel = new Set(), bulkBrk = 0, _bkPresetItems = [];
+function mondayOf(d) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); const dow = (x.getDay() + 6) % 7; x.setDate(x.getDate() - dow); return x; }
+function openBulkSheet() {
+  bulkMon = mondayOf(new Date()); bulkSel.clear();
+  const L = settings.last || { start: '16:00', end: '22:00', brk: 0 };
+  $('bk-start').value = L.start; $('bk-end').value = L.end; $('blk-note').value = ''; setBulkBreak(L.brk || 0);
+  renderBulkPresets(); renderBulkWeek(); openSheet('bulk-sheet');
+}
+function stepBulkWeek(dir) { bulkMon = addDays(bulkMon, dir * 7); bulkSel.clear(); renderBulkWeek(); }
+function toggleBulkDay(ds) { if (bulkSel.has(ds)) bulkSel.delete(ds); else bulkSel.add(ds); renderBulkWeek(); }
+function setBulkBreak(n) { bulkBrk = n; $$('#bk-break button').forEach(b => b.classList.toggle('on', +b.dataset.bb === n)); updateBulkPreview(); }
+function applyBulkPreset(i) { const p = _bkPresetItems[i]; if (!p) return; $('bk-start').value = p.start; $('bk-end').value = p.end; $('blk-note').value = p.label || ''; setBulkBreak(p.brk || 0); }
+function renderBulkPresets() {
+  const box = $('bk-presets'); if (!box) return;
+  const pinned = Array.isArray(settings.customPresets) ? settings.customPresets : [];
+  const seen = new Set(pinned.map(p => `${p.start}|${p.end}|${p.brk || 0}|${(p.label || '').toLowerCase()}`));
+  const freq = new Map();
+  shifts.forEach(s => { if (!s.startTime || !s.endTime) return; const lbl = (s.note || '').trim(), k = `${s.startTime}|${s.endTime}|${s.breakMin || 0}|${lbl.toLowerCase()}`; if (seen.has(k)) return; const cur = freq.get(k) || { start: s.startTime, end: s.endTime, brk: s.breakMin || 0, label: lbl, c: 0 }; cur.c++; freq.set(k, cur); });
+  _bkPresetItems = [...pinned.slice(0, 4), ...[...freq.values()].sort((a, b) => b.c - a.c).slice(0, 3)];
+  let h = _bkPresetItems.map((p, i) => `<button type="button" class="fchip" onclick="applyBulkPreset(${i})">${esc(p.label ? p.label + ' · ' : '')}${shortT(p.start)}–${shortT(p.end)}</button>`).join('');
+  if (!h) h = `<button type="button" class="fchip" onclick="$('bk-start').value='16:00';$('bk-end').value='22:00';setBulkBreak(0)">6h (4p–10p)</button><button type="button" class="fchip" onclick="$('bk-start').value='18:00';$('bk-end').value='00:00';setBulkBreak(0)">6h ND (6p–12a)</button><button type="button" class="fchip" onclick="$('bk-start').value='08:00';$('bk-end').value='17:00';setBulkBreak(60)">8h + 1h break</button>`;
+  setHTML(box, h);
+}
+function renderBulkWeek() {
+  const sun = addDays(bulkMon, 6);
+  setText($('bk-week-range'), `${MON[bulkMon.getMonth()]} ${bulkMon.getDate()} – ${MON[sun.getMonth()]} ${sun.getDate()}`);
+  let h = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(bulkMon, i), ds = dstr(d), on = bulkSel.has(ds), hol = holidayFor(ds);
+    h += `<button type="button" class="wday press${on ? ' on' : ''}" onclick="toggleBulkDay('${ds}')"><span>${DOW[d.getDay()].slice(0, 2)}</span><b class="num">${d.getDate()}</b>${hol ? '<i class="hdot"></i>' : ''}</button>`;
+  }
+  setHTML($('bk-days'), h);
+  updateBulkPreview();
+}
+function updateBulkPreview() {
+  const st = $('bk-start').value, en = $('bk-end').value, days = [...bulkSel].sort();
+  let totGross = 0, totHrs = 0;
+  days.forEach(ds => {
+    const hol = holidayFor(ds), mult = hol ? hol.mult : 1;
+    const r = calcPay({ start: st, end: en, mult, rate: settings.hourlyRate, brk: bulkBrk, prior: 0 });
+    if (r) { totGross += r.gross; totHrs += r.paid; }
+  });
+  setText($('bk-gross'), peso(totGross));
+  setText($('bk-summary'), days.length ? `${days.length} day${days.length > 1 ? 's' : ''} · ${fh(totHrs)}` : 'Tap days above');
+  setText($('bk-save-btn'), days.length ? `Add ${days.length} shift${days.length > 1 ? 's' : ''}` : 'Select days to add');
+  $('bk-save-btn').disabled = !days.length || st === en;
+}
+function saveBulkShifts() {
+  const st = $('bk-start').value, en = $('bk-end').value, note = $('blk-note').value.trim(), days = [...bulkSel].sort(), td = today();
+  if (!days.length || st === en) return;
+  let added = 0, skipped = 0;
+  days.forEach((ds, idx) => {
+    if (shifts.some(s => s.date === ds && s.startTime === st && s.endTime === en && isShiftActive(s))) { skipped++; return; }
+    const hol = holidayFor(ds);
+    shifts.push({ id: Date.now() + idx + Math.floor(Math.random() * 999), date: ds, startTime: st, endTime: en, note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: hol ? hol.mult : 1, gross: 0, breakMin: bulkBrk, status: ds > td ? 'scheduled' : 'worked' });
+    recalcDay(ds); added++;
+  });
+  if (added) { settings.last = { start: st, end: en, brk: bulkBrk }; persistSettings(); persistShifts(); selKey = periodOf(days[days.length - 1]).key; }
+  closeSheet('bulk-sheet'); render();
+  toast(added ? `Added ${added} shift${added > 1 ? 's' : ''}${skipped ? ` · ${skipped} skipped` : ''}` : 'Those shifts are already logged');
+}
+/* ================= yearly insights & statutory ledger ================= */
+let _insCache = null;
+function setInsTab(t) {
+  ui.insTab = t;
+  $$('#ins-tabs button').forEach(b => b.classList.toggle('on', b.dataset.it === t));
+  $('ins-p-overview').classList.toggle('hidden', t !== 'overview');
+  $('ins-p-statutory').classList.toggle('hidden', t !== 'statutory');
+}
+function stepInsightYear(dir) { ui.insYear += dir; renderInsights(); }
+function pickInsightMonth(m) { ui.insMonth = m; drawInsightMonthDetail(); }
+function computeYearData(yr) {
+  const ys = String(yr);
+  const months = Array.from({ length: 12 }, (_, m) => ({ m, gross: 0, net: 0, gigs: 0, hrs: 0, shifts: 0, sss: 0, ph: 0, pi: 0, tax: 0, oth: 0 }));
+  const yShifts = shifts.filter(s => s.date.startsWith(ys) && isShiftActive(s));
+  const yGigs = gigs.filter(g => g.date.startsWith(ys) && g.status !== 'pending');
+  const pKeys = new Set();
+  yShifts.forEach(s => pKeys.add(periodOf(s.date).key));
+  yGigs.forEach(g => pKeys.add(periodOf(g.date).key));
+  pKeys.forEach(k => {
+    const P = periodFromKey(k);
+    if (P.start.getFullYear() !== yr) return;
+    const D = periodData(k), mo = months[P.start.getMonth()];
+    mo.gross = r2(mo.gross + D.grossAll);
+    mo.net = r2(mo.net + D.net);
+    mo.gigs = r2(mo.gigs + D.gigPaid);
+    mo.hrs = r2(mo.hrs + D.t.hrs);
+    mo.shifts += D.t.n;
+    mo.sss = r2(mo.sss + D.d.sss); mo.ph = r2(mo.ph + D.d.ph); mo.pi = r2(mo.pi + D.d.pi); mo.tax = r2(mo.tax + D.d.tax); mo.oth = r2(mo.oth + D.d.oth);
+  });
+  const totGross = r2(yShifts.reduce((a, s) => a + s.gross, 0));
+  const totHrs = r2(yShifts.reduce((a, s) => a + s.reg + s.ot, 0));
+  const basicYr = r2(yShifts.reduce((a, s) => a + s.reg * s.hourlyRate, 0));
+  const totNet = r2(months.reduce((a, x) => a + x.net, 0));
+  const totGigs = r2(months.reduce((a, x) => a + x.gigs, 0));
+  const st = { sss: r2(months.reduce((a, x) => a + x.sss, 0)), ph: r2(months.reduce((a, x) => a + x.ph, 0)), pi: r2(months.reduce((a, x) => a + x.pi, 0)), tax: r2(months.reduce((a, x) => a + x.tax, 0)) };
+  const bySt = new Map();
+  yShifts.forEach(s => { const k = shiftLabel(s); const cur = bySt.get(k) || { n: k, v: 0, c: 0 }; cur.v += s.gross; cur.c++; bySt.set(k, cur); });
+  yGigs.forEach(g => { const k = g.stream + ' (gig)'; const cur = bySt.get(k) || { n: k, v: 0, c: 0 }; cur.v += g.amount; cur.c++; bySt.set(k, cur); });
+  const top = [...bySt.values()].sort((a, b) => b.v - a.v).slice(0, 5);
+  return { yr, months, totGross, totHrs, totShifts: yShifts.length, basicYr, totNet, totGigs, st, top, cutoffCount: pKeys.size };
+}
+function drawInsightMonthDetail() {
+  if (!_insCache) return;
+  const mo = _insCache.months[ui.insMonth] || _insCache.months[0];
+  const allMode = settings.incomeScope === 'all' && _insCache.totGigs > 0;
+  const val = allMode ? r2(mo.net + mo.gigs) : mo.net;
+  setText($('ins-mo-detail'), `${MONF[mo.m]} ${_insCache.yr}: ${money(val)} net · ${fh(mo.hrs)} · ${mo.shifts} shift${mo.shifts === 1 ? '' : 's'}${mo.gigs > 0 ? ` · +${money(mo.gigs)} gigs` : ''}`);
+  $$('#ins-mbars .m-col').forEach((el, i) => el.classList.toggle('sel', i === ui.insMonth));
+}
+function renderInsights() {
+  const D = computeYearData(ui.insYear); _insCache = D;
+  const allMode = settings.incomeScope === 'all' && D.totGigs > 0;
+  setText($('ins-year-lbl'), String(D.yr));
+  setText($('ins-net'), money(allMode ? r2(D.totNet + D.totGigs) : D.totNet));
+  setText($('ins-net-sub'), `${D.cutoffCount} active cutoff${D.cutoffCount === 1 ? '' : 's'}${D.totGigs > 0 ? ` · +${money(D.totGigs)} gigs` : ''}`);
+  const eff = D.totHrs > 0 ? r2(D.totGross / D.totHrs) : 0, boost = D.totHrs > 0 ? r2(eff - settings.hourlyRate) : 0;
+  setText($('ins-eff'), D.totHrs > 0 ? `${peso(eff)}/hr` : '—');
+  setText($('ins-eff-sub'), D.totHrs > 0 ? `${boost >= 0 ? '+' : ''}${peso(boost)}/hr vs base` : 'No hours yet');
+  setText($('ins-hrs'), fh(D.totHrs)); setText($('ins-hrs-sub'), `${D.totShifts} shift${D.totShifts === 1 ? '' : 's'}`);
+  setText($('ins-13th'), money(D.basicYr / 12));
+  const vals = D.months.map(x => allMode ? r2(x.net + x.gigs) : x.net), max = Math.max(0, ...vals);
+  setHTML($('ins-mbars'), D.months.map((x, i) => {
+    const v = vals[i], sc = max > 0 ? Math.max(0.06, v / max) : 0.06;
+    return `<button type="button" class="m-col press${v <= 0 ? ' zero' : ''}${i === ui.insMonth ? ' sel' : ''}" onclick="pickInsightMonth(${i})"><div class="m-track"><div class="m-bar" style="transform:scaleY(${sc.toFixed(3)})"></div></div><span class="m-lbl">${MON[i][0]}</span></button>`;
+  }).join(''));
+  drawInsightMonthDetail();
+  if (!D.top.length) {
+    setHTML($('ins-stations'), '<p class="note">Log shifts or side gigs in this year to see your top earners.</p>');
+  } else {
+    const topMax = D.top[0].v || 1;
+    setHTML($('ins-stations'), D.top.map(r => `<div class="rank-row"><div class="row between"><span style="font-weight:600">${esc(r.n)} <span class="muted num" style="font-size:11.5px">(${r.c})</span></span><b class="num">${money(r.v)}</b></div><div class="env-bar" style="margin-top:2px"><i class="needs" style="transform:scaleX(${(r.v / topMax).toFixed(3)})"></i></div></div>`).join(''));
+  }
+  // Statutory Ledger
+  setText($('st-sss'), money(D.st.sss)); setText($('st-ph'), money(D.st.ph)); setText($('st-pi'), money(D.st.pi)); setText($('st-tax'), money(D.st.tax));
+  const rows = D.months.filter(x => (x.sss + x.ph + x.pi + x.tax) > 0 || x.gross > 0);
+  if (!rows.length) {
+    setHTML($('st-table'), '<tbody><tr><td colspan="5" style="text-align:center;color:var(--t3);padding:18px 0">No payroll records in ' + D.yr + ' yet.</td></tr></tbody>');
+  } else {
+    const grand = r2(D.st.sss + D.st.ph + D.st.pi + D.st.tax);
+    const body = rows.map(x => `<tr><td>${MON[x.m]}</td><td>${peso(x.sss)}</td><td>${peso(x.ph)}</td><td>${peso(x.pi)}</td><td>${peso(x.tax)}</td></tr>`).join('') +
+      `<tr><td>Total</td><td>${peso(D.st.sss)}</td><td>${peso(D.st.ph)}</td><td>${peso(D.st.pi)}</td><td>${peso(D.st.tax)}</td></tr>`;
+    setHTML($('st-table'), `<thead><tr><th>Mo</th><th>SSS</th><th>PhilH</th><th>Pag-IBIG</th><th>Tax</th></tr></thead><tbody>${body}</tbody>`);
+  }
+}
+async function copyStatutoryLedger() {
+  const D = _insCache || computeYearData(ui.insYear);
+  const lines = [`SweldoPulse Statutory Ledger (${D.yr})`, 'Month | SSS | PhilHealth | Pag-IBIG | Tax'];
+  D.months.filter(x => (x.sss + x.ph + x.pi + x.tax + x.gross) > 0).forEach(x => lines.push(`${MON[x.m]} | ${peso(x.sss)} | ${peso(x.ph)} | ${peso(x.pi)} | ${peso(x.tax)}`));
+  lines.push(`TOTAL | ${peso(D.st.sss)} | ${peso(D.st.ph)} | ${peso(D.st.pi)} | ${peso(D.st.tax)}`);
+  toast((await copyText(lines.join('\n'))) ? 'Statutory ledger copied' : "Couldn't copy");
 }
 async function deleteShift(id) {
   const s = shifts.find(x => x.id === id); if (!s) return;
@@ -1972,7 +2634,7 @@ async function checkUpdates(manual) {
 
 /* ================= backup / restore ================= */
 let bkMode = 'export';
-const backupJSON = () => JSON.stringify({ app: 'SweldoPulse', version: APP_VERSION, exportedAt: new Date().toISOString(), settings, shifts }, null, 1);
+const backupJSON = () => JSON.stringify({ app: 'SweldoPulse', version: APP_VERSION, exportedAt: new Date().toISOString(), settings, shifts, gigs, expenses }, null, 1);
 function csvText() {
   const q = v => { v = String(v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return `"${v.replace(/"/g, '""')}"`; },  rows = ['date,start,end,label,break_min,day_multiplier,regular_h,night_h,overtime_h,gross_php,cutoff'];
   [...shifts].sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || '')).forEach(s => rows.push([s.date, s.startTime, s.endTime, q(s.note || ''), s.breakMin || 0, s.multiplier, s.reg, s.nd, s.ot, s.gross.toFixed(2), q(periodOf(s.date).label)].join(',')));
@@ -1984,7 +2646,7 @@ function openBackup(mode) {
   $('bk-sub').textContent = csv ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'} · opens in Excel / Sheets` : (ex ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'} + settings` : 'Replaces everything on this device');
   ta.value = csv ? csvText() : (ex ? backupJSON() : ''); ta.readOnly = ex; ta.placeholder = ex ? '' : 'Paste your backup text here…';
   $('bk-export').classList.toggle('hidden', !ex); $('bk-restore').classList.toggle('hidden', ex);
-  $('bk-note').textContent = csv ? 'Copy it into a spreadsheet, or tap Save / share to send the .csv file.' : ex ? 'Tip: tap Copy, then paste it into Notes, Drive or a Messenger chat to yourself.' : 'Pick the backup file, or open it in any app, copy all the text and paste it above.';
+  $('blk-note').textContent = csv ? 'Copy it into a spreadsheet, or tap Save / share to send the .csv file.' : ex ? 'Tip: tap Copy, then paste it into Notes, Drive or a Messenger chat to yourself.' : 'Pick the backup file, or open it in any app, copy all the text and paste it above.';
   openSheet('backup-sheet');
 }
 const markBackup = () => { if (bkMode === 'csv') return render(); try { localStorage.setItem(BK_KEY, Date.now()); } catch (e) {} render(); syncBackupStatus(); };
@@ -2004,8 +2666,8 @@ async function restoreFromText() {
   const list = normalizeShifts(d && d.shifts);
   if (!d || d.app !== 'SweldoPulse' || !Array.isArray(d.shifts) || (d.shifts.length && !list.length)) return toast('Not a SweldoPulse backup');
   if (!await askConfirm({ title: 'Replace all data?', body: `This replaces everything on this device with the backup (<b>${list.length}</b> shifts). This cannot be undone.`, ok: 'Restore', danger: true })) return;
-  settings = { ...settings, ...(d.settings || {}) }; if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!Array.isArray(settings.customPresets)) settings.customPresets = []; shifts = list; _pm.clear(); selKey = ''; ui.calDay = '';
-  persistSettings(); persistShifts(); syncNativeReminder(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts`);
+  settings = { ...settings, ...(d.settings || {}) }; if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!Array.isArray(settings.customPresets)) settings.customPresets = []; if (!Array.isArray(settings.vaults)) settings.vaults = []; shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); _pm.clear(); selKey = ''; ui.calDay = '';
+  persistSettings(); persistShifts(); persistGigs(); persistExpenses(); syncNativeReminder(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts${gigs.length ? ' + ' + gigs.length + ' gigs' : ''}`);
 }
 function syncBackupStatus() { const lb = +localStorage.getItem(BK_KEY) || 0; $('backup-status').textContent = lb ? 'Last backup: ' + new Date(lb).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never backed up'; }
 
@@ -2103,7 +2765,7 @@ function lockCancel() { if (window.AndroidBridge) try { AndroidBridge.fpCancel()
 function lockSetAuto(v) { const c = lockCfg(); if (c) { c.auto = +v; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); } }
 async function lockForgot() {
   if (!await askConfirm({ title: 'Reset PIN?', body: 'Resetting the PIN <b>erases all shifts and settings</b> on this device — your PIN is what guards your data. You can restore from a backup afterwards.', ok: 'Erase & reset' })) return;
-  [SHIFTS_KEY, SETTINGS_KEY, LOCK_KEY, 'sp_lock_until', 'sp_pin_fails', TOUR_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
+  [SHIFTS_KEY, SETTINGS_KEY, GIGS_KEY, EXP_KEY, LOCK_KEY, 'sp_lock_until', 'sp_pin_fails', TOUR_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
 }
 function tryFingerprint() { if (!window.AndroidBridge || !lockVisible()) return; fpPurpose = 'unlock'; setText($('lock-sub'), 'Touch the fingerprint sensor'); AndroidBridge.fpAuth(); }
 window.onFingerprint = function (ok) {
@@ -2197,7 +2859,10 @@ function boot() {
   // after an update: show what's new once (not on a fresh install); then quietly look for newer releases every 6 hours
   try { const seen = localStorage.getItem('sp_seen_version'); if (seen !== APP_VERSION) { localStorage.setItem('sp_seen_version', APP_VERSION); if (seen && !lockVisible()) setTimeout(showWhatsNew, 900); } } catch (e) {}
   setTimeout(() => { if (!lockVisible() && navigator.onLine !== false && Date.now() - (settings.lastUpd || 0) > 216e5) checkUpdates(false); }, 4500);
+  window.onShortcutTab = function (tab) { if (!lockVisible() && VIEWS[tab]) go(tab); };
   if (location.hash === '#log-shift') setTimeout(() => openShift(), 300);
+  if (location.hash === '#deductions' || location.hash === '#payslip') setTimeout(() => { if (!lockVisible()) go('deductions'); }, 250);
+  if (location.hash === '#insights') setTimeout(() => { if (!lockVisible()) go('insights'); }, 250);
   if (location.hash === '#install-update') setTimeout(() => { if (!lockVisible()) promptInstallUpdate(); }, 500);
   // roll the cutoff over automatically if the app stays open past midnight
   let lastCur = curPeriod().key, lastDay = today();
