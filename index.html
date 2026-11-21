@@ -473,6 +473,11 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .io-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);flex:none}
 .rate-pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--accent-text);background:var(--accent-soft);padding:2px 8px;border-radius:99px}
 
+/* ---------- v2.2: PayLater/Hulugan & Utang dues + planned shift check-in ---------- */
+.due-card{padding:13px 14px;border-radius:18px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.due-card.settled{opacity:.58}
+.checkin{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border-radius:18px;background:var(--accent-soft);border:1px solid var(--accent-soft-border);color:var(--accent-text)}
+
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
 @media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.hero{padding:16px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
 @media (prefers-reduced-motion:reduce){.wallet::before,.wallet::after{animation:none}.spark{transition:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -603,6 +608,15 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <button type="button" class="qa-i" onclick="go('budget')"><span class="qa-ic"><svg class="ic"><use href="#i-pie"/></svg></span>Budget</button>
       </div>
 
+      <div class="checkin hidden" id="checkin-card">
+        <div class="row between"><div class="grow" style="min-width:0"><p style="font-size:13px;font-weight:700" id="ci-title">Finished your shift?</p><p style="font-size:11.5px;opacity:.85" id="ci-sub"></p></div><span class="chip">Check-in</span></div>
+        <div class="grid3">
+          <button type="button" class="btn primary sm press" onclick="resolveCheckin('worked')">Worked</button>
+          <button type="button" class="btn ghost sm press" onclick="resolveCheckin('edit')">Edit</button>
+          <button type="button" class="btn ghost sm press" onclick="resolveCheckin('cancelled')">Off</button>
+        </div>
+      </div>
+
       <button type="button" class="card bcard press" onclick="go('budget')" aria-label="Open budget plan">
         <div class="row between"><div class="row" style="gap:8px"><span class="bc-ic"><svg class="ic"><use href="#i-pie"/></svg></span><span class="card-t">Budget plan</span></div><span class="chip ok num" id="bc-save">Save ₱0.00</span></div>
         <div class="stackbar" style="margin-top:12px"><i class="c-needs" id="bc-bn"></i><i class="c-wants" id="bc-bw"></i><i class="c-save" id="bc-bs"></i></div>
@@ -628,7 +642,8 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="row between"><button type="button" class="btn ghost sm press" onclick="go('home')"><svg class="ic sm"><use href="#i-back"/></svg>Home</button><span class="chip num" id="bud-net">Net: ₱0.00</span></div>
       <div class="seg" id="bud-tabs">
         <button type="button" data-bt="overview" class="on" onclick="setBudTab('overview')">Overview</button>
-        <button type="button" data-bt="expenses" onclick="setBudTab('expenses')">Expenses</button>
+        <button type="button" data-bt="expenses" onclick="setBudTab('expenses')">Spend</button>
+        <button type="button" data-bt="dues" onclick="setBudTab('dues')">Dues</button>
         <button type="button" data-bt="vaults" onclick="setBudTab('vaults')">Vaults</button>
       </div>
 
@@ -673,6 +688,20 @@ input[type=search]::-webkit-search-cancel-button{display:none}
           <div class="row between"><div><p class="card-t">Cutoff spending</p><p class="card-s num" id="exp-sub">₱0.00 spent</p></div><button type="button" class="btn primary sm press" onclick="openExpSheet()">+ Log expense</button></div>
         </div>
         <div class="list" id="exp-list"></div>
+      </div>
+
+      <div id="bud-p-dues" class="stack hidden">
+        <div class="card">
+          <div class="row between"><div><p class="card-t">PayLater, Hulugan &amp; Utang</p><p class="card-s num" id="dues-sub">₱0.00 total balance</p></div><button type="button" class="btn primary sm press" onclick="openDebtSheet()">+ Add</button></div>
+          <div class="filters" id="dues-filters" style="margin-top:12px">
+            <button type="button" class="fchip on press" data-df="all" onclick="setDueFilter('all')">All</button>
+            <button type="button" class="fchip press" data-df="paylater" onclick="setDueFilter('paylater')">PayLater</button>
+            <button type="button" class="fchip press" data-df="owe" onclick="setDueFilter('owe')">I Owe</button>
+            <button type="button" class="fchip press" data-df="owed" onclick="setDueFilter('owed')">Owed to Me</button>
+            <button type="button" class="fchip press" data-df="paid" onclick="setDueFilter('paid')">Settled</button>
+          </div>
+        </div>
+        <div class="list" id="dues-list"></div>
       </div>
 
       <div id="bud-p-vaults" class="stack hidden">
@@ -843,8 +872,12 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       </div>
 
       <div class="card">
-        <div class="setting"><div><p class="k">Shift reminder</p><p class="d" id="notif-sub">Daily alert to log your shift</p></div><span class="switch"><input type="checkbox" id="notif-on" onchange="toggleNotif()"><i></i></span></div>
-        <div class="setting"><div><p class="k">Reminder time</p></div><select id="notif-time" class="field" style="width:140px" onchange="saveNotifTime()"></select></div>
+        <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Notifications</p><p class="card-s">Separate Android channels for shifts &amp; dues</p></div><button type="button" class="btn soft sm press" style="min-height:32px;padding:0 11px" onclick="sendTestNotif()">Test</button></div>
+        <div class="setting"><div><p class="k">Daily shift reminder</p><p class="d" id="notif-sub">Daily alert to log your shift</p></div><span class="switch"><input type="checkbox" id="notif-on" onchange="toggleNotif()"><i></i></span></div>
+        <div class="setting"><div><p class="k">Shift reminder time</p></div><select id="notif-time" class="field" style="width:140px" onchange="saveNotifTime()"></select></div>
+        <div class="setting"><div><p class="k">PayLater &amp; due alerts</p><p class="d" id="due-notif-sub">Morning alert for due &amp; overdue items</p></div><span class="switch"><input type="checkbox" id="due-notif-on" onchange="toggleDueNotif()"><i></i></span></div>
+        <div class="setting"><div><p class="k">Due alert time</p></div><select id="due-notif-time" class="field" style="width:140px" onchange="saveDueNotifTime()"></select></div>
+        <div class="setting"><div><p class="k">Planned shift nudge</p><p class="d">Alert 1 hour before a planned shift starts</p></div><span class="switch"><input type="checkbox" id="plan-nudge-on" onchange="togglePlanNudge()"><i></i></span></div>
       </div>
 
       <div class="card">
@@ -1041,6 +1074,41 @@ input[type=search]::-webkit-search-cancel-button{display:none}
   </div>
 </div>
 
+<div id="debt-sheet" class="scrim" onclick="if(event.target===this)closeSheet('debt-sheet')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t" id="debt-sheet-t">Add PayLater / Utang</h2><p class="card-s" id="debt-sheet-sub">Track due dates &amp; installment progress</p></div><button type="button" class="icon-btn press" onclick="closeSheet('debt-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:12px">
+      <div class="seg" id="db-kind">
+        <button type="button" data-dk="paylater" class="on" onclick="setDebtKind('paylater')">PayLater / Hulugan</button>
+        <button type="button" data-dk="owe" onclick="setDebtKind('owe')">I Owe</button>
+        <button type="button" data-dk="owed" onclick="setDebtKind('owed')">Owed to Me</button>
+      </div>
+      <div><label class="lbl" for="db-name" id="db-name-lbl">App / Provider</label><input id="db-name" class="field" style="font-weight:500" placeholder="e.g. SPayLater, GLoan, Atome" autocomplete="off">
+        <div class="st-chips" id="db-presets">
+          <button type="button" class="schip press" onclick="pickDebtPreset('SPayLater')">SPayLater</button>
+          <button type="button" class="schip press" onclick="pickDebtPreset('SLoan')">SLoan</button>
+          <button type="button" class="schip press" onclick="pickDebtPreset('GLoan')">GLoan</button>
+          <button type="button" class="schip press" onclick="pickDebtPreset('GGives')">GGives</button>
+          <button type="button" class="schip press" onclick="pickDebtPreset('Atome')">Atome</button>
+          <button type="button" class="schip press" onclick="pickDebtPreset('Billease')">Billease</button>
+          <button type="button" class="schip press" onclick="pickDebtPreset('Maya Credit')">Maya Credit</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div><label class="lbl" for="db-amt" id="db-amt-lbl">Amount per due</label><label class="money-field"><span>₱</span><input id="db-amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00"></label></div>
+        <div><label class="lbl" for="db-due">Next due date</label><input type="date" id="db-due" class="field"></div>
+      </div>
+      <div class="grid2" id="db-terms-row">
+        <div><label class="lbl" for="db-paid">Terms paid</label><input id="db-paid" class="field num" type="number" inputmode="numeric" min="0" value="0"></div>
+        <div><label class="lbl" for="db-total">Total terms (mos)</label><input id="db-total" class="field num" type="number" inputmode="numeric" min="1" value="3"></div>
+      </div>
+      <div><label class="lbl" for="db-note">Item / note (optional)</label><input id="db-note" class="field" style="font-weight:500" placeholder="e.g. Phone case, Groceries, Cash" autocomplete="off"></div>
+      <div class="row"><button type="button" class="btn ghost press hidden" id="db-del" onclick="deleteDebtFromSheet()" aria-label="Delete item"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="db-save" onclick="saveDebt()">Save</button></div>
+    </div>
+  </div>
+</div>
+
 <div id="io-sheet" class="scrim" onclick="if(event.target===this)closeSheet('io-sheet')">
   <div class="sheet"><div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t">Smart roster import</h2><p class="card-s">Paste from Messenger — preview before saving</p></div><button type="button" class="icon-btn press" onclick="closeSheet('io-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -1068,13 +1136,12 @@ M/W/F 4-10pm Grill
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.1</span></h2><p class="card-s">Smarter widget, upgraded security &amp; payday tools</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.2</span></h2><p class="card-s">PayLater &amp; Utang tracker, 3 widgets &amp; rich alerts</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:11px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Widget</span><span class="sub">Resizable Home Widget (drag from compact 2×1 to expanded stats card) that automatically follows your Light/Dark/Black theme &amp; accent color.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">PIN</span><span class="sub">Redesigned theme-synced PIN lock screen with 4- or 6-digit option, step pills, live lockout timer, and quick fingerprint trigger.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Bills</span><span class="sub">Recurring Bills checklist inside Budget → Expenses — mark repeating bills paid in 1 tap.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Import</span><span class="sub">Smart Messenger Roster Importer with shorthand parsing (3-9, M/W/F) &amp; checkable live preview.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">More</span><span class="sub">Silent daily Auto-Backup to Documents/SweldoPulse, Smart Goal shifts-left planner, per-shift rate override, and Shareable Insights PNG card.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Dues</span><span class="sub">PayLater, Hulugan &amp; Utang tracker inside Budget → Dues (SPayLater, SLoan, GLoan, Atome, IOUs) with term progress &amp; 1-tap Pay.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Widgets</span><span class="sub">3 theme-synced home widgets: Pay Glance (now with 1-tap HIDE/SHOW privacy button), Budget &amp; Dues Glance, and 4×1 Quick Actions Bar.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Alerts</span><span class="sub">Multi-channel Android notifications with morning PayLater due alerts, 1-hour planned-shift nudges, action buttons &amp; Test alert.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Check-in</span><span class="sub">1-tap Home check-in banner after a planned shift ends to confirm Worked, Edit, or Off.</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
   </div>
@@ -1105,9 +1172,9 @@ M/W/F 4-10pm Grill
 </div>
 
 <script>
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
-const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
+const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', DEBTS_KEY = 'sweldo_pulse_debts_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const root = document.documentElement;
 const p2 = n => String(n).padStart(2, '0');
@@ -1135,18 +1202,19 @@ const t12 = t => { const [h, m] = t.split(':'); const H = +h; return `${H % 12 =
 const fmtDay = ds => { const d = pd(ds); return `${DOW[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`; };
 
 /* ================= state ================= */
-let shifts = [], gigs = [], expenses = [];
+let shifts = [], gigs = [], expenses = [], debts = [];
 let settings = {
   hourlyRate: 73.75, calabarzonArea: '73.75', schedule: 'semi', sss: 0, philhealth: 0, pagibig: 0, tax: 0, otherDed: 0,
   accentTheme: 'indigo', darkMode: false, themeMode: '', budgetNeeds: 70, budgetWants: 20, budgetSavings: 10,
   notifEnabled: false, notifTime: '22:00', lastNotifDate: '', goal: 0, deductMode: 'split', mwe: false, autoDeduct: null, hide: false, payLag: 0, repo: '', lastUpd: 0,
   last: { start: '16:00', end: '22:00', brk: 0 },
   cutoffData: {}, customPresets: [], vaults: [], bills: [], incomeScope: 'all',
-  autoDownloadUpd: true, updWifiOnly: true, autoBackup: true, lastAutoBk: 0
+  autoDownloadUpd: true, updWifiOnly: true, autoBackup: true, lastAutoBk: 0,
+  dueNotifEnabled: true, dueNotifTime: '09:00', planNudgeEnabled: true
 };
 let selKey = '', periodKeys = [], curView = 'home';
-const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '', budTab: 'overview', insTab: 'overview', insYear: new Date().getFullYear(), insMonth: new Date().getMonth() };
-let editingId = null, editingGigId = null, editingVaultId = null, editingBillId = null, modalKind = 'shift', modalBrk = 0, modalStatus = 'worked', modalGigStatus = 'paid', expCat = 'needs', billCat = 'needs', budNet = 0;
+const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '', budTab: 'overview', dueF: 'all', insTab: 'overview', insYear: new Date().getFullYear(), insMonth: new Date().getMonth() };
+let editingId = null, editingGigId = null, editingVaultId = null, editingBillId = null, editingDebtId = null, modalKind = 'shift', modalBrk = 0, modalStatus = 'worked', modalGigStatus = 'paid', expCat = 'needs', billCat = 'needs', debtKind = 'paylater', budNet = 0, checkinShiftId = null;
 
 const ACCENTS = {
   midnight: { a: '#1E3A8A', ad: '#3556B8', h: '#1E40AF', sl: '#EAF0FF', bl: '#BCCBF5', tl: '#1E3A8A', sd: 'rgba(59,91,184,.22)', bd: 'rgba(96,130,220,.4)', td: '#A9BEF5', g: 'rgba(30,58,138,.38)' },
@@ -1178,6 +1246,7 @@ function loadState() {
   try { shifts = normalizeShifts(JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]')); } catch (e) { shifts = []; }
   try { gigs = normalizeGigs(JSON.parse(localStorage.getItem(GIGS_KEY) || '[]')); } catch (e) { gigs = []; }
   try { expenses = normalizeExpenses(JSON.parse(localStorage.getItem(EXP_KEY) || '[]')); } catch (e) { expenses = []; }
+  try { debts = normalizeDebts(JSON.parse(localStorage.getItem(DEBTS_KEY) || '[]')); } catch (e) { debts = []; }
 }
 function normalizeShifts(arr) {
   if (!Array.isArray(arr)) return [];
@@ -1209,7 +1278,22 @@ let dv = 0, _idx = null, _idxV = -1, _gidx = null, _gidxV = -1, _eidx = null, _e
 let _psT = 0;
 const persistShifts = () => { dv++; try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} scheduleAutoBackup(); };
 const persistGigs = () => { dv++; try { localStorage.setItem(GIGS_KEY, JSON.stringify(gigs)); } catch (e) {} scheduleAutoBackup(); };
+function normalizeDebts(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(d => d && d.name && isFinite(d.amount)).map((d, i) => ({
+    id: d.id || (Date.now() + 12000 + i),
+    kind: (d.kind === 'owe' || d.kind === 'owed') ? d.kind : 'paylater',
+    name: String(d.name).trim(),
+    amount: r2(Math.max(0, +d.amount || 0)),
+    dueDate: /^\d{4}-\d{2}-\d{2}$/.test(d.dueDate || '') ? d.dueDate : '',
+    paidTerms: Math.max(0, parseInt(d.paidTerms, 10) || 0),
+    totalTerms: Math.max(1, parseInt(d.totalTerms, 10) || 1),
+    note: String(d.note || '').trim(),
+    settled: !!d.settled
+  }));
+}
 const persistExpenses = () => { dv++; try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses)); } catch (e) {} scheduleAutoBackup(); };
+const persistDebts = () => { dv++; try { localStorage.setItem(DEBTS_KEY, JSON.stringify(debts)); } catch (e) {} scheduleAutoBackup(); syncDueAndPlanAlarms(); };
 const persistSettings = () => { dv++; if (_psT) { clearTimeout(_psT); _psT = 0; } try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} };
 const persistSettingsDebounced = () => { dv++; clearTimeout(_psT); _psT = setTimeout(() => { _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }, 220); };
 const flushSettings = () => { if (_psT) { clearTimeout(_psT); _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} } };
@@ -1565,11 +1649,19 @@ function syncWidget() {
     const P = ACCENTS[settings.accentTheme] || ACCENTS.indigo;
     const accent = dark && P.ad ? P.ad : P.a;
     const accentText = dark ? P.td : P.tl;
+    const exListCur = expensesIn(cur.key);
+    const spCur = r2(exListCur.reduce((a, e) => a + e.amount, 0));
+    const remBudget = money(r2(dispNet - spCur));
+    const nextDue = getNextUpcomingDue();
+    const dueTitle = nextDue ? nextDue.badge : 'Next due';
+    const dueLine = nextDue ? `${nextDue.name} · ${peso(nextDue.amount)}` : 'No upcoming PayLater or bills';
+    const dueUrgent = !!(nextDue && nextDue.urgent);
     if (typeof AndroidBridge.updateWidgetV2 === 'function') {
       AndroidBridge.updateWidgetV2(JSON.stringify({
         net: netText, badge: badgeText, meta: metaText, period: cur.label,
         gross: money(dispGross), ded: settings.hide ? MASK : '−' + peso(D.d.total),
-        extra, theme, accent, accentText
+        extra, remBudget, dueTitle, dueLine, dueUrgent, appHide: !!settings.hide,
+        theme, accent, accentText
       }));
     } else if (typeof AndroidBridge.updateWidget === 'function') {
       AndroidBridge.updateWidget(netText, badgeText, metaText, cur.label);
@@ -1634,9 +1726,11 @@ function renderHome() {
   setHTML($('recent-list'), rec.length ? rec.map(x => x.k === 'g' ? gigRow(x.o, false) : shiftRow(x.o, false)).join('') : `<div class="empty"><b>Nothing logged yet</b>Tap “Log shift” or “Bulk week” to see your pay build up.</div>`);
   const lb = +localStorage.getItem(BK_KEY) || 0, nag = $('backup-nag'), need = shifts.length && (!lb || Date.now() - lb > 14 * 864e5);
   nag.classList.toggle('hidden', !need); if (need) setText(nag, `⚠ ${lb ? 'Last backup was over 2 weeks ago' : 'You have no backup yet'} — tap to back up`);
+  renderCheckin();
   renderBudget(dispNet);
   renderTrend();
   syncWidget();
+  syncDueAndPlanAlarms();
 }
 function shortPeso(v) {
   if (settings.hide) return '•••';
@@ -1672,12 +1766,182 @@ function renderTrend() {
   }).join(''));
 }
 const DONUT_C = 2 * Math.PI * 46;
+function renderCheckin() {
+  const card = $('checkin-card'); if (!card) return;
+  const now = new Date(), td = today(), nowMin = now.getHours() * 60 + now.getMinutes();
+  const pastPlanned = shifts.filter(s => {
+    if (shiftStatusOf(s) !== 'scheduled') return false;
+    if (s.date < td) return true;
+    if (s.date > td) return false;
+    if (!s.startTime || !s.endTime) return false;
+    const sm = tmin(s.startTime), em = tmin(s.endTime);
+    if (em <= sm) return false; // overnight ends tomorrow
+    return nowMin >= em + 10;
+  }).sort(sortShifts);
+  const s = pastPlanned[0];
+  checkinShiftId = s ? s.id : null;
+  card.classList.toggle('hidden', !s);
+  if (!s) return;
+  setText($('ci-title'), `Finished your ${shiftLabel(s)} shift?`);
+  setText($('ci-sub'), `${fmtDay(s.date)}${s.startTime && s.endTime ? ` · ${t12(s.startTime)}–${t12(s.endTime)}` : ''} · ${peso(s.gross)}`);
+}
+function resolveCheckin(act) {
+  const id = checkinShiftId; if (!id) return;
+  const s = shifts.find(x => x.id === id); if (!s) return;
+  if (act === 'edit') { openShift(id); return; }
+  s.status = act === 'cancelled' ? 'cancelled' : 'worked';
+  recalcDay(s.date); persistShifts(); render();
+  toast(act === 'cancelled' ? 'Marked as Off / Cancelled' : 'Confirmed as Worked ✓');
+}
 function setBudTab(t) {
   ui.budTab = t;
   $$('#bud-tabs button').forEach(b => b.classList.toggle('on', b.dataset.bt === t));
-  ['overview', 'expenses', 'vaults'].forEach(k => { const el = $('bud-p-' + k); if (el) el.classList.toggle('hidden', k !== t); });
+  ['overview', 'expenses', 'dues', 'vaults'].forEach(k => { const el = $('bud-p-' + k); if (el) el.classList.toggle('hidden', k !== t); });
   if (t === 'expenses') renderExpenses();
+  if (t === 'dues') renderDues();
   if (t === 'vaults') renderVaults();
+}
+function addMonthsStr(ds, n) {
+  if (!ds) return '';
+  const d = pd(ds), targetM = d.getMonth() + n, y = d.getFullYear() + Math.floor(targetM / 12), m = ((targetM % 12) + 12) % 12;
+  const maxDay = new Date(y, m + 1, 0).getDate();
+  return dstr(new Date(y, m, Math.min(d.getDate(), maxDay)));
+}
+function dueMeta(ds) {
+  if (!ds) return { label: 'No due date', cls: 'mute', urgent: false, diff: 9999 };
+  const diff = dayNum(ds) - dayNum(today());
+  if (diff < 0) return { label: `Overdue ${Math.abs(diff)}d`, cls: 'bad', urgent: true, diff };
+  if (diff === 0) return { label: 'Due today', cls: 'bad', urgent: true, diff };
+  if (diff === 1) return { label: 'Due tomorrow', cls: 'warn', urgent: true, diff };
+  if (diff <= 5) return { label: `Due in ${diff}d`, cls: 'warn', urgent: false, diff };
+  const d = pd(ds);
+  return { label: `Due ${MON[d.getMonth()]} ${d.getDate()}`, cls: 'mute', urgent: false, diff };
+}
+function getNextUpcomingDue() {
+  const active = debts.filter(d => !d.settled && d.kind !== 'owed' && d.dueDate)
+    .map(d => ({ ...d, m: dueMeta(d.dueDate) }))
+    .sort((a, b) => a.m.diff - b.m.diff);
+  if (active.length) {
+    const x = active[0];
+    return { name: x.name, amount: x.amount, badge: x.m.label, urgent: x.m.urgent, diff: x.m.diff };
+  }
+  return null;
+}
+function setDueFilter(f) {
+  ui.dueF = f;
+  $$('#dues-filters .fchip').forEach(b => b.classList.toggle('on', b.dataset.df === f));
+  renderDues();
+}
+function renderDues() {
+  const activeOwe = debts.filter(d => !d.settled && d.kind !== 'owed');
+  const totalBal = r2(activeOwe.reduce((a, d) => a + (d.kind === 'paylater' ? d.amount * Math.max(1, d.totalTerms - d.paidTerms) : d.amount), 0));
+  const owedMe = r2(debts.filter(d => !d.settled && d.kind === 'owed').reduce((a, d) => a + d.amount, 0));
+  setText($('dues-sub'), `${money(totalBal)} to pay${owedMe > 0 ? ` · ${money(owedMe)} owed to you` : ''}`);
+  let list = debts.filter(d => {
+    if (ui.dueF === 'paid') return !!d.settled;
+    if (d.settled) return false;
+    if (ui.dueF === 'all') return true;
+    return d.kind === ui.dueF;
+  }).sort((a, b) => {
+    const da = a.dueDate ? dayNum(a.dueDate) : 999999, db = b.dueDate ? dayNum(b.dueDate) : 999999;
+    return da - db || b.id - a.id;
+  });
+  if (!list.length) {
+    setHTML($('dues-list'), `<div class="empty"><b>${ui.dueF === 'paid' ? 'No settled items yet' : 'No active dues'}</b>Tap “+ Add” to track SPayLater, GLoan, Atome, Hulugan, or personal Utang.</div>`);
+    return;
+  }
+  setHTML($('dues-list'), list.map(d => {
+    const dm = dueMeta(d.dueDate);
+    const isPL = d.kind === 'paylater', isOwed = d.kind === 'owed';
+    const remTerms = isPL ? Math.max(0, d.totalTerms - d.paidTerms) : 0;
+    const remBal = isPL ? r2(d.amount * remTerms) : d.amount;
+    const pc = isPL && d.totalTerms > 0 ? Math.min(100, Math.round(d.paidTerms / d.totalTerms * 100)) : (d.settled ? 100 : 0);
+    const kindTag = isPL ? `${d.paidTerms}/${d.totalTerms} paid` : (isOwed ? 'Owed to you' : 'You owe');
+    return `<div class="due-card${d.settled ? ' settled' : ''}">` +
+      `<div class="row between"><div class="grow" onclick="openDebtSheet(${d.id})" role="button" tabindex="0"><p class="card-t">${esc(d.name)}</p><p class="card-s num">${kindTag}${d.note ? ' · ' + esc(d.note) : ''}</p></div>` +
+      `<div class="row" style="gap:6px">${!d.settled && d.dueDate ? `<span class="chip ${dm.cls} num">${dm.label}</span>` : ''}${d.settled ? '<span class="chip ok">Paid ✓</span>' : `<button type="button" class="btn primary sm press" style="min-height:32px;padding:0 12px" onclick="payDebt(${d.id})">${isPL ? 'Pay' : 'Settle'}</button>`}</div></div>` +
+      `<div class="row between" style="font-size:12.5px"><span class="muted num">${isPL ? `Per due: <b style="color:var(--t1)">${money(d.amount)}</b>` : (isOwed ? 'Receivable' : 'Balance')}</span><b class="num ${isOwed ? 'pos-ok' : ''}">${isPL ? `${money(remBal)} left` : money(d.amount)}</b></div>` +
+      (isPL ? `<div class="env-bar" style="margin-top:0"><i class="ok" style="transform:scaleX(${(pc / 100).toFixed(3)})"></i></div>` : '') +
+      `</div>`;
+  }).join(''));
+}
+function setDebtKind(k) {
+  debtKind = k;
+  $$('#db-kind button').forEach(b => b.classList.toggle('on', b.dataset.dk === k));
+  $('db-terms-row').classList.toggle('hidden', k !== 'paylater');
+  $('db-presets').classList.toggle('hidden', k !== 'paylater');
+  setText($('db-name-lbl'), k === 'paylater' ? 'App / Provider' : 'Person / Lender');
+  $('db-name').placeholder = k === 'paylater' ? 'e.g. SPayLater, GLoan, Atome' : 'e.g. Juan, Coworker';
+  setText($('db-amt-lbl'), k === 'paylater' ? 'Amount per due' : 'Amount');
+}
+function pickDebtPreset(n) { $('db-name').value = n; }
+function openDebtSheet(id = null) {
+  editingDebtId = id;
+  const d = id !== null ? debts.find(x => x.id === id) : null;
+  setText($('debt-sheet-t'), d ? 'Edit PayLater / Utang' : 'Add PayLater / Utang');
+  setText($('db-save'), d ? 'Update' : 'Save');
+  $('db-del').classList.toggle('hidden', !d);
+  setDebtKind(d ? d.kind : 'paylater');
+  $('db-name').value = d ? d.name : '';
+  $('db-amt').value = d ? d.amount : '';
+  $('db-due').value = d ? (d.dueDate || '') : today();
+  $('db-paid').value = d ? d.paidTerms : 0;
+  $('db-total').value = d ? d.totalTerms : 3;
+  $('db-note').value = d ? (d.note || '') : '';
+  openSheet('debt-sheet');
+}
+function saveDebt() {
+  const name = $('db-name').value.trim(); if (!name) return toast('Enter a name or provider');
+  const amount = r2(Math.max(0, parseFloat($('db-amt').value) || 0)); if (!(amount > 0)) return toast('Enter an amount');
+  const dueDate = $('db-due').value || '';
+  const totalTerms = debtKind === 'paylater' ? Math.max(1, parseInt($('db-total').value, 10) || 1) : 1;
+  const paidTerms = debtKind === 'paylater' ? Math.min(totalTerms, Math.max(0, parseInt($('db-paid').value, 10) || 0)) : 0;
+  const note = $('db-note').value.trim();
+  const settled = debtKind === 'paylater' ? (paidTerms >= totalTerms) : false;
+  if (editingDebtId !== null) {
+    const d = debts.find(x => x.id === editingDebtId);
+    if (d) Object.assign(d, { kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
+  } else {
+    debts.push({ id: Date.now() + Math.floor(Math.random() * 999), kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
+  }
+  editingDebtId = null; persistDebts(); closeSheet('debt-sheet'); render(); toast('Saved to Dues');
+}
+async function deleteDebtFromSheet() {
+  const id = editingDebtId; if (id === null) return;
+  const d = debts.find(x => x.id === id); if (!d) return;
+  closeSheet('debt-sheet'); editingDebtId = null;
+  const ok = await askConfirm({ title: 'Delete this item?', body: `Remove <b>${esc(d.name)}</b>? Already logged expenses are not removed.`, ok: 'Delete' });
+  if (!ok) return;
+  debts = debts.filter(x => x.id !== id); persistDebts(); render(); toast('Removed from Dues');
+}
+function payDebt(id) {
+  const d = debts.find(x => x.id === id); if (!d || d.settled) return;
+  const prev = { ...d };
+  const P = periodFromKey(selKey), cur = curPeriod();
+  const payDate = P.key === cur.key ? today() : P.endStr;
+  let loggedExp = null;
+  if (d.kind === 'paylater') {
+    d.paidTerms = Math.min(d.totalTerms, (d.paidTerms || 0) + 1);
+    if (d.paidTerms >= d.totalTerms) d.settled = true;
+    else if (d.dueDate) d.dueDate = addMonthsStr(d.dueDate, 1);
+    loggedExp = { id: Date.now() + Math.floor(Math.random() * 999), date: payDate, cat: 'needs', note: `${d.name} (${d.paidTerms}/${d.totalTerms})`, amount: d.amount, billId: null };
+    expenses.push(loggedExp); persistExpenses();
+  } else if (d.kind === 'owe') {
+    d.settled = true;
+    loggedExp = { id: Date.now() + Math.floor(Math.random() * 999), date: payDate, cat: 'needs', note: `Paid ${d.name}`, amount: d.amount, billId: null };
+    expenses.push(loggedExp); persistExpenses();
+  } else {
+    d.settled = true;
+  }
+  persistDebts(); render();
+  toast(d.kind === 'owed' ? `Marked ${d.name} settled ✓` : `Paid ${d.name} (${peso(d.amount)})`, {
+    label: 'Undo',
+    fn: () => {
+      Object.assign(d, prev);
+      if (loggedExp) { expenses = expenses.filter(e => e.id !== loggedExp.id); persistExpenses(); }
+      persistDebts(); render(); toast('Payment undone');
+    }
+  });
 }
 function renderBudget(net) {
   budNet = net;
@@ -1712,6 +1976,7 @@ function renderBudget(net) {
   setText($('bud-period'), (settings.incomeScope === 'all' && gigs.length ? 'All income · ' : 'Payroll · ') + periodFromKey(selKey).label);
   if (curView === 'budget') {
     if (ui.budTab === 'expenses') renderExpenses();
+    if (ui.budTab === 'dues') renderDues();
     if (ui.budTab === 'vaults') renderVaults();
   }
 }
@@ -2074,7 +2339,7 @@ function setStatOpt() { settings.deductMode = $('stat-mode').value; settings.mwe
 /* ================= shift sheet ================= */
 function populateTimes() {
   let h = ''; for (let m = 0; m < 1440; m += 30) { const v = `${p2(Math.floor(m / 60))}:${p2(m % 60)}`; h += `<option value="${v}">${t12(v)}</option>`; }
-  ['m-start', 'm-end', 'notif-time', 'bk-start', 'bk-end'].forEach(id => { if ($(id)) $(id).innerHTML = h; });
+  ['m-start', 'm-end', 'notif-time', 'due-notif-time', 'bk-start', 'bk-end'].forEach(id => { if ($(id)) $(id).innerHTML = h; });
 }
 function setBreak(n) { modalBrk = n; $$('#m-break button').forEach(b => b.classList.toggle('on', +b.dataset.b === n)); updatePreview(); }
 function priorHours(date, startMin, excludeId) {
@@ -2645,6 +2910,9 @@ function syncSettingsUI() {
   if ($('upd-auto-dl')) $('upd-auto-dl').checked = settings.autoDownloadUpd !== false;
   if ($('upd-wifi-only')) $('upd-wifi-only').checked = settings.updWifiOnly !== false;
   if ($('upd-wifi-row')) $('upd-wifi-row').classList.toggle('hidden', settings.autoDownloadUpd === false);
+  if ($('due-notif-on')) $('due-notif-on').checked = settings.dueNotifEnabled !== false;
+  if ($('due-notif-time')) $('due-notif-time').value = settings.dueNotifTime || '09:00';
+  if ($('plan-nudge-on')) $('plan-nudge-on').checked = settings.planNudgeEnabled !== false;
   notifSub(); syncDedUI(); applyTheme(); renderSecurity(); syncUpdateUI();
 }
 function applyArea() { const v = $('set-area').value; settings.calabarzonArea = v; if (v !== 'custom') { $('set-rate').value = v; settings.hourlyRate = parseFloat(v); } persistSettings(); render(); toast(`Rate set to ${peso(settings.hourlyRate)}/hr · applies to new shifts`); }
@@ -2665,6 +2933,84 @@ function syncNativeReminder() {
     const [h, m] = (settings.notifTime || '22:00').split(':').map(Number);
     AndroidBridge.scheduleReminder(!!settings.notifEnabled, isFinite(h) ? h : 22, isFinite(m) ? m : 0);
   } catch (e) {}
+  syncDueAndPlanAlarms();
+}
+function syncDueAndPlanAlarms() {
+  if (!window.AndroidBridge) return;
+  try {
+    if (typeof AndroidBridge.scheduleDueAlerts === 'function') {
+      const enabled = settings.dueNotifEnabled !== false;
+      const [dh, dm] = (settings.dueNotifTime || '09:00').split(':').map(Number);
+      const urgent = debts.filter(d => !d.settled && d.kind !== 'owed' && d.dueDate)
+        .map(d => ({ ...d, m: dueMeta(d.dueDate) }))
+        .filter(d => d.m.diff <= 3)
+        .sort((a, b) => a.m.diff - b.m.diff);
+      if (enabled && urgent.length) {
+        const first = urgent[0];
+        const title = urgent.length === 1 ? `${first.name} — ${first.m.label}` : `${urgent.length} dues need attention`;
+        const body = urgent.slice(0, 3).map(x => `${x.name} (${peso(x.amount)} · ${x.m.label})`).join(' | ');
+        AndroidBridge.scheduleDueAlerts(true, isFinite(dh) ? dh : 9, isFinite(dm) ? dm : 0, title, body);
+      } else {
+        AndroidBridge.scheduleDueAlerts(false, isFinite(dh) ? dh : 9, isFinite(dm) ? dm : 0, '', '');
+      }
+    }
+    if (typeof AndroidBridge.schedulePlannedShift === 'function') {
+      if (settings.planNudgeEnabled === false) {
+        AndroidBridge.schedulePlannedShift(0, '', '');
+      } else {
+        const nowMs = Date.now();
+        let nextMs = 0, nextShift = null;
+        shifts.forEach(s => {
+          if (shiftStatusOf(s) !== 'scheduled' || !s.startTime) return;
+          const [y, mo, da] = s.date.split('-').map(Number);
+          const [hh, mm] = s.startTime.split(':').map(Number);
+          const startMs = new Date(y, mo - 1, da, hh, mm, 0).getTime();
+          const trig = startMs - 3600000; // 1 hour before
+          if (trig > nowMs + 60000 && (!nextMs || trig < nextMs)) { nextMs = trig; nextShift = s; }
+        });
+        if (nextShift) {
+          AndroidBridge.schedulePlannedShift(nextMs, `Shift in 1 hour: ${shiftLabel(nextShift)}`, `${t12(nextShift.startTime)}–${t12(nextShift.endTime)} · Est. ${peso(nextShift.gross)}`);
+        } else {
+          AndroidBridge.schedulePlannedShift(0, '', '');
+        }
+      }
+    }
+  } catch (e) {}
+}
+async function toggleDueNotif() {
+  const cb = $('due-notif-on');
+  if (cb.checked && 'Notification' in window && Notification.permission !== 'granted') {
+    const p = await Notification.requestPermission();
+    if (p !== 'granted') { cb.checked = false; return toast('Allow notifications in Android settings'); }
+  }
+  settings.dueNotifEnabled = cb.checked; persistSettings(); syncDueAndPlanAlarms();
+  toast(cb.checked ? `Due alerts on (${t12(settings.dueNotifTime || '09:00')})` : 'Due alerts off');
+}
+function saveDueNotifTime() {
+  settings.dueNotifTime = $('due-notif-time').value; persistSettings(); syncDueAndPlanAlarms();
+  toast(`Due alert time: ${t12(settings.dueNotifTime)}`);
+}
+async function togglePlanNudge() {
+  const cb = $('plan-nudge-on');
+  if (cb.checked && 'Notification' in window && Notification.permission !== 'granted') {
+    const p = await Notification.requestPermission();
+    if (p !== 'granted') { cb.checked = false; return toast('Allow notifications in Android settings'); }
+  }
+  settings.planNudgeEnabled = cb.checked; persistSettings(); syncDueAndPlanAlarms();
+  toast(cb.checked ? '1-hour pre-shift nudge on' : 'Pre-shift nudge off');
+}
+async function sendTestNotif() {
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    const p = await Notification.requestPermission();
+    if (p !== 'granted') return toast('Allow notifications in Android settings');
+  }
+  if (window.AndroidBridge && typeof AndroidBridge.sendTestNotification === 'function') {
+    AndroidBridge.sendTestNotification();
+    toast('Test notification sent');
+  } else {
+    await showSystemNotification('SweldoPulse notifications active', { body: 'Shift reminders, PayLater due alerts, and planned-shift nudges are ready.' });
+    toast('Test notification sent');
+  }
 }
 window.onNotifPermission = function (granted) {
   const r = window.__notifPermRes; window.__notifPermRes = null;
@@ -2950,7 +3296,7 @@ async function checkUpdates(manual) {
 /* ================= backup / restore & silent auto-backup ================= */
 let bkMode = 'export', _abT = 0;
 const hasNativeAutoBk = () => !!(window.AndroidBridge && typeof AndroidBridge.saveAutoBackup === 'function');
-const backupJSON = () => JSON.stringify({ app: 'SweldoPulse', version: APP_VERSION, exportedAt: new Date().toISOString(), settings, shifts, gigs, expenses }, null, 1);
+const backupJSON = () => JSON.stringify({ app: 'SweldoPulse', version: APP_VERSION, exportedAt: new Date().toISOString(), settings, shifts, gigs, expenses, debts }, null, 1);
 function scheduleAutoBackup() {
   if (!hasNativeAutoBk() || settings.autoBackup === false) return;
   if (Date.now() - (+settings.lastAutoBk || 0) < 12 * 3600000) return;
@@ -3021,8 +3367,8 @@ async function restoreFromText() {
   const list = normalizeShifts(d && d.shifts);
   if (!d || d.app !== 'SweldoPulse' || !Array.isArray(d.shifts) || (d.shifts.length && !list.length)) return toast('Not a SweldoPulse backup');
   if (!await askConfirm({ title: 'Replace all data?', body: `This replaces everything on this device with the backup (<b>${list.length}</b> shifts). This cannot be undone.`, ok: 'Restore', danger: true })) return;
-  settings = { ...settings, ...(d.settings || {}) }; if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!Array.isArray(settings.customPresets)) settings.customPresets = []; if (!Array.isArray(settings.vaults)) settings.vaults = []; if (!Array.isArray(settings.bills)) settings.bills = []; shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); _pm.clear(); selKey = ''; ui.calDay = '';
-  persistSettings(); persistShifts(); persistGigs(); persistExpenses(); syncNativeReminder(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts${gigs.length ? ' + ' + gigs.length + ' gigs' : ''}`);
+  settings = { ...settings, ...(d.settings || {}) }; if (!settings.cutoffData || typeof settings.cutoffData !== 'object') settings.cutoffData = {}; if (!Array.isArray(settings.customPresets)) settings.customPresets = []; if (!Array.isArray(settings.vaults)) settings.vaults = []; if (!Array.isArray(settings.bills)) settings.bills = []; shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); debts = normalizeDebts(d.debts || []); _pm.clear(); selKey = ''; ui.calDay = '';
+  persistSettings(); persistShifts(); persistGigs(); persistExpenses(); persistDebts(); syncNativeReminder(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts${gigs.length ? ' + ' + gigs.length + ' gigs' : ''}`);
 }
 function syncBackupStatus() {
   const lb = +localStorage.getItem(BK_KEY) || 0;
@@ -3227,7 +3573,7 @@ document.addEventListener('keydown', e => {
 function lockSetAuto(v) { const c = lockCfg(); if (c) { c.auto = +v; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); } }
 async function lockForgot() {
   if (!await askConfirm({ title: 'Reset PIN?', body: 'Resetting the PIN <b>erases all shifts and settings</b> on this device — your PIN is what guards your data. You can restore from a backup afterwards.', ok: 'Erase & reset' })) return;
-  [SHIFTS_KEY, SETTINGS_KEY, GIGS_KEY, EXP_KEY, LOCK_KEY, 'sp_lock_until', 'sp_pin_fails', TOUR_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
+  [SHIFTS_KEY, SETTINGS_KEY, GIGS_KEY, EXP_KEY, DEBTS_KEY, LOCK_KEY, 'sp_lock_until', 'sp_pin_fails', TOUR_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
 }
 function tryFingerprint() { if (!window.AndroidBridge || !lockVisible()) return; fpPurpose = 'unlock'; setText($('lock-sub'), 'Touch the fingerprint sensor'); AndroidBridge.fpAuth(); }
 window.onFingerprint = function (ok) {
@@ -3322,10 +3668,21 @@ function boot() {
   try { const seen = localStorage.getItem('sp_seen_version'); if (seen !== APP_VERSION) { localStorage.setItem('sp_seen_version', APP_VERSION); if (seen && !lockVisible()) setTimeout(showWhatsNew, 900); } } catch (e) {}
   setTimeout(() => { if (!lockVisible() && navigator.onLine !== false && Date.now() - (settings.lastUpd || 0) > 216e5) checkUpdates(false); }, 4500);
   setTimeout(() => { if (shifts.length && hasNativeAutoBk() && settings.autoBackup !== false && Date.now() - (+settings.lastAutoBk || 0) > 864e5) runAutoBackup(false); }, 6500);
-  window.onShortcutTab = function (tab) { if (!lockVisible() && VIEWS[tab]) go(tab); };
+  function handleDeepTab(tab) {
+    if (lockVisible()) return;
+    if (tab === 'budget-dues') { go('budget'); setBudTab('dues'); }
+    else if (tab === 'log-expense') { go('budget'); setBudTab('expenses'); setTimeout(openExpSheet, 180); }
+    else if (tab === 'bulk-week') { go('home'); setTimeout(openBulkSheet, 180); }
+    else if (VIEWS[tab]) go(tab);
+  }
+  window.onShortcutTab = handleDeepTab;
   if (location.hash === '#log-shift') setTimeout(() => openShift(), 300);
-  if (location.hash === '#deductions' || location.hash === '#payslip') setTimeout(() => { if (!lockVisible()) go('deductions'); }, 250);
-  if (location.hash === '#insights') setTimeout(() => { if (!lockVisible()) go('insights'); }, 250);
+  if (location.hash === '#deductions' || location.hash === '#payslip') setTimeout(() => handleDeepTab('deductions'), 250);
+  if (location.hash === '#insights') setTimeout(() => handleDeepTab('insights'), 250);
+  if (location.hash === '#budget-dues') setTimeout(() => handleDeepTab('budget-dues'), 250);
+  if (location.hash === '#log-expense') setTimeout(() => handleDeepTab('log-expense'), 250);
+  if (location.hash === '#bulk-week') setTimeout(() => handleDeepTab('bulk-week'), 250);
+  if (location.hash === '#shifts') setTimeout(() => handleDeepTab('shifts'), 250);
   if (location.hash === '#install-update') setTimeout(() => { if (!lockVisible()) promptInstallUpdate(); }, 500);
   // roll the cutoff over automatically if the app stays open past midnight
   let lastCur = curPeriod().key, lastDay = today();

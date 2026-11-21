@@ -942,6 +942,21 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void scheduleDueAlerts(boolean enabled, int hour, int min, String title, String body) {
+            ReminderReceiver.scheduleDueAlerts(MainActivity.this, enabled, hour, min, title, body);
+        }
+
+        @JavascriptInterface
+        public void schedulePlannedShift(long triggerAtMs, String title, String body) {
+            ReminderReceiver.schedulePlannedShift(MainActivity.this, triggerAtMs, title, body);
+        }
+
+        @JavascriptInterface
+        public void sendTestNotification() {
+            ReminderReceiver.sendTest(MainActivity.this);
+        }
+
+        @JavascriptInterface
         public void scheduleReminder(final boolean enabled, final int hour, final int min) {
             ReminderReceiver.schedule(MainActivity.this, enabled, hour, min);
         }

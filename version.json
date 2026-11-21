@@ -1,7 +1,7 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
-  "apkName": "SweldoPulse-v2.1.0.apk",
+  "apkName": "SweldoPulse-v2.2.0.apk",
   "apkSize": "Latest Build",
-  "notes": "SweldoPulse 2.1: Resizable & Theme-Synced Home Widget, Upgraded Glass PIN Screen (4/6-digit + live lockout), Recurring Bills Checklist, Smart Roster Importer with Preview, Silent Auto-Backup, Pay Goal Planner & Shareable Insights Card."
+  "notes": "SweldoPulse 2.2: PayLater/Hulugan & Utang Tracker, 3 Theme-Synced Home Widgets (Pay Glance + Privacy Eye, Budget & Due Glance, Quick Actions Bar), Smart Planned-Shift Check-In, and Upgraded Multi-Channel Notifications with Due Alerts & Pre-Shift Nudges."
 }

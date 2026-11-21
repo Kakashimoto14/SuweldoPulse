@@ -1,24 +1,24 @@
-# SweldoPulse v2.1.0 — build, install, update
+# SweldoPulse v2.2.0 — build, install, update
 
 ## Building & Publishing via GitHub Actions (Recommended)
 Repo: `https://github.com/Kakashimoto14/SuweldoPulse`
 
 1. Extract this folder over your local `SuweldoPulse` repo (your private `signing/sweldopulse.jks` stays untouched and excluded by `.gitignore`).
-2. Commit, push, and tag `v2.1.0`:
+2. Commit, push, and tag `v2.2.0`:
    ```cmd
    git add -A
-   git commit -m "v2.1.0: resizable themed widget, upgraded PIN lock, recurring bills, smart roster importer, auto-backup & insights card"
+   git commit -m "v2.2.0: PayLater/Hulugan & Utang tracker, 3 home widgets + privacy eye, planned-shift check-in & upgraded notifications"
    git push origin main
-   git tag v2.1.0
-   git push origin v2.1.0
+   git tag v2.2.0
+   git push origin v2.2.0
    ```
-3. GitHub Actions (`Build APK`) compiles `SweldoPulse-v2.1.0.apk`, signs it using your `KEYSTORE_B64` and `KEYSTORE_PASS` secrets, uploads the artifact, and attaches it to the `v2.1.0` GitHub Release automatically.
-4. On your phone (running v1.17.0+), SweldoPulse will detect, download, verify, and install v2.1.0 directly inside the app.
+3. GitHub Actions (`Build APK`) compiles `SweldoPulse-v2.2.0.apk`, signs it using your `KEYSTORE_B64` and `KEYSTORE_PASS` secrets, uploads the artifact, and attaches it to the `v2.2.0` GitHub Release automatically.
 
-## What's New in v2.1.0
-- **Resizable & Theme-Synced Home Widget:** Drag widget edges from compact 2x1 pill up to 4x3 expanded stats card; Light/Dark/AMOLED mode and all 11 accent colors sync instantly when changed in the app.
-- **Upgraded Glass PIN Lock Screen:** Theme-aware backdrop & glow, 4-digit or 6-digit PIN choice, step badges, live lockout countdown timer, biometric quick-pill, and keyboard support.
-- **Recurring Bills & Payday Checklist:** Save repeating cutoff bills (1st, 2nd, or Every cutoff) inside Budget -> Expenses and mark them paid in 1 tap.
-- **Smart Messenger Roster Importer with Live Preview:** Parses shorthand schedules (`3-9`, `6p-12mn`, `M/W/F`, multi-line date headers) with checkable preview rows before importing.
-- **Silent Auto-Backup (`Documents/SweldoPulse`):** Daily zero-permission rolling backup on Android 10–15 plus 1-tap Restore Auto-Backup in Settings.
-- **Smart Pay Goal Planner, Per-Shift Rate Override & Shareable Insights Card:** Actionable goal progress with shifts-remaining estimate, per-shift rate override, and PNG summary export on Yearly Insights.
+## What's New in v2.2.0
+- **Utang, PayLater & Hulugan Tracker (Budget -> Dues):** Track SPayLater, SLoan, GLoan, GGives, Atome, Billease, Maya Credit installments (with term progress bars & due countdowns) plus Personal IOUs (I Owe / Owed to Me). 1-tap Pay/Settle advances terms and logs directly to your cutoff expenses.
+- **3 Theme-Synced Home Screen Widgets:**
+  1. **SweldoPulse Pay Glance:** Now includes a 1-tap `HIDE`/`SHOW` privacy toggle right on your home screen.
+  2. **SweldoPulse Budget & Dues:** Shows remaining cutoff cash + next upcoming PayLater/Hulugan/Bill due date + `+ Spend` button.
+  3. **SweldoPulse Quick Actions (4x1):** 1-tap dock for `+ Shift`, `Bulk`, `Spend`, and `Dues`.
+- **Upgraded Multi-Channel Notifications:** Separate Android notification channels (`Shift reminders`, `PayLater & due alerts`, `Upcoming shift nudges`), rich expandable alerts with action buttons, customizable morning Due-Date digest, 1-hour Pre-Shift nudge, and a **Send test notification** button in Settings.
+- **Smart Planned-Shift Check-In:** Compact Home banner after a planned shift ends to confirm **Worked**, **Edit**, or **Off** in 1 tap.

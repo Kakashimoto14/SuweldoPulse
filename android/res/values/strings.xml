@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_label">SweldoPulse Pay Glance</string>
+    <string name="widget_budget_label">SweldoPulse Budget &amp; Dues</string>
+    <string name="widget_quick_label">SweldoPulse Quick Actions</string>
 </resources>

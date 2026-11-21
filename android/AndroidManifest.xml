@@ -17,8 +17,19 @@
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter>
         </receiver>
         <receiver android:name=".SweldoWidgetProvider" android:label="@string/widget_label" android:exported="true">
-            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="com.kakashimoto14.sweldopulse.TOGGLE_WIDGET_PRIVACY"/>
+            </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/sweldo_widget_info"/>
+        </receiver>
+        <receiver android:name=".BudgetDueWidgetProvider" android:label="@string/widget_budget_label" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/budget_due_widget_info"/>
+        </receiver>
+        <receiver android:name=".QuickActionsWidgetProvider" android:label="@string/widget_quick_label" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/quick_actions_widget_info"/>
         </receiver>
         <provider android:name=".AppFileProvider" android:authorities="com.kakashimoto14.sweldopulse.files" android:exported="false" android:grantUriPermissions="true"/>
     </application>
