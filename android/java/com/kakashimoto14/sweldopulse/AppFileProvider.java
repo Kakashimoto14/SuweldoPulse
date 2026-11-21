@@ -64,7 +64,7 @@ public class AppFileProvider extends ContentProvider {
         if (p == null) return "application/octet-stream";
         String lower = p.toLowerCase();
         if (lower.endsWith(".apk")) return "application/vnd.android.package-archive";
-        if (lower.endsWith(".json")) return "application/json";
+        if (lower.endsWith(".json") || lower.endsWith(".spbackup")) return "application/json";
         if (lower.endsWith(".csv")) return "text/csv";
         if (lower.endsWith(".png")) return "image/png";
         if (lower.endsWith(".txt")) return "text/plain";

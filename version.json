@@ -1,7 +1,7 @@
 {
-  "version": "2.4.0",
+  "version": "2.5.0",
   "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
-  "apkName": "SweldoPulse-v2.4.0.apk",
+  "apkName": "SweldoPulse-v2.5.0.apk",
   "apkSize": "Latest Build",
-  "notes": "SweldoPulse 2.4 (Phase 1 Hardening): PIN Lock & Widget Privacy Hardening (PBKDF2-SHA256, Monotonic Lockout, Fixed #log-shift Bypass), Native Backup File Picker, Autonomous Live Due Alerts & Auto-Chained Shift Nudges, Monochrome Status-Bar Notification Icon, GitHub Host + APK Cert Verification, and Payroll/Dues/Importer Edge-Case Fixes."
+  "notes": "SweldoPulse 2.5 (Phase 2 Workflow & Protection): Budget Cutoff Switcher, Partial Utang Payments with Progress Tracking, AES-256-GCM Encrypted .spbackup Export & Restore, Smarter Importer v2 (Auto Break Detection, Guessed-Date Warnings & Per-Row Break Picker), and Automatic Payslip Cutoff Lock/Snapshot on Reconciliation."
 }

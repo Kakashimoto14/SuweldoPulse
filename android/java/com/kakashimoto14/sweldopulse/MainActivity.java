@@ -109,7 +109,6 @@ public class MainActivity extends Activity {
                     Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                     i.addCategory(Intent.CATEGORY_OPENABLE);
                     i.setType("*/*");
-                    i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "text/plain", "text/csv", "application/octet-stream"});
                     startActivityForResult(Intent.createChooser(i, "Choose backup file"), REQ_FILE_CHOOSER);
                     return true;
                 } catch (Throwable t) {
@@ -686,7 +685,6 @@ public class MainActivity extends Activity {
                         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                         i.addCategory(Intent.CATEGORY_OPENABLE);
                         i.setType("*/*");
-                        i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "text/plain", "application/octet-stream"});
                         startActivityForResult(Intent.createChooser(i, "Choose backup file"), REQ_BACKUP_PICK);
                     } catch (Throwable t) {
                         js("window.onBackupFileError&&onBackupFileError(" + jsStr("Could not open file picker.") + ")");

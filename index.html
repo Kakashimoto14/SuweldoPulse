@@ -493,6 +493,16 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .io-note-in{width:100%;margin-top:4px;height:28px;padding:0 8px;border-radius:8px;background:var(--card);border:1px solid var(--line);font-size:11.5px;font-weight:500;color:var(--t1)}
 .io-note-in:focus{border-color:var(--accent)}
 
+/* ---------- v2.5 (Phase 2): Cutoff lock banner, importer v2 break pills, encrypted backups ---------- */
+.ps-lock-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;border-radius:12px;background:var(--subtle);border:1px solid var(--line);font-size:11.5px;font-weight:600;color:var(--t2);margin-bottom:10px}
+.ps-lock-bar.on{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+.ps-lock-btn{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:99px;font-size:11px;font-weight:700;background:var(--subtle);color:var(--t2);border:1px solid var(--line);white-space:nowrap}
+.ps-lock-btn.on{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.io-brk-btn{height:24px;padding:0 8px;border-radius:8px;background:var(--card);border:1px solid var(--line);font-size:10.5px;font-weight:700;color:var(--t2);white-space:nowrap;flex:none}
+.io-brk-btn.on{background:var(--accent-soft);border-color:var(--accent-soft-border);color:var(--accent-text)}
+.io-warn-bar{padding:8px 11px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:11.5px;font-weight:600;margin-top:8px;line-height:1.4}
+.enc-box{padding:11px 12px;border-radius:14px;background:var(--subtle);border:1px solid var(--line);margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
 @media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
 @media (prefers-reduced-motion:reduce){.wallet::before,.wallet::after{animation:none}.spark{transition:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -654,6 +664,12 @@ input[type=search]::-webkit-search-cancel-button{display:none}
     <!-- ================= BUDGET ================= -->
     <section id="view-budget" class="view">
       <div class="row between"><button type="button" class="btn ghost sm press" onclick="go('home')"><svg class="ic sm"><use href="#i-back"/></svg>Home</button><span class="chip num" id="bud-net">Net: ₱0.00</span></div>
+      <div class="switcher" data-switcher>
+        <button type="button" class="icon-btn press" onclick="stepPeriod(-1)" aria-label="Previous cutoff"><svg class="ic"><use href="#i-l"/></svg></button>
+        <div class="mid"><span data-period-label>—</span><svg class="ic sm muted"><use href="#i-d"/></svg><select data-period-select onchange="selectPeriod(this.value)" aria-label="Choose cutoff"></select></div>
+        <button type="button" class="cur-pill press hidden" data-jump-cur onclick="jumpCurrent()">Current</button>
+        <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
+      </div>
       <div class="bud-snap">
         <button type="button" class="bs-tile press" onclick="setBudTab('overview')"><span>Remaining cash</span><b class="num" id="bs-rem">₱0.00</b><small id="bs-rem-sub">After spend</small></button>
         <button type="button" class="bs-tile press" onclick="setBudTab('expenses')"><span>Cutoff spend</span><b class="num neg" id="bs-spent">₱0.00</b><small id="bs-spent-sub">0 items</small></button>
@@ -809,7 +825,8 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       </div>
 
       <div class="card">
-        <div class="card-h" style="margin-bottom:6px"><div><p class="card-t">Payslip</p><p class="card-s num" id="ps-hours">0.0h regular · 0.0h night · 0.0h overtime</p></div><span class="chip" id="ps-badge">2nd cutoff</span></div>
+        <div class="card-h" style="margin-bottom:8px"><div><p class="card-t">Payslip</p><p class="card-s num" id="ps-hours">0.0h regular · 0.0h night · 0.0h overtime</p></div><div class="row" style="gap:6px"><button type="button" class="ps-lock-btn press hidden" id="ps-lock-btn" onclick="toggleCutoffLock()"><svg class="ic xs"><use href="#i-lock"/></svg><span id="ps-lock-txt">Lock</span></button><span class="chip" id="ps-badge">2nd cutoff</span></div></div>
+        <div class="ps-lock-bar on hidden" id="ps-lock-bar"><span id="ps-lock-msg">Snapshot frozen — rate &amp; rule changes won't alter this cutoff</span><button type="button" class="link" style="padding:2px 4px;color:inherit" onclick="unlockCutoffSnapshot(selKey)">Unlock</button></div>
         <p class="ps-group">Earnings</p>
         <div class="ps-row"><span class="k">Basic regular pay</span><span class="v" id="ps-basic">₱0.00</span></div>
         <div class="ps-row"><span class="k">Night differential</span><span class="v pos-nd" id="ps-nd">₱0.00</span></div>
@@ -838,8 +855,8 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div id="recon-msg" class="recon-msg hidden"></div>
       </div>
 
-      <div class="card">
-        <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Adjustments &amp; deductions</p><p class="card-s">Saved for this cutoff — past cutoffs stay locked</p></div></div>
+      <div class="card" id="ded-adj-card">
+        <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Adjustments &amp; deductions</p><p class="card-s" id="ded-adj-sub">Saved for this cutoff — past cutoffs stay locked</p></div></div>
         <div class="seg" id="ded-mode"><button type="button" data-m="auto" onclick="setDedMode(true)">Auto-estimate</button><button type="button" data-m="manual" onclick="setDedMode(false)">Manual</button></div>
         <div id="ded-auto" class="stack" style="margin-top:14px">
           <div><label class="lbl" for="stat-mode">When to deduct SSS &amp; PhilHealth</label>
@@ -938,7 +955,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
       <p class="sec-lbl">App &amp; Updates</p>
       <div class="card">
-        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.4.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
+        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.5.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
         <div id="upd-box" class="hidden" style="margin-top:12px">
           <div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div>
           <p class="note" id="upd-notes" style="margin:4px 0 10px"></p>
@@ -1131,9 +1148,30 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div><label class="lbl" for="db-paid">Terms paid</label><input id="db-paid" class="field num" type="number" inputmode="numeric" min="0" value="0"></div>
         <div><label class="lbl" for="db-total">Total terms (mos)</label><input id="db-total" class="field num" type="number" inputmode="numeric" min="1" value="3"></div>
       </div>
+      <div class="hidden" id="db-paidamt-row">
+        <label class="lbl" for="db-paid-amt">Already paid (partial)</label>
+        <label class="money-field"><span>₱</span><input id="db-paid-amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00"></label>
+      </div>
       <div><label class="lbl" for="db-note">Item / note (optional)</label><input id="db-note" class="field" style="font-weight:500" placeholder="e.g. Phone case, Groceries, Cash" autocomplete="off"></div>
       <div class="setting hidden" id="db-settled-row" style="min-height:40px;border:0;padding:0;margin:0"><div><p class="k" style="font-size:13.5px">Marked as settled</p><p class="d">Turn off to move back to active dues</p></div><span class="switch"><input type="checkbox" id="db-settled"><i></i></span></div>
       <div class="row"><button type="button" class="btn ghost press hidden" id="db-del" onclick="deleteDebtFromSheet()" aria-label="Delete item"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="db-save" onclick="saveDebt()">Save</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="partpay-sheet" class="scrim" onclick="if(event.target===this)closeSheet('partpay-sheet')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t" id="pp-title">Record payment</h2><p class="card-s num" id="pp-sub">Remaining balance: ₱0.00</p></div><button type="button" class="icon-btn press" onclick="closeSheet('partpay-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:12px">
+      <div class="presets wrap" id="pp-chips">
+        <button type="button" class="fchip press" onclick="setPartPayFrac(0.25)">25%</button>
+        <button type="button" class="fchip press" onclick="setPartPayFrac(0.5)">50%</button>
+        <button type="button" class="fchip press" onclick="setPartPayFrac(1)">Full balance</button>
+      </div>
+      <div><label class="lbl" for="pp-amt">Payment amount</label><label class="money-field"><span>₱</span><input id="pp-amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00" oninput="syncPartPayPreview()"></label></div>
+      <p class="note num" id="pp-after">Balance after payment: ₱0.00</p>
+      <button type="button" class="btn primary block press" id="pp-save-btn" onclick="submitPartPay()">Record payment</button>
     </div>
   </div>
 </div>
@@ -1147,12 +1185,13 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <button type="button" class="fchip press" onclick="fillExample()">Insert sample</button>
       <button type="button" class="fchip press" onclick="clearIoText()">Clear</button>
     </div>
-    <textarea id="io-text" class="field" rows="5" placeholder="Standard template (or paste Messenger text):&#10;Nov 23 | 4:00 PM - 10:00 PM | Lobby&#10;Nov 24 | 6:00 PM - 12:00 AM | Grill&#10;Nov 25 | OFF" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;min-height:112px" oninput="queueIoPreview()"></textarea>
+    <textarea id="io-text" class="field" rows="5" placeholder="Standard template (or paste Messenger text):&#10;Nov 23 | 4:00 PM - 10:00 PM | Lobby&#10;Nov 24 | 8:00 AM - 5:00 PM (1h break) | Grill&#10;Nov 25 | OFF" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;min-height:112px" oninput="queueIoPreview()"></textarea>
     <div id="io-wk-row" class="row between hidden" style="margin-top:10px">
       <span class="card-s" style="margin:0">Weekday schedule applies to:</span>
       <div class="seg" id="io-wk-seg" style="width:186px"><button type="button" data-wk="0" class="on" onclick="setIoWeek(0)">This week</button><button type="button" data-wk="1" onclick="setIoWeek(1)">Next week</button></div>
     </div>
     <div id="io-prev-wrap" class="hidden">
+      <div class="io-warn-bar hidden" id="io-guess-warn">⚠ Some rows had no date — dates were guessed starting today. Add dates above or double-check before importing.</div>
       <div class="row between" style="margin-top:10px"><span class="eyebrow" id="io-prev-count">0 shifts detected</span><span class="chip ok num" id="io-prev-gross">₱0.00</span></div>
       <div class="io-prev" id="io-prev-list"></div>
     </div>
@@ -1163,21 +1202,34 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 <div id="backup-sheet" class="scrim" onclick="if(event.target===this)closeSheet('backup-sheet')">
   <div class="sheet"><div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t" id="bk-title">Back up</h2><p class="card-s" id="bk-sub"></p></div><button type="button" class="icon-btn press" onclick="closeSheet('backup-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div id="bk-enc-wrap" class="enc-box hidden">
+      <div class="setting" style="min-height:34px;border:0;padding:0;margin:0"><div><p class="k" style="font-size:13px">Encrypt backup (.spbackup)</p><p class="d">AES-256-GCM passphrase protection</p></div><span class="switch"><input type="checkbox" id="bk-enc-on" onchange="toggleBkEncrypt()"><i></i></span></div>
+      <div id="bk-enc-fields" class="stack hidden" style="gap:8px">
+        <input id="bk-pass" type="password" class="field" placeholder="Enter passphrase (min 4 chars)" autocomplete="new-password">
+        <input id="bk-pass2" type="password" class="field" placeholder="Confirm passphrase" autocomplete="new-password">
+      </div>
+    </div>
+    <div id="bk-dec-box" class="enc-box hidden">
+      <p class="k" style="font-size:13px;color:var(--accent-text)">Encrypted .spbackup detected</p>
+      <p class="card-s" style="margin:0">Enter the passphrase used when creating this backup.</p>
+      <input id="bk-dec-pass" type="password" class="field" placeholder="Backup passphrase" autocomplete="off">
+      <button type="button" class="btn primary sm press" onclick="decryptAndRestore()">Decrypt &amp; restore</button>
+    </div>
     <textarea id="bk-text" class="field" style="font-family:ui-monospace,Menlo,monospace;font-size:11px;min-height:130px"></textarea>
     <div id="bk-export" class="grid2" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="copyBackup()"><svg class="ic sm"><use href="#i-copy"/></svg>Copy</button><button type="button" class="btn primary press" onclick="saveBackupFile()"><svg class="ic sm"><use href="#i-down"/></svg>Save / share file</button></div>
-    <div id="bk-restore" class="grid2 hidden" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="chooseBackupFile()"><svg class="ic sm"><use href="#i-up"/></svg>Choose file</button><button type="button" class="btn primary press" onclick="restoreFromText()">Restore</button><input type="file" id="bk-file" accept="application/json,.json,text/plain" class="hidden" onchange="restoreFromFile(this)"></div>
+    <div id="bk-restore" class="grid2 hidden" style="margin-top:12px"><button type="button" class="btn ghost press" onclick="chooseBackupFile()"><svg class="ic sm"><use href="#i-up"/></svg>Choose file</button><button type="button" class="btn primary press" onclick="restoreFromText()">Restore</button><input type="file" id="bk-file" accept=".json,.spbackup,application/json,text/plain" class="hidden" onchange="restoreFromFile(this)"></div>
     <p class="note" id="bk-note" style="margin-top:12px"></p>
   </div>
 </div>
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.4</span></h2><p class="card-s">Security hardening, native file picker &amp; autonomous alerts</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.5</span></h2><p class="card-s">Partial utang pay, encrypted backups &amp; cutoff lock</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:11px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Security</span><span class="sub">Hardened PIN lock (PBKDF2-SHA256, clock-tamper-proof lockout, fixed #log-shift deep-link bypass), PIN-masked widgets, GitHub update host &amp; APK cert verification.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Restore</span><span class="sub">Fixed Backup → Restore → Choose file inside the Android APK using native document picker, plus strict settings sanitization on restore.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Alerts</span><span class="sub">Autonomous background notifications: live due-date countdowns even when the app stays closed, auto-chained planned-shift nudges &amp; crisp monochrome status-bar icon.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Accuracy</span><span class="sub">Fixed 1st-cutoff retroactive SSS drift, 2nd-cutoff catch-up, settled IOU edits, Bulk Week custom minutes, Dec→Jan import rollover, weekly Insights &amp; 2027–2028 PH holidays.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Budget</span><span class="sub">Cutoff switcher right inside Budget, plus partial payment tracking on personal Utang (I Owe &amp; Owed to Me) with progress bars and 25% / 50% / Full chips.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Backup</span><span class="sub">Optional AES-256-GCM passphrase encryption (.spbackup) when exporting or sharing backups — decrypt &amp; restore anytime in-app.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Import</span><span class="sub">Smarter Importer v2 auto-detects unpaid breaks (1h break, 30m brk), flags guessed dates, and lets you tap to toggle 0m / 30m / 1h break per row in preview.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Payslip</span><span class="sub">Cutoff Lock / Snapshot freezes earnings and deductions automatically when you enter Actual Pay (or manually via Lock) so future rate/rule changes never alter past slips.</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
   </div>
@@ -1208,7 +1260,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 </div>
 
 <script>
-const APP_VERSION = '2.4.0';
+const APP_VERSION = '2.5.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', DEBTS_KEY = 'sweldo_pulse_debts_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -1334,17 +1386,26 @@ const persistGigs = () => { dv++; try { localStorage.setItem(GIGS_KEY, JSON.stri
 function normalizeDebts(arr) {
   if (!Array.isArray(arr)) return [];
   const seen = new Set();
-  return arr.filter(d => d && d.name && isFinite(d.amount)).map(d => ({
-    id: uniqueIdOf(d.id, seen),
-    kind: (d.kind === 'owe' || d.kind === 'owed') ? d.kind : 'paylater',
-    name: String(d.name).trim(),
-    amount: r2(Math.max(0, +d.amount || 0)),
-    dueDate: /^\d{4}-\d{2}-\d{2}$/.test(d.dueDate || '') ? d.dueDate : '',
-    paidTerms: Math.max(0, parseInt(d.paidTerms, 10) || 0),
-    totalTerms: Math.max(1, parseInt(d.totalTerms, 10) || 1),
-    note: String(d.note || '').trim(),
-    settled: !!d.settled
-  }));
+  return arr.filter(d => d && d.name && isFinite(d.amount)).map(d => {
+    const amt = r2(Math.max(0, +d.amount || 0));
+    const kind = (d.kind === 'owe' || d.kind === 'owed') ? d.kind : 'paylater';
+    const paidAmt = kind === 'paylater' ? 0 : r2(Math.min(amt, Math.max(0, +d.paidAmount || 0)));
+    const payments = Array.isArray(d.payments) ? d.payments.filter(p => p && isFinite(p.amount) && +p.amount > 0).map(p => ({ date: String(p.date || ''), amount: r2(+p.amount) })) : [];
+    return {
+      id: uniqueIdOf(d.id, seen), kind, name: String(d.name).trim(), amount: amt,
+      dueDate: /^\d{4}-\d{2}-\d{2}$/.test(d.dueDate || '') ? d.dueDate : '',
+      paidTerms: Math.max(0, parseInt(d.paidTerms, 10) || 0),
+      totalTerms: Math.max(1, parseInt(d.totalTerms, 10) || 1),
+      paidAmount: paidAmt, payments,
+      note: String(d.note || '').trim(),
+      settled: !!d.settled
+    };
+  });
+}
+function debtRemaining(d) {
+  if (!d || d.settled) return 0;
+  if (d.kind === 'paylater') return r2(d.amount * Math.max(1, d.totalTerms - d.paidTerms));
+  return r2(Math.max(0, d.amount - (+d.paidAmount || 0)));
 }
 const persistExpenses = () => { dv++; try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses)); } catch (e) {} scheduleAutoBackup(); };
 const persistDebts = () => { dv++; try { localStorage.setItem(DEBTS_KEY, JSON.stringify(debts)); } catch (e) {} scheduleAutoBackup(); syncDueAndPlanAlarms(); };
@@ -1605,15 +1666,59 @@ function deductionsFor(key, gross, allow = 0, basic = 0) {
   }
   d.total = r2(d.sss + d.ph + d.pi + d.tax + d.oth); return d;
 }
+function getCutoffSnapshot(key) {
+  const s = getCutoffExtra(key).snapshot;
+  return (s && typeof s === 'object' && s.t && s.d && isFinite(s.net)) ? s : null;
+}
+function lockCutoffSnapshot(key, isAuto) {
+  const k = key || selKey || curPeriod().key;
+  const ex = ensureCutoffExtra(k);
+  delete ex.snapshot;
+  _pdc.clear();
+  const D = periodData(k);
+  ex.snapshot = {
+    lockedAt: Date.now(), auto: !!isAuto,
+    t: { ...D.t }, allow: D.allow, grossAll: D.grossAll,
+    d: { sss: D.d.sss, ph: D.d.ph, pi: D.d.pi, tax: D.d.tax, oth: D.d.oth, total: D.d.total, capped: !!D.d.capped },
+    net: D.net
+  };
+  _pdc.clear();
+}
+function unlockCutoffSnapshot(key, quiet) {
+  const k = key || selKey || curPeriod().key;
+  if (settings.cutoffData && settings.cutoffData[k] && settings.cutoffData[k].snapshot) {
+    delete settings.cutoffData[k].snapshot;
+    _pdc.clear();
+    if (!quiet) { persistSettings(); render(); toast('Cutoff unlocked — recalculating live'); }
+    return true;
+  }
+  return false;
+}
+function toggleCutoffLock() {
+  const k = selKey || curPeriod().key;
+  if (getCutoffSnapshot(k)) { unlockCutoffSnapshot(k, false); return; }
+  const D = periodData(k);
+  if (D.grossAll <= 0) return toast('Log shifts in this cutoff before locking');
+  lockCutoffSnapshot(k, false);
+  persistSettings(); render();
+  toast('Payslip snapshot locked ✓');
+}
 function periodData(key) {
   const list = shiftsIn(key); if (_pdc.has(key)) return _pdc.get(key);
   const gList = gigsIn(key);
-  const t = totals(list), allow = getAllowance(key), grossAll = r2(t.gross + allow), d = deductionsFor(key, t.gross, allow, t.basic), actual = getActualNet(key);
-  const net = r2(Math.max(0, grossAll - d.total));
+  const actual = getActualNet(key);
   const gigPaid = r2(gList.filter(g => g.status !== 'pending').reduce((a, g) => a + g.amount, 0));
   const gigPending = r2(gList.filter(g => g.status === 'pending').reduce((a, g) => a + g.amount, 0));
   const gigTotal = r2(gigPaid + gigPending);
-  const r = { list, gList, t, allow, grossAll, d, net, actual, gigPaid, gigPending, gigTotal, netAll: r2(net + gigPaid) };
+  const snap = getCutoffSnapshot(key);
+  if (snap) {
+    const d = { sss: +snap.d.sss || 0, ph: +snap.d.ph || 0, pi: +snap.d.pi || 0, tax: +snap.d.tax || 0, oth: +snap.d.oth || 0, total: +snap.d.total || 0, capped: !!snap.d.capped, est: null };
+    const r = { list, gList, t: { ...snap.t }, allow: +snap.allow || 0, grossAll: +snap.grossAll || 0, d, net: +snap.net || 0, actual, gigPaid, gigPending, gigTotal, netAll: r2((+snap.net || 0) + gigPaid), locked: true, lockedAuto: !!snap.auto };
+    _pdc.set(key, r); return r;
+  }
+  const t = totals(list), allow = getAllowance(key), grossAll = r2(t.gross + allow), d = deductionsFor(key, t.gross, allow, t.basic);
+  const net = r2(Math.max(0, grossAll - d.total));
+  const r = { list, gList, t, allow, grossAll, d, net, actual, gigPaid, gigPending, gigTotal, netAll: r2(net + gigPaid), locked: false, lockedAuto: false };
   _pdc.set(key, r); return r;
 }
 
@@ -1942,7 +2047,7 @@ function getNextUpcomingDue() {
     .sort((a, b) => a.m.diff - b.m.diff);
   if (active.length) {
     const x = active[0];
-    return { name: x.name, amount: x.amount, badge: x.m.label, urgent: x.m.urgent, diff: x.m.diff };
+    return { name: x.name, amount: x.kind === 'paylater' ? x.amount : debtRemaining(x), badge: x.m.label, urgent: x.m.urgent, diff: x.m.diff };
   }
   const ck = curPeriod().key, paidIds = new Set(expensesIn(ck).filter(e => e.billId).map(e => e.billId));
   const unpaidBill = (settings.bills || []).find(b => billDueIn(b, ck) && !paidIds.has(b.id));
@@ -1956,10 +2061,11 @@ function setDueFilter(f) {
   $$('#dues-filters .fchip').forEach(b => b.classList.toggle('on', b.dataset.df === f));
   renderDues();
 }
+let partPayId = null;
 function renderDues() {
   const activeOwe = debts.filter(d => !d.settled && d.kind !== 'owed');
-  const totalBal = r2(activeOwe.reduce((a, d) => a + (d.kind === 'paylater' ? d.amount * Math.max(1, d.totalTerms - d.paidTerms) : d.amount), 0));
-  const owedMe = r2(debts.filter(d => !d.settled && d.kind === 'owed').reduce((a, d) => a + d.amount, 0));
+  const totalBal = r2(activeOwe.reduce((a, d) => a + debtRemaining(d), 0));
+  const owedMe = r2(debts.filter(d => !d.settled && d.kind === 'owed').reduce((a, d) => a + debtRemaining(d), 0));
   setText($('dues-sub'), `${money(totalBal)} to pay${owedMe > 0 ? ` · ${money(owedMe)} owed to you` : ''}`);
   let list = debts.filter(d => {
     if (ui.dueF === 'paid') return !!d.settled;
@@ -1977,15 +2083,25 @@ function renderDues() {
   setHTML($('dues-list'), list.map(d => {
     const dm = dueMeta(d.dueDate);
     const isPL = d.kind === 'paylater', isOwed = d.kind === 'owed';
-    const remTerms = isPL ? Math.max(0, d.totalTerms - d.paidTerms) : 0;
-    const remBal = isPL ? r2(d.amount * remTerms) : d.amount;
-    const pc = isPL && d.totalTerms > 0 ? Math.min(100, Math.round(d.paidTerms / d.totalTerms * 100)) : (d.settled ? 100 : 0);
+    const remBal = debtRemaining(d);
+    const paidAmt = isPL ? 0 : r2(+d.paidAmount || 0);
+    const pc = isPL
+      ? (d.totalTerms > 0 ? Math.min(100, Math.round(d.paidTerms / d.totalTerms * 100)) : 0)
+      : (d.settled ? 100 : (d.amount > 0 ? Math.min(100, Math.round(paidAmt / d.amount * 100)) : 0));
     const kindTag = isPL ? `${d.paidTerms}/${d.totalTerms} paid` : (isOwed ? 'Owed to you' : 'You owe');
+    const subLeft = isPL
+      ? `Per due: <b style="color:var(--t1)">${money(d.amount)}</b>`
+      : (paidAmt > 0 ? `Paid ${money(paidAmt)} of ${money(d.amount)}` : (isOwed ? 'Receivable' : 'Balance'));
+    const actions = d.settled
+      ? '<span class="chip ok">Paid ✓</span>'
+      : (isPL
+          ? `<button type="button" class="btn primary sm press" style="min-height:32px;padding:0 12px" onclick="payDebt(${d.id})">Pay</button>`
+          : `<button type="button" class="btn soft sm press" style="min-height:32px;padding:0 10px" onclick="openPartPay(${d.id})">+ Pay</button><button type="button" class="btn primary sm press" style="min-height:32px;padding:0 10px" onclick="payDebt(${d.id})">Settle</button>`);
     return `<div class="due-card${d.settled ? ' settled' : ''}">` +
       `<div class="row between"><div class="grow" onclick="openDebtSheet(${d.id})" role="button" tabindex="0"><p class="card-t">${esc(d.name)}</p><p class="card-s num">${kindTag}${d.note ? ' · ' + esc(d.note) : ''}</p></div>` +
-      `<div class="row" style="gap:6px">${!d.settled && d.dueDate ? `<span class="chip ${dm.cls} num">${dm.label}</span>` : ''}${d.settled ? '<span class="chip ok">Paid ✓</span>' : `<button type="button" class="btn primary sm press" style="min-height:32px;padding:0 12px" onclick="payDebt(${d.id})">${isPL ? 'Pay' : 'Settle'}</button>`}</div></div>` +
-      `<div class="row between" style="font-size:12.5px"><span class="muted num">${isPL ? `Per due: <b style="color:var(--t1)">${money(d.amount)}</b>` : (isOwed ? 'Receivable' : 'Balance')}</span><b class="num ${isOwed ? 'pos-ok' : ''}">${isPL ? `${money(remBal)} left` : money(d.amount)}</b></div>` +
-      (isPL ? `<div class="env-bar" style="margin-top:0"><i class="ok" style="transform:scaleX(${(pc / 100).toFixed(3)})"></i></div>` : '') +
+      `<div class="row" style="gap:6px">${!d.settled && d.dueDate ? `<span class="chip ${dm.cls} num">${dm.label}</span>` : ''}${actions}</div></div>` +
+      `<div class="row between" style="font-size:12.5px"><span class="muted num">${subLeft}</span><b class="num ${isOwed ? 'pos-ok' : ''}">${d.settled ? money(d.amount) : `${money(remBal)} left`}</b></div>` +
+      ((isPL || paidAmt > 0) ? `<div class="env-bar" style="margin-top:0"><i class="ok" style="transform:scaleX(${(pc / 100).toFixed(3)})"></i></div>` : '') +
       `</div>`;
   }).join(''));
 }
@@ -1994,9 +2110,10 @@ function setDebtKind(k) {
   $$('#db-kind button').forEach(b => b.classList.toggle('on', b.dataset.dk === k));
   $('db-terms-row').classList.toggle('hidden', k !== 'paylater');
   $('db-presets').classList.toggle('hidden', k !== 'paylater');
+  if ($('db-paidamt-row')) $('db-paidamt-row').classList.toggle('hidden', k === 'paylater' || editingDebtId === null);
   setText($('db-name-lbl'), k === 'paylater' ? 'App / Provider' : 'Person / Lender');
   $('db-name').placeholder = k === 'paylater' ? 'e.g. SPayLater, GLoan, Atome' : 'e.g. Juan, Coworker';
-  setText($('db-amt-lbl'), k === 'paylater' ? 'Amount per due' : 'Amount');
+  setText($('db-amt-lbl'), k === 'paylater' ? 'Amount per due' : 'Total amount');
 }
 function pickDebtPreset(n) { $('db-name').value = n; }
 function openDebtSheet(id = null) {
@@ -2011,6 +2128,7 @@ function openDebtSheet(id = null) {
   $('db-due').value = d ? (d.dueDate || '') : today();
   $('db-paid').value = d ? d.paidTerms : 0;
   $('db-total').value = d ? d.totalTerms : 3;
+  if ($('db-paid-amt')) $('db-paid-amt').value = d && d.paidAmount ? d.paidAmount : '';
   $('db-note').value = d ? (d.note || '') : '';
   if ($('db-settled-row')) {
     $('db-settled-row').classList.toggle('hidden', !d);
@@ -2026,17 +2144,23 @@ function saveDebt() {
   const paidTerms = debtKind === 'paylater' ? Math.min(totalTerms, Math.max(0, parseInt($('db-paid').value, 10) || 0)) : 0;
   const note = $('db-note').value.trim();
   const existing = editingDebtId !== null ? debts.find(x => x.id === editingDebtId) : null;
+  let paidAmount = 0;
+  if (debtKind !== 'paylater' && existing && $('db-paid-amt')) {
+    paidAmount = r2(Math.min(amount, Math.max(0, parseFloat($('db-paid-amt').value) || 0)));
+  }
   let settled = false;
   if (debtKind === 'paylater') {
     settled = paidTerms >= totalTerms;
     if (existing && $('db-settled') && !$('db-settled-row').classList.contains('hidden') && $('db-settled').checked) settled = true;
   } else if (existing) {
-    settled = ($('db-settled') && !$('db-settled-row').classList.contains('hidden')) ? !!$('db-settled').checked : !!existing.settled;
+    const sw = ($('db-settled') && !$('db-settled-row').classList.contains('hidden')) ? !!$('db-settled').checked : !!existing.settled;
+    settled = sw || paidAmount >= amount;
+    if (!settled && paidAmount >= amount) paidAmount = 0;
   }
   if (existing) {
-    Object.assign(existing, { kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
+    Object.assign(existing, { kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, paidAmount, note, settled });
   } else {
-    debts.push({ id: nextId(), kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, note, settled });
+    debts.push({ id: nextId(), kind: debtKind, name, amount, dueDate, paidTerms, totalTerms, paidAmount: 0, payments: [], note, settled });
   }
   editingDebtId = null; persistDebts(); closeSheet('debt-sheet'); render(); toast('Saved to Dues');
 }
@@ -2048,9 +2172,41 @@ async function deleteDebtFromSheet() {
   if (!ok) return;
   debts = debts.filter(x => x.id !== id); persistDebts(); render(); toast('Removed from Dues');
 }
-function payDebt(id) {
+function openPartPay(id) {
+  const d = debts.find(x => x.id === id); if (!d || d.settled || d.kind === 'paylater') return;
+  partPayId = id;
+  const rem = debtRemaining(d);
+  setText($('pp-title'), d.kind === 'owed' ? `Received from ${d.name}` : `Pay ${d.name}`);
+  setText($('pp-sub'), `Remaining balance: ${peso(rem)} of ${peso(d.amount)}`);
+  $('pp-amt').value = '';
+  syncPartPayPreview();
+  openSheet('partpay-sheet');
+  setTimeout(() => $('pp-amt').focus(), 200);
+}
+function setPartPayFrac(frac) {
+  const d = debts.find(x => x.id === partPayId); if (!d) return;
+  const rem = debtRemaining(d);
+  $('pp-amt').value = r2(rem * frac);
+  syncPartPayPreview();
+}
+function syncPartPayPreview() {
+  const d = debts.find(x => x.id === partPayId); if (!d) return;
+  const rem = debtRemaining(d), val = r2(Math.max(0, parseFloat($('pp-amt').value) || 0));
+  const after = r2(Math.max(0, rem - val));
+  setText($('pp-after'), val > 0 ? (after <= 0 ? 'Settles balance in full ✓' : `Balance after payment: ${peso(after)}`) : `Remaining balance: ${peso(rem)}`);
+  $('pp-save-btn').disabled = !(val > 0);
+}
+function submitPartPay() {
+  const id = partPayId; if (!id) return;
   const d = debts.find(x => x.id === id); if (!d || d.settled) return;
-  const prev = { ...d };
+  const rem = debtRemaining(d), raw = r2(Math.max(0, parseFloat($('pp-amt').value) || 0));
+  if (!(raw > 0)) return toast('Enter a payment amount');
+  const payAmt = r2(Math.min(rem, raw));
+  closeSheet('partpay-sheet'); partPayId = null;
+  applyDebtPayment(d, payAmt);
+}
+function applyDebtPayment(d, payAmt) {
+  const prev = { ...d, payments: Array.isArray(d.payments) ? d.payments.slice() : [] };
   const P = periodFromKey(selKey), cur = curPeriod();
   const payDate = P.key === cur.key ? today() : P.endStr;
   let loggedExp = null;
@@ -2060,15 +2216,21 @@ function payDebt(id) {
     else if (d.dueDate) d.dueDate = addMonthsStr(d.dueDate, 1);
     loggedExp = { id: nextId(), date: payDate, cat: 'needs', note: `${d.name} (${d.paidTerms}/${d.totalTerms})`, amount: d.amount, billId: null };
     expenses.push(loggedExp); persistExpenses();
-  } else if (d.kind === 'owe') {
-    d.settled = true;
-    loggedExp = { id: nextId(), date: payDate, cat: 'needs', note: `Paid ${d.name}`, amount: d.amount, billId: null };
-    expenses.push(loggedExp); persistExpenses();
   } else {
-    d.settled = true;
+    d.paidAmount = r2(Math.min(d.amount, (+d.paidAmount || 0) + payAmt));
+    if (!Array.isArray(d.payments)) d.payments = [];
+    d.payments.push({ date: payDate, amount: payAmt });
+    if (d.paidAmount >= d.amount - 0.005) { d.paidAmount = d.amount; d.settled = true; }
+    if (d.kind === 'owe') {
+      loggedExp = { id: nextId(), date: payDate, cat: 'needs', note: d.settled ? `Paid ${d.name}` : `Partial pay · ${d.name}`, amount: payAmt, billId: null };
+      expenses.push(loggedExp); persistExpenses();
+    }
   }
   persistDebts(); render();
-  toast(d.kind === 'owed' ? `Marked ${d.name} settled ✓` : `Paid ${d.name} (${peso(d.amount)})`, {
+  const msg = d.kind === 'owed'
+    ? (d.settled ? `${d.name} settled ✓` : `Recorded ${peso(payAmt)} from ${d.name}`)
+    : (d.settled ? `Settled ${d.name} (${peso(payAmt)}) ✓` : `Paid ${peso(payAmt)} to ${d.name}`);
+  toast(msg, {
     label: 'Undo',
     fn: () => {
       Object.assign(d, prev);
@@ -2076,6 +2238,10 @@ function payDebt(id) {
       persistDebts(); render(); toast('Payment undone');
     }
   });
+}
+function payDebt(id) {
+  const d = debts.find(x => x.id === id); if (!d || d.settled) return;
+  applyDebtPayment(d, d.kind === 'paylater' ? d.amount : debtRemaining(d));
 }
 function renderBudget(net) {
   budNet = net;
@@ -2109,7 +2275,7 @@ function renderBudget(net) {
   setText($('bud-net'), 'Net: ' + money(net));
   setText($('bud-period'), (settings.incomeScope === 'all' && gigs.length ? 'All income · ' : 'Payroll · ') + periodFromKey(selKey).label);
   const actDues = debts.filter(d => !d.settled && d.kind !== 'owed');
-  const duesBal = r2(actDues.reduce((a, d) => a + (d.kind === 'paylater' ? d.amount * Math.max(1, d.totalTerms - d.paidTerms) : d.amount), 0));
+  const duesBal = r2(actDues.reduce((a, d) => a + debtRemaining(d), 0));
   const vList = Array.isArray(settings.vaults) ? settings.vaults : [];
   const vTot = r2(vList.reduce((a, v) => a + (+v.saved || 0), 0));
   if ($('bs-rem')) {
@@ -2391,8 +2557,24 @@ function renderPayslip() {
   setText($('ps-sss'), '−' + peso(d.sss)); setText($('ps-ph'), '−' + peso(d.ph)); setText($('ps-pi'), '−' + peso(d.pi)); setText($('ps-tax'), '−' + peso(d.tax)); setText($('ps-oth'), '−' + peso(d.oth));
   setText($('ps-tot-ded'), '−' + peso(d.total));
   setText($('ps-net'), peso(D.net));
+  const lBtn = $('ps-lock-btn'), lBar = $('ps-lock-bar');
+  if (lBtn) {
+    lBtn.classList.toggle('hidden', !D.locked && D.grossAll <= 0);
+    lBtn.classList.toggle('on', !!D.locked);
+    setText($('ps-lock-txt'), D.locked ? 'Locked' : 'Lock');
+  }
+  if (lBar) {
+    lBar.classList.toggle('hidden', !D.locked);
+    if (D.locked) setText($('ps-lock-msg'), D.lockedAuto ? 'Auto-locked after reconciliation — safe from rate/rule edits' : "Snapshot locked — rate & rule changes won't alter this cutoff");
+  }
+  if ($('ded-adj-sub')) setText($('ded-adj-sub'), D.locked ? 'This cutoff is locked — unlock above to edit deductions' : 'Saved for this cutoff — past cutoffs stay locked');
+  if ($('ded-adj-card')) $('ded-adj-card').style.opacity = D.locked ? '.68' : '';
   const setTag = (id, txt, cls) => { const el = $(id); if (!el) return; el.classList.toggle('hidden', !txt); if (txt) { setText(el, txt); el.className = 'ps-basis' + (cls ? ' ' + cls : ''); } };
-  if (settings.autoDeduct && d.est) {
+  if (D.locked) {
+    setTag('ps-sss-tag', 'locked', 'ok');
+    setTag('ps-ph-tag', 'locked', 'ok');
+    setTag('ps-pi-tag', 'locked', 'ok');
+  } else if (settings.autoDeduct && d.est) {
     const tc = d.est.skippedLow ? 'warn' : (d.est.deferred ? 'warn' : '');
     setTag('ps-sss-tag', d.est.sssNote, tc);
     setTag('ps-ph-tag', d.est.sssNote, tc);
@@ -2471,21 +2653,34 @@ function setDedMode(auto) {
 }
 function saveManual() {
   const k = selKey || curPeriod().key, v = id => Math.max(0, parseFloat($(id).value) || 0);
-  ensureCutoffExtra(k).manual = { sss: v('in-sss'), ph: v('in-ph'), pi: v('in-pi'), tax: v('in-tax') };
+  const rec = ensureCutoffExtra(k);
+  rec.manual = { sss: v('in-sss'), ph: v('in-ph'), pi: v('in-pi'), tax: v('in-tax') };
+  if (rec.snapshot) delete rec.snapshot;
   persistSettingsDebounced(); render();
 }
 function saveCutoffExtras() {
   const k = selKey || curPeriod().key, rec = ensureCutoffExtra(k);
   const v = id => Math.max(0, parseFloat($(id).value) || 0);
+  const allowChanged = Math.abs((+rec.allowance || 0) - v('in-allow')) > 0.001;
+  const othChanged = Math.abs((+rec.otherDed || 0) - v('in-oth')) > 0.001;
   rec.allowance = v('in-allow');
   rec.otherDed = v('in-oth');
+  if ((allowChanged || othChanged) && rec.snapshot) delete rec.snapshot;
   const rawAct = $('in-actual') ? $('in-actual').value.trim() : '';
   rec.actualNet = rawAct === '' ? null : Math.max(0, parseFloat(rawAct) || 0);
+  if (rec.actualNet !== null && !rec.snapshot) {
+    lockCutoffSnapshot(k, true);
+  } else if (rec.actualNet === null && rec.snapshot && rec.snapshot.auto) {
+    delete rec.snapshot;
+  }
   persistSettingsDebounced(); render();
 }
 function clearActualPay() {
   const k = selKey || curPeriod().key;
-  if (settings.cutoffData && settings.cutoffData[k]) settings.cutoffData[k].actualNet = null;
+  if (settings.cutoffData && settings.cutoffData[k]) {
+    settings.cutoffData[k].actualNet = null;
+    if (settings.cutoffData[k].snapshot && settings.cutoffData[k].snapshot.auto) delete settings.cutoffData[k].snapshot;
+  }
   const aEl = $('in-actual'); if (aEl) aEl.value = '';
   persistSettings(); render(); toast('Actual pay cleared');
 }
@@ -2714,9 +2909,11 @@ async function saveShift() {
     if (s) { old = s.date; Object.assign(s, { date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: v.rate, multiplier: v.mult, breakMin: v.brk, status: modalStatus }); }
   } else shifts.push({ id: nextId(), date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: v.rate, reg: 0, nd: 0, ot: 0, multiplier: v.mult, gross: 0, breakMin: v.brk, status: modalStatus });
   recalcDay(v.date); if (old && old !== v.date) recalcDay(old);
+  const P = periodOf(v.date);
+  const unlockedEdited = unlockCutoffSnapshot(P.key, true) || (old ? unlockCutoffSnapshot(periodOf(old).key, true) : false);
   settings.last = { start: v.start, end: v.end, brk: v.brk }; persistSettings(); persistShifts();
-  const P = periodOf(v.date); selKey = P.key; const wasEdit = editingId !== null;
-  closeShift(); render(); toast(wasEdit ? `Updated in ${P.label}` : `Added to ${P.label}`);
+  selKey = P.key; const wasEdit = editingId !== null;
+  closeShift(); render(); toast((wasEdit ? `Updated in ${P.label}` : `Added to ${P.label}`) + (unlockedEdited ? ' · cutoff unlocked' : ''));
 }
 /* ================= weekly roster bulk logger ================= */
 let bulkMon = null, bulkSel = new Set(), bulkBrk = 0, _bkPresetItems = [];
@@ -2875,7 +3072,7 @@ async function deleteShift(id) {
   const s = shifts.find(x => x.id === id); if (!s) return;
   const ok = await askConfirm({ title: 'Delete this shift?', body: `<b>${esc(shiftLabel(s))}</b><br>${fmtDay(s.date)}${s.startTime ? ` · ${t12(s.startTime)} – ${t12(s.endTime)}` : ''}<br>${peso(s.gross)} gross will be removed from this cutoff.`, ok: 'Delete' });
   if (!ok) return;
-  shifts = shifts.filter(x => x.id !== id); recalcDay(s.date); persistShifts(); render();
+  shifts = shifts.filter(x => x.id !== id); recalcDay(s.date); unlockCutoffSnapshot(periodOf(s.date).key, true); persistSettings(); persistShifts(); render();
   toast('Shift deleted', { label: 'Undo', fn: () => { shifts.push(s); recalcDay(s.date); persistShifts(); render(); toast('Shift restored'); } });
 }
 function deleteFromSheet() { const id = editingId; closeShift(); setTimeout(() => deleteShift(id), 200); }
@@ -2918,7 +3115,7 @@ async function pasteIntoIo() {
 function clearIoText() { $('io-text').value = ''; updateIoPreview(); }
 function fillExample() {
   const d0 = addDays(new Date(), 1), d1 = addDays(new Date(), 2), d2 = addDays(new Date(), 3);
-  $('io-text').value = `${MON[d0.getMonth()]}. ${d0.getDate()} - 6-12mn (${DOW[d0.getDay()]}.)\nLOBBY\n${MON[d1.getMonth()]} ${d1.getDate()} | 8-12 | Prepping\n${MON[d2.getMonth()]} ${d2.getDate()} | OFF\nM/W/F 4-10pm Grill`;
+  $('io-text').value = `${MON[d0.getMonth()]}. ${d0.getDate()} - 6-12mn (${DOW[d0.getDay()]}.)\nLOBBY\n${MON[d1.getMonth()]} ${d1.getDate()} | 8-5 (1h break) | Prepping\n${MON[d2.getMonth()]} ${d2.getDate()} | OFF\nM/W/F 4-10pm Grill`;
   updateIoPreview();
 }
 async function copyText(text) {
@@ -3041,13 +3238,22 @@ function cleanNoteText(s) {
     .replace(/\s*[-|•:]+$/, '')
     .trim();
 }
+function extractBreakFromLine(line) {
+  let brk = 0, text = line;
+  const re60 = /\(?\s*(?:w\/?\s*|with\s+|less\s+)?(?:1\s*(?:hr|hrs|hour|hours|h)|60\s*(?:mins?|m))\s*(?:unpaid\s*)?(?:break|brk)\s*\)?|\(?\s*less\s+(?:1\s*(?:hr|h)|60\s*m)\s*\)?/i;
+  const re30 = /\(?\s*(?:w\/?\s*|with\s+|less\s+)?(?:30\s*(?:mins?|m)|(?:0\.5|half)\s*(?:hr|hour|h))\s*(?:unpaid\s*)?(?:break|brk)\s*\)?|\(?\s*less\s+30\s*(?:mins?|m)\s*\)?/i;
+  if (re60.test(text)) { brk = 60; text = text.replace(re60, ' '); }
+  else if (re30.test(text)) { brk = 30; text = text.replace(re30, ' '); }
+  return { brk, text: text.replace(/\s{2,}/g, ' ').trim() };
+}
 function parseScheduleText(raw) {
   const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const reRange = /\b(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn|a|p)\.?|\b12mn\b|\b12nn\b|\d{1,2}(?::\d{2})?)\s*(?:-|–|—|\bto\b)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm|mn|nn|a|p)\.?|\b12mn\b|\b12nn\b|\d{1,2}(?::\d{2})?)\b/i;
   const out = [];
   const seenKeys = new Set();
   let ctxDate = null, usedDow = false;
-  lines.forEach(line => {
+  lines.forEach(rawLine => {
+    const { brk, text: line } = extractBreakFromLine(rawLine);
     const strictDate = parseDateStrict(line);
     const cleaned = strictDate ? stripDateFromLine(line) : line;
     const remClean = cleaned.replace(/[|:-]+/g, ' ').trim();
@@ -3056,20 +3262,25 @@ function parseScheduleText(raw) {
     if (!tm) {
       if (strictDate) { ctxDate = strictDate; return; }
       const l = out[out.length - 1];
+      if (l && brk > 0 && !l.brk) {
+        l.brk = brk;
+        const rr = calcPay({ start: l.start, end: l.end, mult: l.mult, rate: settings.hourlyRate, brk, prior: 0 });
+        if (rr) l.gross = rr.gross;
+      }
       const cn = cleanNoteText(line);
       if (l && !l.labeled && cn && !isOffLine(cn) && !parseDowTokens(cn, 0).length) { l.note = cn; l.labeled = true; }
       return;
     }
     const tr = resolveTimeRange(tm[1], tm[2]);
     if (!tr) return;
-    let dates = [];
+    let dates = [], dateGuessed = false;
     if (strictDate) { dates = [strictDate]; ctxDate = strictDate; }
     else {
       const pre = cleaned.slice(0, tm.index).replace(/[-|:•]+$/, '').trim();
       const dows = parseDowTokens(pre, _ioWeekOff || 0);
       if (dows.length) { dates = dows; usedDow = true; }
       else if (ctxDate) dates = [ctxDate];
-      else dates = [dstr(addDays(new Date(), out.length))];
+      else { dates = [dstr(addDays(new Date(), out.length))]; dateGuessed = true; }
     }
     let note = '', labeled = false;
     const parts = line.split('|').map(x => x.trim());
@@ -3083,9 +3294,9 @@ function parseScheduleText(raw) {
       if (seenKeys.has(sig)) return;
       seenKeys.add(sig);
       const hol = holidayFor(date), mult = hol ? hol.mult : 1;
-      const r = calcPay({ start: tr.start, end: tr.end, mult, rate: settings.hourlyRate, brk: 0, prior: 0 });
+      const r = calcPay({ start: tr.start, end: tr.end, mult, rate: settings.hourlyRate, brk, prior: 0 });
       const dup = shifts.some(s => s.date === date && s.startTime === tr.start && s.endTime === tr.end && isShiftActive(s));
-      out.push({ date, start: tr.start, end: tr.end, note, labeled, mult, hol: hol ? hol.name : '', gross: r ? r.gross : 0, dup, checked: !dup });
+      out.push({ date, start: tr.start, end: tr.end, note, labeled, mult, brk, dateGuessed, hol: hol ? hol.name : '', gross: r ? r.gross : 0, dup, checked: !dup });
     });
   });
   if ($('io-wk-row')) $('io-wk-row').classList.toggle('hidden', !usedDow);
@@ -3094,6 +3305,14 @@ function parseScheduleText(raw) {
 function queueIoPreview() { clearTimeout(_ioPrevT); _ioPrevT = setTimeout(updateIoPreview, 130); }
 function toggleIoRow(i, on) { if (_ioParsed[i]) { _ioParsed[i].checked = !!on; syncIoSummary(); } }
 function editIoNote(i, val) { if (_ioParsed[i]) { _ioParsed[i].note = val.trim(); } }
+function cycleIoBreak(i) {
+  const o = _ioParsed[i]; if (!o) return;
+  o.brk = o.brk === 0 ? 30 : (o.brk === 30 ? 60 : 0);
+  const r = calcPay({ start: o.start, end: o.end, mult: o.mult, rate: settings.hourlyRate, brk: o.brk, prior: 0 });
+  o.gross = r ? r.gross : 0;
+  renderIoList();
+  syncIoSummary();
+}
 function syncIoSummary() {
   const sel = _ioParsed.filter(x => x.checked);
   const tot = r2(sel.reduce((a, x) => a + x.gross, 0));
@@ -3102,6 +3321,18 @@ function syncIoSummary() {
   setText($('io-imp-btn'), sel.length ? `Import ${sel.length} shift${sel.length > 1 ? 's' : ''}` : 'Import shifts');
   $('io-imp-btn').disabled = _ioParsed.length > 0 && sel.length === 0;
 }
+function renderIoList() {
+  if ($('io-guess-warn')) $('io-guess-warn').classList.toggle('hidden', !_ioParsed.some(x => x.dateGuessed));
+  setHTML($('io-prev-list'), _ioParsed.map((o, i) => {
+    const brkLbl = o.brk === 60 ? '1h brk' : (o.brk === 30 ? '30m brk' : '0m brk');
+    return `<div class="io-row${o.dup ? ' dup' : ''}">` +
+      `<input type="checkbox"${o.checked ? ' checked' : ''} onchange="toggleIoRow(${i},this.checked)" aria-label="Select shift">` +
+      `<div class="grow" style="min-width:0"><p style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtDay(o.date)} · ${t12(o.start)}–${t12(o.end)}</p>` +
+      `<p class="card-s" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${o.hol ? `${o.mult}× ${esc(o.hol)}` : 'Regular'}${o.dup ? ' · Already logged' : ''}${o.dateGuessed ? '<span class="dot-b ot">⚠ Date guessed</span>' : ''}</p>` +
+      `<div class="row" style="gap:6px;margin-top:4px"><input class="io-note-in grow" style="margin-top:0" value="${esc(o.note)}" placeholder="Station / note (optional)" oninput="editIoNote(${i},this.value)"><button type="button" class="io-brk-btn press${o.brk ? ' on' : ''}" onclick="cycleIoBreak(${i})" title="Tap to change unpaid break">${brkLbl}</button></div></div>` +
+      `<b class="num">${peso(o.gross)}</b></div>`;
+  }).join(''));
+}
 function updateIoPreview() {
   const raw = ($('io-text').value || '').trim();
   const wrap = $('io-prev-wrap');
@@ -3109,14 +3340,7 @@ function updateIoPreview() {
   _ioParsed = parseScheduleText(raw);
   wrap.classList.toggle('hidden', !_ioParsed.length);
   if (!_ioParsed.length) { $('io-imp-btn').disabled = false; setText($('io-imp-btn'), 'Import shifts'); return; }
-  setHTML($('io-prev-list'), _ioParsed.map((o, i) =>
-    `<div class="io-row${o.dup ? ' dup' : ''}">` +
-    `<input type="checkbox"${o.checked ? ' checked' : ''} onchange="toggleIoRow(${i},this.checked)" aria-label="Select shift">` +
-    `<div class="grow" style="min-width:0"><p style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtDay(o.date)} · ${t12(o.start)}–${t12(o.end)}</p>` +
-    `<p class="card-s">${o.hol ? `${o.mult}× ${esc(o.hol)}` : 'Regular'}${o.dup ? ' · Already logged' : ''}</p>` +
-    `<input class="io-note-in" value="${esc(o.note)}" placeholder="Station / note (optional)" oninput="editIoNote(${i},this.value)"></div>` +
-    `<b class="num">${peso(o.gross)}</b></div>`
-  ).join(''));
+  renderIoList();
   syncIoSummary();
 }
 function importText() {
@@ -3126,13 +3350,13 @@ function importText() {
   if (!picked.length) return toast(_ioParsed.length ? 'Select at least one shift to import' : 'No valid shifts found — try the standard template');
   const td = today(), days = new Set();
   picked.forEach(o => {
-    shifts.push({ id: nextId(), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: o.mult, gross: 0, breakMin: 0, status: o.date > td ? 'scheduled' : 'worked' });
+    shifts.push({ id: nextId(), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: o.mult, gross: 0, breakMin: o.brk || 0, status: o.date > td ? 'scheduled' : 'worked' });
     days.add(o.date);
   });
-  days.forEach(recalcDay);
+  days.forEach(ds => { recalcDay(ds); unlockCutoffSnapshot(periodOf(ds).key, true); });
   selKey = periodOf([...days].sort().pop()).key;
   $('io-text').value = ''; _ioParsed = []; $('io-prev-wrap').classList.add('hidden'); if ($('io-wk-row')) $('io-wk-row').classList.add('hidden');
-  persistShifts(); render(); closeSheet('io-sheet');
+  persistSettings(); persistShifts(); render(); closeSheet('io-sheet');
   toast(`Imported ${picked.length} shift${picked.length > 1 ? 's' : ''}`);
 }
 
@@ -3177,7 +3401,7 @@ function syncDueAndPlanAlarms() {
     const [dh, dm] = (settings.dueNotifTime || '09:00').split(':').map(Number);
     const activeDues = debts
       .filter(d => !d.settled && d.kind !== 'owed' && d.dueDate)
-      .map(d => ({ name: d.name, amount: d.amount, dueDate: d.dueDate }));
+      .map(d => ({ name: d.name, amount: d.kind === 'paylater' ? d.amount : debtRemaining(d), dueDate: d.dueDate }));
     if (typeof AndroidBridge.scheduleDueItems === 'function') {
       AndroidBridge.scheduleDueItems(dueOn, isFinite(dh) ? dh : 9, isFinite(dm) ? dm : 0, JSON.stringify(activeDues));
     } else if (typeof AndroidBridge.scheduleDueAlerts === 'function') {
@@ -3585,25 +3809,88 @@ function csvText() {
   });
   return rows.join('\n');
 }
+const b64Enc = bytes => { let s = ''; for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]); return btoa(s); };
+const b64Dec = str => { const bin = atob(str), out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; };
+async function deriveBackupKey(passphrase, saltBytes, iter) {
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: saltBytes, iterations: iter, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function encryptBackupText(plainText, passphrase) {
+  if (!window.crypto || !crypto.subtle) throw new Error('Encryption requires a secure context');
+  const salt = new Uint8Array(16), iv = new Uint8Array(12);
+  crypto.getRandomValues(salt); crypto.getRandomValues(iv);
+  const iter = 150000;
+  const key = await deriveBackupKey(passphrase, salt, iter);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plainText)));
+  return JSON.stringify({ app: 'SweldoPulse', encrypted: true, v: 1, kdf: 'PBKDF2-SHA256', iter, salt: b64Enc(salt), iv: b64Enc(iv), data: b64Enc(ct) }, null, 1);
+}
+async function decryptBackupEnvelope(env, passphrase) {
+  if (!window.crypto || !crypto.subtle) throw new Error('Decryption unavailable');
+  const salt = b64Dec(env.salt), iv = b64Dec(env.iv), ct = b64Dec(env.data);
+  const iter = Math.min(500000, Math.max(10000, parseInt(env.iter, 10) || 150000));
+  const key = await deriveBackupKey(passphrase, salt, iter);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return new TextDecoder().decode(pt);
+}
+let _pendingEncEnv = null;
+function toggleBkEncrypt() {
+  const on = $('bk-enc-on') && $('bk-enc-on').checked;
+  if ($('bk-enc-fields')) $('bk-enc-fields').classList.toggle('hidden', !on);
+  const ta = $('bk-text');
+  if (bkMode === 'export') {
+    ta.classList.toggle('hidden', !!on);
+    if (!on) ta.value = backupJSON();
+  }
+}
+async function prepareExportPayload() {
+  const csv = bkMode === 'csv';
+  if (csv) return { text: csvText(), name: `SweldoPulse-shifts-${today()}.csv`, mime: 'text/csv', encrypted: false };
+  const encOn = $('bk-enc-on') && $('bk-enc-on').checked;
+  if (!encOn) return { text: backupJSON(), name: `SweldoPulse-backup-${today()}.json`, mime: 'application/json', encrypted: false };
+  const p1 = ($('bk-pass').value || ''), p2v = ($('bk-pass2').value || '');
+  if (p1.length < 4) { toast('Passphrase must be at least 4 characters'); return null; }
+  if (p1 !== p2v) { toast('Passphrases do not match'); return null; }
+  toast('Encrypting backup…');
+  try {
+    const encText = await encryptBackupText(backupJSON(), p1);
+    $('bk-text').value = encText;
+    return { text: encText, name: `SweldoPulse-backup-${today()}.spbackup`, mime: 'application/json', encrypted: true };
+  } catch (e) { toast('Encryption failed on this device'); return null; }
+}
 function openBackup(mode) {
-  bkMode = mode; const ta = $('bk-text'), ex = mode !== 'restore', csv = mode === 'csv';
+  bkMode = mode; _pendingEncEnv = null;
+  const ta = $('bk-text'), ex = mode !== 'restore', csv = mode === 'csv', jsonEx = mode === 'export';
   $('bk-title').textContent = csv ? 'Export as CSV' : (ex ? 'Back up your data' : 'Restore from backup');
   $('bk-sub').textContent = csv ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'}${gigs.length ? ` + ${gigs.length} gigs` : ''} · opens in Excel / Sheets` : (ex ? `${shifts.length} shift${shifts.length === 1 ? '' : 's'} + settings` : 'Replaces everything on this device');
-  ta.value = csv ? csvText() : (ex ? backupJSON() : ''); ta.readOnly = ex; ta.placeholder = ex ? '' : 'Paste your backup text here…';
+  if ($('bk-enc-wrap')) $('bk-enc-wrap').classList.toggle('hidden', !jsonEx);
+  if ($('bk-enc-on')) $('bk-enc-on').checked = false;
+  if ($('bk-enc-fields')) $('bk-enc-fields').classList.add('hidden');
+  if ($('bk-pass')) $('bk-pass').value = '';
+  if ($('bk-pass2')) $('bk-pass2').value = '';
+  if ($('bk-dec-box')) $('bk-dec-box').classList.add('hidden');
+  if ($('bk-dec-pass')) $('bk-dec-pass').value = '';
+  ta.classList.remove('hidden');
+  ta.value = csv ? csvText() : (ex ? backupJSON() : ''); ta.readOnly = ex; ta.placeholder = ex ? '' : 'Paste your .json or .spbackup text here…';
   $('bk-export').classList.toggle('hidden', !ex); $('bk-restore').classList.toggle('hidden', ex);
-  $('bk-note').textContent = csv ? 'Copy it into a spreadsheet, or tap Save / share to send the .csv file.' : ex ? 'Tip: tap Copy, then paste it into Notes, Drive or a Messenger chat to yourself.' : 'Pick the backup file, or open it in any app, copy all the text and paste it above.';
+  $('bk-note').textContent = csv ? 'Copy it into a spreadsheet, or tap Save / share to send the .csv file.' : ex ? 'Turn on Encrypt to save a passphrase-protected .spbackup file before sharing to Drive or Messenger.' : 'Choose a .json or .spbackup file, or paste the backup text above.';
   openSheet('backup-sheet');
 }
 const markBackup = () => { if (bkMode === 'csv') return render(); try { localStorage.setItem(BK_KEY, Date.now()); } catch (e) {} render(); syncBackupStatus(); };
-async function copyBackup() { if (await copyText($('bk-text').value)) { markBackup(); toast('Backup copied — paste it somewhere safe'); } else toast("Couldn't copy — select the text and copy manually"); }
+async function copyBackup() {
+  const pkg = await prepareExportPayload(); if (!pkg) return;
+  if (await copyText(pkg.text)) { markBackup(); toast(pkg.encrypted ? 'Encrypted backup copied ✓' : 'Backup copied — paste it somewhere safe'); }
+  else toast("Couldn't copy — select the text and copy manually");
+}
 async function saveBackupFile() {
-  const csv = bkMode === 'csv', name = csv ? `SweldoPulse-shifts-${today()}.csv` : `SweldoPulse-backup-${today()}.json`, text = $('bk-text').value, mime = csv ? 'text/csv' : 'application/json';
+  const pkg = await prepareExportPayload(); if (!pkg) return;
+  const { name, text, mime, encrypted } = pkg;
   try { const f = new File([text], name, { type: mime }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); markBackup(); return; } } catch (e) { if (e.name === 'AbortError') return; }
   if (window.AndroidBridge) {
-    if (typeof AndroidBridge.shareFile === 'function' && AndroidBridge.shareFile(name, text, mime)) { markBackup(); toast('Opening share sheet…'); return; }
+    if (typeof AndroidBridge.shareFile === 'function' && AndroidBridge.shareFile(name, text, mime)) { markBackup(); toast(encrypted ? 'Sharing encrypted .spbackup…' : 'Opening share sheet…'); return; }
     if (await copyText(text)) { markBackup(); toast('Saved to clipboard — paste it into Notes or Drive'); } return;
   }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); markBackup(); toast('Backup file saved');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); markBackup(); toast(encrypted ? 'Encrypted .spbackup saved' : 'Backup file saved');
 }
 function chooseBackupFile() {
   if (window.AndroidBridge && typeof AndroidBridge.pickBackupFile === 'function') {
@@ -3654,14 +3941,37 @@ function sanitizeRestoredSettings(raw) {
   return out;
 }
 function restoreFromFile(inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const r = new FileReader(); r.onload = () => { $('bk-text').value = r.result; restoreFromText(); }; r.readAsText(f); }
-async function restoreFromText() {
-  let d; try { d = JSON.parse($('bk-text').value.trim()); } catch (e) { return toast('That is not valid backup text'); }
+async function applyRestoredPayload(d) {
   const list = normalizeShifts(d && d.shifts);
   if (!d || d.app !== 'SweldoPulse' || !Array.isArray(d.shifts) || (d.shifts.length && !list.length)) return toast('Not a SweldoPulse backup');
   if (!await askConfirm({ title: 'Replace all data?', body: `This replaces everything on this device with the backup (<b>${list.length}</b> shifts). This cannot be undone.`, ok: 'Restore', danger: true })) return;
   settings = sanitizeRestoredSettings(d.settings);
-  shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); debts = normalizeDebts(d.debts || []); _pm.clear(); selKey = ''; ui.calDay = '';
+  shifts = list; gigs = normalizeGigs(d.gigs || []); expenses = normalizeExpenses(d.expenses || []); debts = normalizeDebts(d.debts || []); _pm.clear(); selKey = ''; ui.calDay = ''; _pendingEncEnv = null;
   persistSettings(); persistShifts(); persistGigs(); persistExpenses(); persistDebts(); syncNativeReminder(); closeSheet('backup-sheet'); syncSettingsUI(); renderNow(); toast(`Restored ${list.length} shifts${gigs.length ? ' + ' + gigs.length + ' gigs' : ''}`);
+}
+async function restoreFromText() {
+  let d; try { d = JSON.parse($('bk-text').value.trim()); } catch (e) { return toast('That is not valid backup text'); }
+  if (d && d.app === 'SweldoPulse' && d.encrypted === true && d.data && d.salt && d.iv) {
+    _pendingEncEnv = d;
+    if ($('bk-dec-box')) $('bk-dec-box').classList.remove('hidden');
+    if ($('bk-dec-pass')) { $('bk-dec-pass').value = ''; setTimeout(() => $('bk-dec-pass').focus(), 120); }
+    toast('Enter passphrase to decrypt backup');
+    return;
+  }
+  await applyRestoredPayload(d);
+}
+async function decryptAndRestore() {
+  if (!_pendingEncEnv) return toast('No encrypted backup loaded');
+  const pass = $('bk-dec-pass') ? $('bk-dec-pass').value : '';
+  if (!pass) return toast('Enter the backup passphrase');
+  try {
+    const plain = await decryptBackupEnvelope(_pendingEncEnv, pass);
+    const d = JSON.parse(plain);
+    if ($('bk-dec-box')) $('bk-dec-box').classList.add('hidden');
+    await applyRestoredPayload(d);
+  } catch (e) {
+    toast('Wrong passphrase or corrupted backup');
+  }
 }
 function syncBackupStatus() {
   const lb = +localStorage.getItem(BK_KEY) || 0;
