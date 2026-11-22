@@ -8,7 +8,7 @@ VER=$(python3 -c "import json;print(json.load(open('version.json'))['version'])"
 CODE=$(python3 -c "a,b,c=map(int,'$VER'.split('.'));print(a*10000+b*100+c)")
 KS=${KEYSTORE:-signing/sweldopulse.jks}; KPASS=${KEYSTORE_PASS:-sweldopulse}; ALIAS=${KEY_ALIAS:-sweldo}
 B=build; rm -rf $B; mkdir -p $B/assets/fonts $B/gen $B/classes
-cp index.html manifest.json version.json icon.svg icon-192.png icon-512.png $B/assets/
+cp index.html app.css app.js manifest.json version.json icon.svg icon-192.png icon-512.png $B/assets/
 cp fonts/*.woff2 $B/assets/fonts/
 aapt package -f -M android/AndroidManifest.xml -S android/res -A $B/assets -I $AJ -J $B/gen -F $B/unsigned.ap_ \
   --version-code "$CODE" --version-name "$VER" --min-sdk-version 23 --target-sdk-version 29

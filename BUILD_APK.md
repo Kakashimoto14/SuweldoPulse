@@ -1,33 +1,33 @@
-# SweldoPulse v2.6.0 — Pre-Holiday 1.30x, Importer Holiday Fix, Overlap Guard, Swipeable Side-Gigs Card & Screenshot Security Toggle
+# SweldoPulse v2.7.0 — Production Polish, Low-End Optimization, Desktop Responsive, PH Work Profiles & Real-Time Updates
 
 ## Building & Publishing via GitHub Actions (Recommended)
 Repo: `https://github.com/Kakashimoto14/SuweldoPulse`
 
 1. Extract this folder over your local `SuweldoPulse` repo (your private `signing/sweldopulse.jks` stays untouched and excluded by `.gitignore`).
-2. Commit, push, and tag `v2.6.0`:
+2. Commit, push, and tag `v2.7.0`:
    ```cmd
    git add -A
-   git commit -m "v2.6.0: pre-holiday 1.30x auto-detect, importer holiday fix, overlap conflict sheet, swipeable side-gigs card & screen-lock screenshot toggle"
+   git commit -m "v2.7.0: modular split, low-end optimization, desktop responsive layout, PH DOLE work profiles, smart real-time updates & updated tour"
    git push origin main
-   git tag v2.6.0
-   git push origin v2.6.0
+   git tag v2.7.0
+   git push origin v2.7.0
    ```
-3. GitHub Actions (`Build APK`) compiles `SweldoPulse-v2.6.0.apk`, signs it using your `KEYSTORE_B64` and `KEYSTORE_PASS` secrets, uploads the artifact, and attaches it to the `v2.6.0` GitHub Release automatically.
+3. GitHub Actions (`Build APK`) bundles `index.html`, `app.css`, and `app.js` into Android assets, compiles `SweldoPulse-v2.7.0.apk`, signs it with your keystore secrets, and publishes it to the `v2.7.0` GitHub Release automatically.
 
-## What's New & Fixed in v2.6.0
-- **Holiday & Day-Before-Holiday (`1.30x`) Auto-Detection:**
-  - Automatically detects the day before any Regular Holiday (`2.0x`) as `1.30x` (Pre-Holiday duty required to prevent average pay) as well as all Special Non-Working Holidays (`1.30x`).
-  - Preserves `2.0x` on consecutive Regular Holidays (e.g., Maundy Thursday before Good Friday).
-  - Added a 1-tap **"Fix holiday rates"** banner on Shifts & Payslip if existing logged shifts on holidays or pre-holidays are still set to `1.0x`.
-- **Fixed Schedule Importer Holiday Detection:**
-  - Flushes pending preview debounce and re-verifies `holidayFor()` live during `importText()` and `saveBulkShifts()`.
-  - Expanded date parsing to support compact & ordinal formats (`Nov.30`, `Nov 30th`, `Nov-30`, `30-Nov`, `(11/30)`, `11/30,`, `11-30`).
-- **Strict Overlap / Duplicate Guard + Duty & Side Gig Conflict Sheet:**
-  - Strictly blocks duplicate or overlapping shift hours across Log Shift, Bulk Week, and Smart Shift Importer (including cross-midnight and intra-batch overlaps).
-  - Side Gigs now support optional Start / End times: non-overlapping duty + gig on the same day save smoothly; overlapping hours open the Conflict Action Sheet to edit, replace, or delete conflicting entries.
-- **Swipeable Net Pay Carousel (Payroll <-> Side Gigs) + Total Earnings Budgeting:**
-  - Swipe left on the Home net-pay card (or tap the `Payroll` / `Side gigs` pills) to switch between Main Payroll Net Pay and a dedicated emerald Side Gigs Earnings card.
-  - Home Budget card and Budget view calculate and display **Total Earnings (Payroll Net + Paid Side Gigs)**.
-- **Allow Screenshots Toggle (PIN Lock Only, Screen Lock Gated):**
-  - Appears in **Settings -> Security** whenever PIN lock is enabled.
-  - Requires **Screen Lock verification** (Fingerprint, Android Device Screen Lock via `KeyguardManager`, or App PIN fallback) before allowing or blocking screenshots (`FLAG_SECURE`).
+## What's New in v2.7.0
+- **Clean Split Architecture:** Separated HTML, unified deduplicated CSS (`app.css`), and modular JavaScript (`app.js`) for fast caching, cleaner maintenance, and zero legacy style overrides.
+- **Smooth & Stable on Low-End Android Devices (e.g. OPPO CPH2269):**
+  - Replaced minute-by-minute `calcPay()` loops with exact O(1) interval math.
+  - Replaced `color-mix()` gradients with precomputed CSS variables compatible with older Android System WebViews.
+  - Removed forced layout reflows, idle `will-change` layers, and background timers; added automatic + manual **Lite Motion Mode** and `onTrimMemory()` WebView cache cleanup.
+- **True Responsive Layout (Mobile, Tablet & Laptop/PC):**
+  - Persistent left sidebar and 2-column desktop workspace (`>= 1024px`) with side-by-side Payroll + Side Gigs cards, centered floating dialogs, and keyboard shortcuts (`Esc`).
+- **PH DOLE 2026 Standards & Work Situation Profiles:**
+  - Updated 2026 DOLE regional minimum wage presets (NCR, CALABARZON, Central Luzon, Western/Central Visayas, Davao, or Custom with daily rate readout).
+  - One-tap **Work Situation Profiles** (Part-Time Crew / Working Student, Full-Time Hourly / Retail, BPO / Night Shift, Daily-Paid / Weekly, Freelance / Side Gigs).
+  - Configurable **Pre-Holiday (`1.30x`)** rule (ON by default, toggleable to Standard DOLE), **Night Diff %** (`0% / 10% / 15% / 20%`), **OT threshold** (`8h / 9h / None`), and **`11-25 / 26-10`** semi-monthly cutoff cycle.
+- **Smart Real-Time Update Checker & Background Notifications:**
+  - Checks on boot (even behind PIN lock), every app resume (3-min throttle), network reconnect, every 15 mins while active, and every 4 hours natively in the background via Android AlarmManager (`ReminderReceiver`).
+  - Uses GitHub `ETag` (`If-None-Match`) + `version.json` fast-check so frequent checks stay within rate limits and immediately post a native notification when a new release drops.
+- **Guaranteed Post-Update "What's New" & Updated 7-Step Tour:**
+  - Queues **What's New** cleanly behind PIN unlock so it is never skipped after installing an update, and updates the spotlight tour for all current features across mobile and desktop.

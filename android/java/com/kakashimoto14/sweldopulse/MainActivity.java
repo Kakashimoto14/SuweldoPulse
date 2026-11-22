@@ -2,6 +2,7 @@ package com.kakashimoto14.sweldopulse;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -653,6 +654,14 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (level >= TRIM_MEMORY_MODERATE && web != null) {
+            try { web.clearCache(false); } catch (Throwable ignored) {}
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         if (fpCancel != null) fpCancel.cancel();
         if (filePathCallback != null) { try { filePathCallback.onReceiveValue(null); } catch (Throwable ignored) {} filePathCallback = null; }
@@ -846,6 +855,30 @@ public class MainActivity extends Activity {
                 }
             }
             return "";
+        }
+
+        @JavascriptInterface
+        public boolean isLowRamDevice() {
+            try {
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                if (am == null) return false;
+                if (am.isLowRamDevice()) return true;
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(mi);
+                return mi.totalMem > 0L && mi.totalMem <= 4500000000L;
+            } catch (Throwable t) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public void configureUpdateCheck(String repo, String curVer, boolean enabled) {
+            ReminderReceiver.configureUpdateCheck(MainActivity.this, repo, curVer, enabled);
+        }
+
+        @JavascriptInterface
+        public void notifyUpdateAvailable(String version, String body) {
+            ReminderReceiver.notifyNewRelease(MainActivity.this, version, body);
         }
 
         @JavascriptInterface

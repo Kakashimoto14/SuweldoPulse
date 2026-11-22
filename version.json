@@ -1,7 +1,7 @@
 {
-  "version": "2.6.0",
+  "version": "2.7.0",
   "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
-  "apkName": "SweldoPulse-v2.6.0.apk",
+  "apkName": "SweldoPulse-v2.7.0.apk",
   "apkSize": "Latest Build",
-  "notes": "SweldoPulse 2.6: Auto-Detected Day-Before-Holiday (1.30x) & Special Non-Working Holiday (1.30x) Pay Rules, Fixed Schedule Importer Holiday Detection & 1-Tap Re-Check Holidays, Strict Overlap/Duplicate Blocking with Conflict Action Sheet (including Duty + Timed Side Gigs), Swipeable Net Pay Carousel (Payroll <-> Side Gigs) with Total Earnings Budgeting, and Screen-Lock-Gated Allow Screenshots Toggle under PIN Security."
+  "notes": "SweldoPulse 2.7: Split Modular Architecture (index.html + app.css + app.js), True Responsive Desktop/Tablet/Mobile Layout, Low-End Device Smooth Engine (O(1) pay math, WebView compatibility & Lite Motion Mode), PH DOLE 2026 Regional Wage Presets & Work Situation Profiles (including 11-25/26-10 cutoff, configurable NSD, OT & Pre-Holiday rules), Smart Real-Time Auto-Update Checks with Background Notifications, Guaranteed Post-Update What's New, and Updated 7-Step Interactive Tour."
 }

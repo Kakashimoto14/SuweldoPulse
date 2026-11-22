@@ -1,7 +1,9 @@
-const CACHE_NAME = 'sweldopulse-v26';
+const CACHE_NAME = 'sweldopulse-v27';
 const ASSETS = [
   './',
   './index.html',
+  './app.css',
+  './app.js',
   './manifest.json',
   './version.json',
   './icon.svg',
@@ -37,7 +39,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('.json')) {
+  if (
+    req.mode === 'navigate' ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.json')
+  ) {
     event.respondWith(
       fetch(req)
         .then((res) => {

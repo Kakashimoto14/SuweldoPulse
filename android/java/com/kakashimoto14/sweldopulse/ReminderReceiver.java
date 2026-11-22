@@ -15,6 +15,10 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Locale;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,18 +42,26 @@ public class ReminderReceiver extends BroadcastReceiver {
     static final String KEY_PLAN_TITLE = "plan_title";
     static final String KEY_PLAN_BODY = "plan_body";
 
+    static final String KEY_UPD_ON = "upd_bg_enabled";
+    static final String KEY_UPD_REPO = "upd_bg_repo";
+    static final String KEY_UPD_CUR = "upd_bg_cur_ver";
+    static final String KEY_UPD_NOTIFIED = "upd_bg_notified_ver";
+
     static final int REQ_SHIFT = 1001;
     static final int REQ_DUE = 1002;
     static final int REQ_PLAN = 1003;
+    static final int REQ_UPD = 1004;
 
     static final int NOTIF_SHIFT = 1001;
     static final int NOTIF_DUE = 1002;
     static final int NOTIF_PLAN = 1003;
     static final int NOTIF_TEST = 1004;
+    static final int NOTIF_UPD_AVAIL = 2003;
 
     static final String ACTION_SHIFT = "com.kakashimoto14.sweldopulse.ALARM_SHIFT";
     static final String ACTION_DUE = "com.kakashimoto14.sweldopulse.ALARM_DUE";
     static final String ACTION_PLAN = "com.kakashimoto14.sweldopulse.ALARM_PLAN";
+    static final String ACTION_UPD = "com.kakashimoto14.sweldopulse.ALARM_UPDATE_CHECK";
 
     static class DueEntry {
         String name;
@@ -73,6 +85,9 @@ public class ReminderReceiver extends BroadcastReceiver {
             if (sp.getBoolean(KEY_PLAN_ON, true)) {
                 armNextPlannedShift(ctx, sp);
             }
+            if (sp.getBoolean(KEY_UPD_ON, true)) {
+                scheduleUpdateAlarm(ctx);
+            }
             return;
         }
 
@@ -82,6 +97,25 @@ public class ReminderReceiver extends BroadcastReceiver {
             if (hasDueItems(sp)) {
                 scheduleDaily(ctx, ACTION_DUE, REQ_DUE, sp.getInt(KEY_DUE_H, 9), sp.getInt(KEY_DUE_M, 0));
             }
+            return;
+        }
+
+        if (ACTION_UPD.equals(action)) {
+            if (!sp.getBoolean(KEY_UPD_ON, true)) return;
+            scheduleUpdateAlarm(ctx);
+            final PendingResult pr = goAsync();
+            final Context appCtx = ctx.getApplicationContext();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        runBackgroundUpdateCheck(appCtx);
+                    } catch (Throwable ignored) {
+                    } finally {
+                        try { pr.finish(); } catch (Throwable ignored) {}
+                    }
+                }
+            }).start();
             return;
         }
 
@@ -315,6 +349,91 @@ public class ReminderReceiver extends BroadcastReceiver {
             .putString(KEY_PLAN_BODY, body == null ? "Your planned shift starts in 1 hour." : body)
             .apply();
         scheduleExactOnce(ctx, ACTION_PLAN, REQ_PLAN, triggerAtMs);
+    }
+
+    static int compareSemver(String a, String b) {
+        if (a == null) a = "0.0.0";
+        if (b == null) b = "0.0.0";
+        String ca = a.trim().replaceFirst("^[vV]", "");
+        String cb = b.trim().replaceFirst("^[vV]", "");
+        String[] xa = ca.split("\\.");
+        String[] xb = cb.split("\\.");
+        for (int i = 0; i < 3; i++) {
+            int na = 0, nb = 0;
+            try { if (i < xa.length) na = Integer.parseInt(xa[i].replaceAll("[^0-9].*$", "")); } catch (Throwable ignored) {}
+            try { if (i < xb.length) nb = Integer.parseInt(xb[i].replaceAll("[^0-9].*$", "")); } catch (Throwable ignored) {}
+            if (na != nb) return na > nb ? 1 : -1;
+        }
+        return 0;
+    }
+
+    static void runBackgroundUpdateCheck(Context ctx) {
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String repo = sp.getString(KEY_UPD_REPO, "Kakashimoto14/SuweldoPulse");
+        String curVer = sp.getString(KEY_UPD_CUR, "2.7.0");
+        String lastNotified = sp.getString(KEY_UPD_NOTIFIED, "");
+        if (repo == null || !repo.matches("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")) return;
+        HttpURLConnection conn = null;
+        BufferedReader br = null;
+        try {
+            URL u = new URL("https://raw.githubusercontent.com/" + repo + "/HEAD/version.json");
+            conn = (HttpURLConnection) u.openConnection();
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(8000);
+            conn.setRequestProperty("User-Agent", "SweldoPulse-Android");
+            conn.setUseCaches(false);
+            if (conn.getResponseCode() != 200) return;
+            br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null && sb.length() < 16384) {
+                sb.append(line);
+            }
+            JSONObject obj = new JSONObject(sb.toString());
+            String remoteVer = obj.optString("version", "").trim();
+            if (remoteVer.length() == 0) return;
+            if (compareSemver(remoteVer, curVer) <= 0) return;
+            if (lastNotified != null && compareSemver(remoteVer, lastNotified) <= 0) return;
+            String notes = obj.optString("notes", "A new SweldoPulse release is ready to download.");
+            if (notes.length() > 140) notes = notes.substring(0, 137) + "...";
+            notifyNewRelease(ctx, remoteVer, notes);
+        } catch (Throwable ignored) {
+        } finally {
+            if (br != null) try { br.close(); } catch (Throwable ignored) {}
+            if (conn != null) try { conn.disconnect(); } catch (Throwable ignored) {}
+        }
+    }
+
+    public static void notifyNewRelease(Context ctx, String version, String body) {
+        if (version == null || version.length() == 0) return;
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String vLabel = version.startsWith("v") || version.startsWith("V") ? version : ("v" + version);
+        sp.edit().putString(KEY_UPD_NOTIFIED, version).apply();
+        showRichNotification(ctx, "updates", "App updates", 3, NOTIF_UPD_AVAIL,
+            "SweldoPulse " + vLabel + " is available",
+            (body != null && body.length() > 0) ? body : "Tap to open Settings and install the latest update.",
+            "settings-update", "Update now");
+    }
+
+    public static void markUpdateNotified(Context ctx, String version) {
+        if (version == null || version.length() == 0) return;
+        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_UPD_NOTIFIED, version).apply();
+    }
+
+    public static void configureUpdateCheck(Context ctx, String repo, String curVer, boolean enabled) {
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        SharedPreferences.Editor ed = sp.edit()
+            .putBoolean(KEY_UPD_ON, enabled)
+            .putString(KEY_UPD_REPO, (repo != null && repo.length() > 0) ? repo : "Kakashimoto14/SuweldoPulse")
+            .putString(KEY_UPD_CUR, (curVer != null && curVer.length() > 0) ? curVer : "2.7.0");
+        ed.apply();
+        if (enabled) scheduleUpdateAlarm(ctx);
+        else cancelAlarm(ctx, ACTION_UPD, REQ_UPD);
+    }
+
+    static void scheduleUpdateAlarm(Context ctx) {
+        long nextAt = System.currentTimeMillis() + 4L * 3600L * 1000L;
+        scheduleExactOnce(ctx, ACTION_UPD, REQ_UPD, nextAt);
     }
 
     public static void sendTest(Context ctx) {
