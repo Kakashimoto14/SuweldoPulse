@@ -1,7 +1,7 @@
 {
-  "version": "2.5.0",
+  "version": "2.6.0",
   "apkUrl": "https://github.com/Kakashimoto14/SuweldoPulse/releases/latest",
-  "apkName": "SweldoPulse-v2.5.0.apk",
+  "apkName": "SweldoPulse-v2.6.0.apk",
   "apkSize": "Latest Build",
-  "notes": "SweldoPulse 2.5 (Phase 2 Workflow & Protection): Budget Cutoff Switcher, Partial Utang Payments with Progress Tracking, AES-256-GCM Encrypted .spbackup Export & Restore, Smarter Importer v2 (Auto Break Detection, Guessed-Date Warnings & Per-Row Break Picker), and Automatic Payslip Cutoff Lock/Snapshot on Reconciliation."
+  "notes": "SweldoPulse 2.6: Auto-Detected Day-Before-Holiday (1.30x) & Special Non-Working Holiday (1.30x) Pay Rules, Fixed Schedule Importer Holiday Detection & 1-Tap Re-Check Holidays, Strict Overlap/Duplicate Blocking with Conflict Action Sheet (including Duty + Timed Side Gigs), Swipeable Net Pay Carousel (Payroll <-> Side Gigs) with Total Earnings Budgeting, and Screen-Lock-Gated Allow Screenshots Toggle under PIN Security."
 }

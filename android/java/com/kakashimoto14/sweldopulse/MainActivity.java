@@ -2,6 +2,7 @@ package com.kakashimoto14.sweldopulse;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -63,6 +64,7 @@ public class MainActivity extends Activity {
     static final int REQ_NOTIF = 8;
     static final int REQ_FILE_CHOOSER = 9;
     static final int REQ_BACKUP_PICK = 10;
+    static final int REQ_DEVICE_AUTH = 11;
     static final int NOTIF_UPDATE_ID = 2002;
 
     WebView web;
@@ -196,6 +198,11 @@ public class MainActivity extends Activity {
                 }
                 try { cb.onReceiveValue(res); } catch (Throwable ignored) {}
             }
+            return;
+        }
+        if (requestCode == REQ_DEVICE_AUTH) {
+            boolean ok = (resultCode == Activity.RESULT_OK);
+            js("window.onDeviceAuth&&onDeviceAuth(" + ok + ")");
             return;
         }
         if (requestCode == REQ_BACKUP_PICK) {
@@ -1098,6 +1105,37 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void fpCancel() {
             runOnUiThread(new Runnable() { public void run() { if (fpCancel != null) { fpCancel.cancel(); fpCancel = null; } } });
+        }
+
+        @JavascriptInterface
+        public boolean deviceAuthAvailable() {
+            try {
+                KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+                return km != null && km.isKeyguardSecure();
+            } catch (Throwable t) { return false; }
+        }
+
+        @JavascriptInterface
+        public boolean requestDeviceAuth(final String title, final String desc) {
+            try {
+                KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+                if (km == null || !km.isKeyguardSecure()) return false;
+                final Intent intent = km.createConfirmDeviceCredentialIntent(
+                    title == null ? "Verify screen lock" : title,
+                    desc == null ? "Confirm your screen lock to continue" : desc
+                );
+                if (intent == null) return false;
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        try {
+                            startActivityForResult(intent, REQ_DEVICE_AUTH);
+                        } catch (Throwable t) {
+                            js("window.onDeviceAuth&&onDeviceAuth(false)");
+                        }
+                    }
+                });
+                return true;
+            } catch (Throwable t) { return false; }
         }
 
         @JavascriptInterface

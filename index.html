@@ -503,6 +503,29 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 .io-warn-bar{padding:8px 11px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:11.5px;font-weight:600;margin-top:8px;line-height:1.4}
 .enc-box{padding:11px 12px;border-radius:14px;background:var(--subtle);border:1px solid var(--line);margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
 
+/* ---------- v2.6: Swipeable net-pay carousel, side-gigs card, holiday fix bar, conflict & screen-lock sheets ---------- */
+.wallet-wrap{display:flex;flex-direction:column;gap:8px}
+.wallet-carousel{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -2px;padding:2px}
+.wallet-carousel::-webkit-scrollbar{display:none}
+.wallet-slide{flex:0 0 100%;width:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;flex-direction:column;justify-content:space-between}
+.wallet.gig-wallet{background:#059669;background:linear-gradient(145deg,#34D399 0%,#059669 38%,#064E3B 100%);box-shadow:0 16px 32px -16px rgba(5,150,105,.38),inset 0 1px 0 rgba(255,255,255,.22)}
+.wallet-dots{display:flex;align-items:center;justify-content:center;gap:6px}
+.w-dot{height:24px;padding:0 11px;border-radius:99px;font-size:11px;font-weight:700;color:var(--t3);background:var(--card);border:1px solid var(--line);display:inline-flex;align-items:center;gap:5px;transition:background-color .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease)}
+.w-dot.on{background:var(--accent-soft);border-color:var(--accent-soft-border);color:var(--accent-text)}
+.w-dot.gig.on{background:var(--ok-soft);border-color:rgba(16,185,129,.35);color:var(--ok)}
+.w-gig-add{height:26px;padding:0 10px;border-radius:99px;background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.w-gig-add:active{transform:scale(.93)}
+.wg-bar{display:flex;gap:3px;height:6px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.18);margin-top:12px}
+.wg-bar i{display:block;height:100%;background:#A7F3D0;border-radius:99px;transition:width .5s var(--ease)}
+.wg-bar i.pend{background:rgba(253,230,138,.85)}
+.hol-fix-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:16px;background:var(--ok-soft);border:1px solid rgba(16,185,129,.28);color:var(--ok)}
+.hol-fix-bar .hf-t{font-size:12.5px;font-weight:700;line-height:1.25}
+.hol-fix-bar .hf-s{font-size:11px;opacity:.88;margin-top:2px}
+.conflict-list{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.conflict-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:var(--subtle);border:1px solid var(--line)}
+.sl-fp-box{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 12px;border-radius:18px;background:var(--subtle);border:1px solid var(--line);text-align:center}
+.sl-fp-ic{width:54px;height:54px;border-radius:99px;background:var(--accent-soft);color:var(--accent-text);display:flex;align-items:center;justify-content:center}
+
 @media (min-width:600px){#app,.nav,.sheet{max-width:560px}main{--pad:22px}}
 @media (max-width:359px){main{padding-left:12px;padding-right:12px}.card{padding:14px}.btn{padding:0 12px}.pin-pad{grid-template-columns:repeat(3,64px)}.pin-key{width:64px;height:64px}}
 @media (prefers-reduced-motion:reduce){.wallet::before,.wallet::after{animation:none}.spark{transition:none}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -610,19 +633,44 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <button type="button" class="btn primary sm press" id="uhb-btn" onclick="handleHomeUpdateBtn()">Install</button>
       </div>
 
-      <div class="wallet press" id="hero" onclick="go('deductions')">
-        <div class="w-top">
-          <div class="w-lbl"><span class="w-live" id="w-live"></span><span id="w-label">2nd cutoff</span></div>
-          <div class="row" style="gap:6px"><button type="button" class="w-scope press hidden" id="w-scope-btn" onclick="event.stopPropagation();toggleIncomeScope()">Payroll</button><button type="button" class="w-eye" id="eye-btn" onclick="event.stopPropagation();toggleHide()" aria-label="Show or hide amounts"><svg class="ic" id="eye-ic"><use href="#i-eye"/></svg></button></div>
+      <div class="wallet-wrap">
+        <div class="wallet-carousel" id="wallet-carousel" onscroll="onWalletScroll()">
+          <div class="wallet wallet-slide press" id="hero" onclick="go('deductions')">
+            <div class="w-top">
+              <div class="w-lbl"><span class="w-live" id="w-live"></span><span id="w-label">2nd cutoff</span></div>
+              <div class="row" style="gap:6px"><button type="button" class="w-eye" id="eye-btn" onclick="event.stopPropagation();toggleHide()" aria-label="Show or hide amounts"><svg class="ic" id="eye-ic"><use href="#i-eye"/></svg></button></div>
+            </div>
+            <div class="w-main">
+              <div style="min-width:0"><div class="w-amt" id="hero-amt"><span class="cur">₱</span><span class="int" id="amt-int">0</span><span class="dec" id="amt-dec">.00</span></div>
+              <div class="w-sub" id="w-sub"></div></div>
+              <div class="ring" id="ring" title="Cutoff progress"><svg viewBox="0 0 40 40"><circle class="tr" cx="20" cy="20" r="16"/><circle class="pg" id="ring-pg" cx="20" cy="20" r="16"/></svg><div class="tx"><b id="ring-n">0</b><small id="ring-u">days</small></div></div>
+            </div>
+            <svg class="spark" id="spark" viewBox="0 0 300 40" aria-hidden="true"></svg>
+            <div class="w-goal hidden" id="w-goal" onclick="event.stopPropagation();openGoalSettings()" title="Tap to edit pay goal"><span id="g-txt"></span><span class="gb"><i id="g-fill"></i></span></div>
+            <div class="w-strip"><div><span>Gross</span><b class="num" id="ws-g">₱0.00</b></div><div><span>Deductions</span><b class="num" id="ws-d">₱0.00</b></div><div><span>Hours</span><b class="num" id="ws-h">0h</b></div></div>
+          </div>
+
+          <div class="wallet wallet-slide gig-wallet press" id="hero-gig" onclick="openGigsFromCard()">
+            <div class="w-top">
+              <div class="w-lbl"><svg class="ic xs"><use href="#i-brief"/></svg><span id="wg-label">Side gigs</span></div>
+              <div class="row" style="gap:6px"><button type="button" class="w-gig-add" onclick="event.stopPropagation();openGig()">+ Add gig</button><button type="button" class="w-eye" id="eye-btn-gig" onclick="event.stopPropagation();toggleHide()" aria-label="Show or hide amounts"><svg class="ic" id="eye-ic-gig"><use href="#i-eye"/></svg></button></div>
+            </div>
+            <div class="w-main">
+              <div style="min-width:0"><div class="w-amt" id="hero-gig-amt"><span class="cur">₱</span><span class="int" id="gamt-int">0</span><span class="dec" id="gamt-dec">.00</span></div>
+              <div class="w-sub" id="wg-sub">Paid side gigs this cutoff</div></div>
+              <div class="ring" title="Side gigs count"><svg viewBox="0 0 40 40"><circle class="tr" cx="20" cy="20" r="16"/><circle class="pg" id="gig-ring-pg" cx="20" cy="20" r="16"/></svg><div class="tx"><b id="gig-ring-n">0</b><small id="gig-ring-u">gigs</small></div></div>
+            </div>
+            <div style="margin-top:8px">
+              <div class="wg-bar"><i id="wg-bar-paid" style="width:0%"></i><i class="pend" id="wg-bar-pend" style="width:0%"></i></div>
+              <p class="w-sub num" id="wg-total-line" style="margin-top:6px">Combined total for budget: ₱0.00</p>
+            </div>
+            <div class="w-strip"><div><span>Paid</span><b class="num" id="wgs-paid">₱0.00</b></div><div><span>Pending</span><b class="num" id="wgs-pend">₱0.00</b></div><div><span>All gigs</span><b class="num" id="wgs-tot">₱0.00</b></div></div>
+          </div>
         </div>
-        <div class="w-main">
-          <div style="min-width:0"><div class="w-amt" id="hero-amt"><span class="cur">₱</span><span class="int" id="amt-int">0</span><span class="dec" id="amt-dec">.00</span></div>
-          <div class="w-sub" id="w-sub"></div></div>
-          <div class="ring" id="ring" title="Cutoff progress"><svg viewBox="0 0 40 40"><circle class="tr" cx="20" cy="20" r="16"/><circle class="pg" id="ring-pg" cx="20" cy="20" r="16"/></svg><div class="tx"><b id="ring-n">0</b><small id="ring-u">days</small></div></div>
+        <div class="wallet-dots" id="wallet-dots">
+          <button type="button" class="w-dot on press" data-wi="0" onclick="slideWallet(0)">Payroll</button>
+          <button type="button" class="w-dot gig press" data-wi="1" onclick="slideWallet(1)">Side gigs <span class="num" id="wd-gig-cnt"></span></button>
         </div>
-        <svg class="spark" id="spark" viewBox="0 0 300 40" aria-hidden="true"></svg>
-        <div class="w-goal hidden" id="w-goal" onclick="event.stopPropagation();openGoalSettings()" title="Tap to edit pay goal"><span id="g-txt"></span><span class="gb"><i id="g-fill"></i></span></div>
-        <div class="w-strip"><div><span>Gross</span><b class="num" id="ws-g">₱0.00</b></div><div><span>Deductions</span><b class="num" id="ws-d">₱0.00</b></div><div><span>Hours</span><b class="num" id="ws-h">0h</b></div></div>
       </div>
 
       <div class="qa">
@@ -642,7 +690,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       </div>
 
       <button type="button" class="card bcard press" onclick="go('budget')" aria-label="Open budget plan">
-        <div class="row between"><div class="row" style="gap:8px"><span class="bc-ic"><svg class="ic"><use href="#i-pie"/></svg></span><span class="card-t">Budget plan</span></div><span class="chip ok num" id="bc-save">Save ₱0.00</span></div>
+        <div class="row between"><div class="row" style="gap:8px"><span class="bc-ic"><svg class="ic"><use href="#i-pie"/></svg></span><div><span class="card-t">Budget plan</span><p class="card-s num hidden" id="bc-tot-line" style="margin-top:0"></p></div></div><span class="chip ok num" id="bc-save">Save ₱0.00</span></div>
         <div class="stackbar" style="margin-top:12px"><i class="c-needs" id="bc-bn"></i><i class="c-wants" id="bc-bw"></i><i class="c-save" id="bc-bs"></i></div>
         <div class="bc-cols">
           <div><span class="bc-l"><i class="c-needs"></i>Needs <em id="bc-pn">70%</em></span><b class="num" id="bc-an">₱0.00</b></div>
@@ -811,6 +859,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="filters" id="shift-filters"></div>
       <div class="card hidden" id="shift-cal" style="padding:12px"></div>
       <div class="cal-bar hidden" id="cal-day-bar"><span id="cal-day-txt"></span><button type="button" class="link" style="padding:2px 4px" onclick="pickCalDay('')">Show all</button></div>
+      <div class="hol-fix-bar hidden" id="hol-fix-shifts"><div class="grow" style="min-width:0"><p class="hf-t" id="hf-s-t">Holiday rates detected</p><p class="hf-s" id="hf-s-s">Update logged shifts on holidays / pre-holidays</p></div><button type="button" class="btn primary sm press" style="min-height:32px;padding:0 12px" onclick="fixCutoffHolidays()">Fix rates</button></div>
       <div class="sumline"><span id="shift-sum"></span><button type="button" class="link" id="sort-btn" onclick="toggleSort()" style="display:flex;align-items:center;gap:5px"><svg class="ic xs"><use href="#i-sort"/></svg><span>Newest</span></button></div>
       <div class="list" id="shift-list"></div>
     </section>
@@ -824,6 +873,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <button type="button" class="icon-btn press" onclick="stepPeriod(1)" aria-label="Next cutoff"><svg class="ic"><use href="#i-r"/></svg></button>
       </div>
 
+      <div class="hol-fix-bar hidden" id="hol-fix-payslip"><div class="grow" style="min-width:0"><p class="hf-t" id="hf-p-t">Holiday rates detected</p><p class="hf-s" id="hf-p-s">Update logged shifts on holidays / pre-holidays</p></div><button type="button" class="btn primary sm press" style="min-height:32px;padding:0 12px" onclick="fixCutoffHolidays()">Fix rates</button></div>
       <div class="card">
         <div class="card-h" style="margin-bottom:8px"><div><p class="card-t">Payslip</p><p class="card-s num" id="ps-hours">0.0h regular · 0.0h night · 0.0h overtime</p></div><div class="row" style="gap:6px"><button type="button" class="ps-lock-btn press hidden" id="ps-lock-btn" onclick="toggleCutoffLock()"><svg class="ic xs"><use href="#i-lock"/></svg><span id="ps-lock-txt">Lock</span></button><span class="chip" id="ps-badge">2nd cutoff</span></div></div>
         <div class="ps-lock-bar on hidden" id="ps-lock-bar"><span id="ps-lock-msg">Snapshot frozen — rate &amp; rule changes won't alter this cutoff</span><button type="button" class="link" style="padding:2px 4px;color:inherit" onclick="unlockCutoffSnapshot(selKey)">Unlock</button></div>
@@ -939,6 +989,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
         <div class="setting hidden" id="lock-fp-row"><div><p class="k">Fingerprint</p><p class="d" id="lock-fp-status">Off</p></div><button type="button" class="btn soft sm press" id="lock-fp-btn" onclick="toggleFingerprint()">Enable</button></div>
         <div class="setting hidden" id="lock-auto-row"><p class="k">Auto-lock after</p><select id="lock-auto" class="field" style="width:140px" onchange="lockSetAuto(this.value)"><option value="0">Immediately</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="300">5 minutes</option></select></div>
         <div class="setting hidden" id="lock-widget-row"><div><p class="k">Mask home widgets</p><p class="d">Hide amounts &amp; dues on widgets while PIN is on</p></div><span class="switch"><input type="checkbox" id="lock-widget-mask" onchange="toggleWidgetLockMask()"><i></i></span></div>
+        <div class="setting hidden" id="lock-ss-row"><div><p class="k">Allow screenshots</p><p class="d" id="lock-ss-sub">Blocked while PIN lock is on · screen lock required</p></div><span class="switch"><input type="checkbox" id="lock-ss-toggle" onclick="return onScreenshotToggleClick(event)"><i></i></span></div>
       </div>
 
       <div class="card">
@@ -955,7 +1006,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
       <p class="sec-lbl">App &amp; Updates</p>
       <div class="card">
-        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.5.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
+        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.6.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
         <div id="upd-box" class="hidden" style="margin-top:12px">
           <div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div>
           <p class="note" id="upd-notes" style="margin:4px 0 10px"></p>
@@ -1002,7 +1053,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       </div>
       <div class="grid2">
         <div><div class="row between" style="margin-bottom:6px"><label class="lbl" for="m-date" style="margin:0">Date</label></div><input type="date" id="m-date" class="field" onchange="onDateChange()"></div>
-        <div><label class="lbl" for="m-mult">Day type</label><select id="m-mult" class="field" onchange="updatePreview()"><option value="1.00">Regular day</option><option value="1.30">Special / rest day</option><option value="1.50">Special day on rest day</option><option value="2.00">Regular holiday</option><option value="2.60">Holiday on rest day</option></select></div>
+        <div><label class="lbl" for="m-mult">Day type</label><select id="m-mult" class="field" onchange="updatePreview()"><option value="1.00">Regular day</option><option value="1.30">Special non-working / pre-holiday (1.3×)</option><option value="1.50">Special day on rest day</option><option value="2.00">Regular holiday</option><option value="2.60">Holiday on rest day</option></select></div>
       </div>
       <div class="grid2">
         <div><label class="lbl">Unpaid break</label><div class="seg" id="m-break"><button type="button" data-b="0" onclick="setBreak(0)">None</button><button type="button" data-b="30" onclick="setBreak(30)">30m</button><button type="button" data-b="60" onclick="setBreak(60)">1h</button></div></div>
@@ -1019,6 +1070,10 @@ input[type=search]::-webkit-search-cancel-button{display:none}
       <div class="grid2">
         <div><label class="lbl" for="g-amt">Amount earned</label><label class="money-field"><span>₱</span><input id="g-amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00"></label></div>
         <div><label class="lbl" for="g-date">Date</label><input type="date" id="g-date" class="field"></div>
+      </div>
+      <div class="grid2">
+        <div><label class="lbl" for="g-start">Start time (optional)</label><select id="g-start" class="field"></select></div>
+        <div><label class="lbl" for="g-end">End time (optional)</label><select id="g-end" class="field"></select></div>
       </div>
       <div><label class="lbl" for="g-stream">Income stream</label><input id="g-stream" class="field" style="font-weight:500" placeholder="e.g. Catering, Freelance, Sound System" autocomplete="off" oninput="syncGigChips()"><div class="st-chips" id="g-streams"></div></div>
       <div><label class="lbl" for="g-title">Event / description (optional)</label><input id="g-title" class="field" style="font-weight:500" placeholder="e.g. Weekend event, Website fix" autocomplete="off"></div>
@@ -1224,14 +1279,45 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.5</span></h2><p class="card-s">Partial utang pay, encrypted backups &amp; cutoff lock</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.6</span></h2><p class="card-s">Pre-holiday 1.3×, overlap guard &amp; swipeable gigs card</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:11px;font-size:13.5px">
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Budget</span><span class="sub">Cutoff switcher right inside Budget, plus partial payment tracking on personal Utang (I Owe &amp; Owed to Me) with progress bars and 25% / 50% / Full chips.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Backup</span><span class="sub">Optional AES-256-GCM passphrase encryption (.spbackup) when exporting or sharing backups — decrypt &amp; restore anytime in-app.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Import</span><span class="sub">Smarter Importer v2 auto-detects unpaid breaks (1h break, 30m brk), flags guessed dates, and lets you tap to toggle 0m / 30m / 1h break per row in preview.</span></div>
-      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Payslip</span><span class="sub">Cutoff Lock / Snapshot freezes earnings and deductions automatically when you enter Actual Pay (or manually via Lock) so future rate/rule changes never alter past slips.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip ok" style="flex:none">Holidays</span><span class="sub">Auto-detects the day before any Regular Holiday as 1.30× (Pre-Holiday duty) plus Special Non-Working Holidays (1.30×), fixes importer holiday detection, and adds 1-tap Fix Rates for existing shifts.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Conflicts</span><span class="sub">Strictly blocks duplicate or overlapping duty hours (and timed side gigs) with a Conflict Sheet to edit, replace, or delete conflicting entries on that day.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Home</span><span class="sub">Swipe left on the Net Pay card to view a dedicated Side Gigs Earnings card — while Budgeting automatically totals Payroll + Side Gigs.</span></div>
+      <div class="row" style="align-items:flex-start"><span class="chip" style="flex:none">Security</span><span class="sub">New Allow Screenshots toggle under Security (visible while PIN lock is on) protected by screen lock verification (fingerprint, device screen lock, or app PIN).</span></div>
     </div>
     <button type="button" class="btn primary block press" style="margin-top:16px" onclick="closeSheet('whatsnew-sheet')">Got it</button>
+  </div>
+</div>
+
+<div id="conflict-sheet" class="scrim top" onclick="if(event.target===this)closeConflictSheet()">
+  <div class="sheet">
+    <div class="row" style="align-items:flex-start;gap:12px">
+      <div class="confirm-ic" id="cfl-ic"><svg class="ic"><use href="#i-alert"/></svg></div>
+      <div class="grow"><h3 style="font-size:17px;font-weight:700;letter-spacing:-.01em" id="cfl-title">Schedule overlap</h3><p class="sub" style="font-size:13px;margin-top:4px;line-height:1.45" id="cfl-body"></p></div>
+    </div>
+    <div class="conflict-list" id="cfl-list"></div>
+    <div class="stack" style="gap:8px;margin-top:12px">
+      <button type="button" class="btn danger block press" id="cfl-replace-btn" onclick="conflictReplace()">Delete conflicting &amp; save new</button>
+      <button type="button" class="btn soft block press hidden" id="cfl-keep-btn" onclick="conflictKeepBoth()">Keep both (times don't overlap)</button>
+      <button type="button" class="btn ghost block press" onclick="closeConflictSheet()">Cancel &amp; edit time</button>
+    </div>
+  </div>
+</div>
+
+<div id="screenlock-sheet" class="scrim top" onclick="if(event.target===this)cancelScreenLockAuth()">
+  <div class="sheet">
+    <div class="sheet-h" style="margin-bottom:10px"><div><h3 class="sheet-t" id="sl-title">Verify screen lock</h3><p class="card-s" id="sl-desc">Confirm to change screenshot protection</p></div><button type="button" class="icon-btn press" onclick="cancelScreenLockAuth()" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sl-fp-box hidden" id="sl-fp-box">
+      <div class="sl-fp-ic"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 11v3a5 5 0 0 1-1 3"/><path d="M8 12a4 4 0 0 1 8 0v2a8 8 0 0 1-1.5 4.5"/><path d="M5 12a7 7 0 0 1 14 0v1"/><path d="M5 15c0 2 .5 3.5 1.5 5"/></svg></div>
+      <p style="font-size:13.5px;font-weight:700" id="sl-fp-msg">Touch the fingerprint sensor</p>
+      <p class="card-s" style="margin:0">Or choose another screen lock option below</p>
+    </div>
+    <div class="stack" style="gap:8px;margin-top:12px">
+      <button type="button" class="btn primary block press hidden" id="sl-dev-btn" onclick="triggerDeviceScreenLock()">Use device screen lock</button>
+      <button type="button" class="btn soft block press" id="sl-pin-btn" onclick="triggerAppPinForAuth()">Use app PIN</button>
+      <button type="button" class="btn ghost block press" onclick="cancelScreenLockAuth()">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -1260,7 +1346,7 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 </div>
 
 <script>
-const APP_VERSION = '2.5.0';
+const APP_VERSION = '2.6.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', DEBTS_KEY = 'sweldo_pulse_debts_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -1300,7 +1386,7 @@ let settings = {
   last: { start: '16:00', end: '22:00', brk: 0 },
   cutoffData: {}, customPresets: [], vaults: [], bills: [], incomeScope: 'all',
   autoDownloadUpd: true, updWifiOnly: true, autoBackup: true, lastAutoBk: 0,
-  dueNotifEnabled: true, dueNotifTime: '09:00', planNudgeEnabled: true, maskWidgetWhenLocked: true
+  dueNotifEnabled: true, dueNotifTime: '09:00', planNudgeEnabled: true, maskWidgetWhenLocked: true, allowScreenshots: false
 };
 let selKey = '', periodKeys = [], curView = 'home';
 const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '', budTab: 'overview', dueF: 'all', insTab: 'overview', insYear: new Date().getFullYear(), insMonth: new Date().getMonth() };
@@ -1364,7 +1450,10 @@ function normalizeGigs(arr) {
   if (!Array.isArray(arr)) return [];
   const seen = new Set();
   return arr.filter(g => g && /^\d{4}-\d{2}-\d{2}$/.test(g.date) && isFinite(g.amount)).map(g => ({
-    id: uniqueIdOf(g.id, seen), date: g.date, stream: String(g.stream || 'Side Gig').trim() || 'Side Gig',
+    id: uniqueIdOf(g.id, seen), date: g.date,
+    startTime: /^\d{2}:\d{2}$/.test(g.startTime || '') ? g.startTime : '',
+    endTime: /^\d{2}:\d{2}$/.test(g.endTime || '') ? g.endTime : '',
+    stream: String(g.stream || 'Side Gig').trim() || 'Side Gig',
     title: String(g.title || '').trim(), amount: r2(Math.max(0, +g.amount || 0)), status: g.status === 'pending' ? 'pending' : 'paid'
   }));
 }
@@ -1527,12 +1616,69 @@ const HOL_YEAR = {
   2027: { '02-06': ['Chinese New Year', 1.3], '03-10': ["Eid'l Fitr", 2], '03-25': ['Maundy Thursday', 2], '03-26': ['Good Friday', 2], '03-27': ['Black Saturday', 1.3], '05-17': ["Eid'l Adha", 2], '11-02': ["All Souls' Day", 1.3], '12-24': ['Christmas Eve', 1.3] },
   2028: { '01-26': ['Chinese New Year', 1.3], '02-27': ["Eid'l Fitr", 2], '04-13': ['Maundy Thursday', 2], '04-14': ['Good Friday', 2], '04-15': ['Black Saturday', 1.3], '05-05': ["Eid'l Adha", 2], '11-02': ["All Souls' Day", 1.3], '12-24': ['Christmas Eve', 1.3] }
 };
-function holidayFor(ds) {
+function baseHolidayFor(ds) {
+  if (!ds || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return null;
   const y = +ds.slice(0, 4), md = ds.slice(5), d = pd(ds);
   const h = (HOL_YEAR[y] && HOL_YEAR[y][md]) || HOL_FIXED[md];
-  if (h) return { name: h[0], mult: h[1] };
-  if (d.getMonth() === 7 && d.getDay() === 1 && d.getDate() + 7 > 31) return { name: 'National Heroes Day', mult: 2 }; // last Monday of August
+  if (h) return { name: h[0], mult: h[1], kind: h[1] >= 2 ? 'regular' : 'special' };
+  if (d.getMonth() === 7 && d.getDay() === 1 && d.getDate() + 7 > 31) return { name: 'National Heroes Day', mult: 2, kind: 'regular' };
   return null;
+}
+function holidayFor(ds) {
+  const cur = baseHolidayFor(ds);
+  if (cur) return cur;
+  // Day before any Regular Holiday (2.0x) is auto-detected as 1.30x (required pre-holiday duty)
+  if (!ds || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return null;
+  const nextDs = dstr(addDays(pd(ds), 1));
+  const nextHol = baseHolidayFor(nextDs);
+  if (nextHol && nextHol.mult >= 2) {
+    return { name: `Day before ${nextHol.name}`, mult: 1.3, kind: 'preholiday', holidayName: nextHol.name };
+  }
+  return null;
+}
+function holidayBadgeText(h) {
+  if (!h) return '';
+  if (h.kind === 'regular' || h.mult >= 2) return `${h.name} · Regular holiday (2×)`;
+  if (h.kind === 'preholiday') return `${h.name} · Pre-holiday duty (1.3×)`;
+  return `${h.name} · Special non-working holiday (1.3×)`;
+}
+function unappliedHolidayShifts(key) {
+  return shiftsIn(key).filter(s => {
+    if (!isShiftActive(s)) return false;
+    const h = holidayFor(s.date);
+    return !!(h && s.multiplier < h.mult - 0.005);
+  });
+}
+function updateHolidayFixBanners() {
+  const miss = unappliedHolidayShifts(selKey);
+  const show = miss.length > 0;
+  const names = [...new Set(miss.map(s => (holidayFor(s.date) || {}).name).filter(Boolean))].slice(0, 2).join(', ');
+  const t = `${miss.length} shift${miss.length > 1 ? 's' : ''} missing holiday rate`;
+  const sub = `${names}${miss.length > 2 ? ' & more' : ''} — tap to apply 1.3× / 2×`;
+  [['hol-fix-shifts', 'hf-s-t', 'hf-s-s'], ['hol-fix-payslip', 'hf-p-t', 'hf-p-s']].forEach(([barId, tId, sId]) => {
+    const bar = $(barId); if (!bar) return;
+    bar.classList.toggle('hidden', !show);
+    if (show) { setText($(tId), t); setText($(sId), sub); }
+  });
+}
+function fixCutoffHolidays() {
+  const miss = unappliedHolidayShifts(selKey);
+  if (!miss.length) return toast('All holiday shifts are already updated');
+  const prev = miss.map(s => ({ id: s.id, mult: s.multiplier, date: s.date }));
+  const days = new Set();
+  miss.forEach(s => {
+    const h = holidayFor(s.date);
+    if (h) { s.multiplier = h.mult; days.add(s.date); }
+  });
+  days.forEach(ds => { recalcDay(ds); unlockCutoffSnapshot(periodOf(ds).key, true); });
+  persistSettings(); persistShifts(); render();
+  toast(`Updated ${miss.length} holiday shift${miss.length > 1 ? 's' : ''} ✓`, {
+    label: 'Undo',
+    fn: () => {
+      prev.forEach(p => { const s = shifts.find(x => x.id === p.id); if (s) s.multiplier = p.mult; });
+      days.forEach(recalcDay); persistShifts(); render(); toast('Holiday update undone');
+    }
+  });
 }
 
 /* ================= pay engine ================= */
@@ -1783,7 +1929,7 @@ function setAmt(val) {
 }
 function toggleHide() {
   settings.hide = !settings.hide; persistSettings(); shownAmt = 0;
-  const ic = $('eye-ic'); ic.classList.remove('blink'); void ic.getBoundingClientRect(); ic.classList.add('blink'); setTimeout(() => ic.classList.remove('blink'), 360);
+  ['eye-ic', 'eye-ic-gig'].forEach(id => { const ic = $(id); if (!ic) return; ic.classList.remove('blink'); void ic.getBoundingClientRect(); ic.classList.add('blink'); setTimeout(() => ic.classList.remove('blink'), 360); });
   render();
 }
 function shiftLabel(s) { return s.note || (s.multiplier >= 2 ? 'Holiday shift' : s.multiplier > 1 ? 'Special day shift' : 'Shift'); }
@@ -1802,10 +1948,10 @@ function shiftRow(s, del) {
   <span class="amt num">${st === 'cancelled' ? '₱0.00' : peso(s.gross)}</span>${del ? `<button type="button" class="trash" onclick="event.stopPropagation();deleteShift(${s.id})" aria-label="Delete shift"><svg class="ic sm"><use href="#i-trash"/></svg></button>` : ''}</div>`;
 }
 function gigRow(g, del) {
-  const d = pd(g.date), b = [`<span class="dot-b gg">${esc(g.stream)}</span>`];
+  const d = pd(g.date), range = g.startTime && g.endTime ? `<span>${t12(g.startTime)} – ${t12(g.endTime)}</span>` : '', b = [`<span class="dot-b gg">${esc(g.stream)}</span>`];
   if (g.status === 'pending') b.push('<span class="dot-b sc">Pending</span>');
   return `<div class="shift press" role="button" tabindex="0" onclick="openGig(${g.id})"><div class="tag gig"><b>${d.getDate()}</b><small>${DOW[d.getDay()]}</small></div>
-  <div class="grow"><p class="t">${esc(g.title || g.stream)}</p><p class="s num">${b.join('')}</p></div>
+  <div class="grow"><p class="t">${esc(g.title || g.stream)}</p><p class="s num">${range}${b.join('')}</p></div>
   <span class="amt num pos-ok">+${peso(g.amount)}</span>${del ? `<button type="button" class="trash" onclick="event.stopPropagation();deleteGig(${g.id})" aria-label="Delete side gig"><svg class="ic sm"><use href="#i-trash"/></svg></button>` : ''}</div>`;
 }
 const sortShifts = (a, b) => b.date.localeCompare(a.date) || (b.startTime || '').localeCompare(a.startTime || '') || b.id - a.id;
@@ -1828,33 +1974,54 @@ function renderSpark(P, list, ti, W) {
   el.setAttribute('viewBox', `0 0 ${W} ${H}`); el.innerHTML = html;
   el.classList.remove('in'); void el.getBoundingClientRect(); requestAnimationFrame(() => el.classList.add('in'));
 }
-const activeNetOf = D => (settings.incomeScope === 'all' && gigs.length > 0) ? D.netAll : D.net;
-function toggleIncomeScope() {
-  settings.incomeScope = settings.incomeScope === 'all' ? 'payroll' : 'all';
-  persistSettings(); render();
-  toast(settings.incomeScope === 'all' ? 'Showing Payroll + Side gigs' : 'Showing Main payroll only');
+const activeNetOf = D => D.netAll;
+let _walletIdx = 0;
+function slideWallet(idx) {
+  const c = $('wallet-carousel'); if (!c) return;
+  _walletIdx = idx ? 1 : 0;
+  c.scrollTo({ left: _walletIdx * (c.clientWidth + 10), behavior: 'smooth' });
+  $$('#wallet-dots .w-dot').forEach(b => b.classList.toggle('on', +b.dataset.wi === _walletIdx));
+}
+function onWalletScroll() {
+  const c = $('wallet-carousel'); if (!c || !c.clientWidth) return;
+  const idx = c.scrollLeft > c.clientWidth * 0.45 ? 1 : 0;
+  if (idx !== _walletIdx) {
+    _walletIdx = idx;
+    $$('#wallet-dots .w-dot').forEach(b => b.classList.toggle('on', +b.dataset.wi === _walletIdx));
+  }
+}
+function openGigsFromCard() {
+  const D = periodData(selKey);
+  if (!D.gList.length) { openGig(); return; }
+  go('shifts');
+  setFilter('gigs');
+}
+function setGigAmt(val) {
+  const box = $('hero-gig-amt'), I = $('gamt-int'), De = $('gamt-dec');
+  if (!box || !I || !De) return;
+  box.classList.toggle('mask', !!settings.hide);
+  if (settings.hide) { I.textContent = '••••••'; De.textContent = ''; return; }
+  const s = nf.format(val), i = s.lastIndexOf('.');
+  I.textContent = s.slice(0, i); De.textContent = s.slice(i);
 }
 function syncWidget() {
   if (!window.AndroidBridge) return;
   try {
     const cur = curPeriod(), D = periodData(cur.key), td = today();
     const left = Math.max(0, dayNum(cur.endStr) - dayNum(td));
-    const allMode = settings.incomeScope === 'all' && gigs.length > 0;
-    const dispNet = allMode ? D.netAll : D.net;
-    const dispGross = allMode ? r2(D.grossAll + D.gigPaid) : D.grossAll;
-    const netText = money(dispNet);
+    const netText = money(D.net);
     const badgeText = `${cur.badge} · ${left === 0 ? 'ends today' : left + 'd left'}`;
-    const gigPart = (allMode && D.gigPaid > 0 && !settings.hide) ? ` · +${peso(D.gigPaid)} gigs` : '';
+    const gigPart = (D.gigPaid > 0 && !settings.hide) ? ` · +${peso(D.gigPaid)} gigs` : '';
     const metaText = `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n === 1 ? '' : 's'}${gigPart}`;
     const goal = +settings.goal || 0;
     let extra = '';
     if (goal > 0) {
-      const pc = Math.min(100, Math.round(dispNet / goal * 100));
-      extra = settings.hide ? `Goal ${pc}%` : (pc >= 100 ? 'Pay goal reached ✓' : `Goal ${pc}% · ${peso(Math.max(0, goal - dispNet))} left`);
+      const pc = Math.min(100, Math.round(D.net / goal * 100));
+      extra = settings.hide ? `Goal ${pc}%` : (pc >= 100 ? 'Pay goal reached ✓' : `Goal ${pc}% · ${peso(Math.max(0, goal - D.net))} left`);
     } else {
       const exList = expensesIn(cur.key);
       const sp = r2(exList.reduce((a, e) => a + e.amount, 0));
-      if (sp > 0) extra = settings.hide ? `${exList.length} expenses logged` : `Spent ${peso(sp)} · ${peso(r2(dispNet - sp))} left`;
+      if (sp > 0) extra = settings.hide ? `${exList.length} expenses logged` : `Spent ${peso(sp)} · ${peso(r2(D.netAll - sp))} left`;
     }
     const dark = isDark(), theme = settings.themeMode === 'amoled' ? 'amoled' : (dark ? 'dark' : 'light');
     const P = ACCENTS[settings.accentTheme] || ACCENTS.indigo;
@@ -1862,7 +2029,7 @@ function syncWidget() {
     const accentText = dark ? P.td : P.tl;
     const exListCur = expensesIn(cur.key);
     const spCur = r2(exListCur.reduce((a, e) => a + e.amount, 0));
-    const remBudget = money(r2(dispNet - spCur));
+    const remBudget = money(r2(D.netAll - spCur));
     const nextDue = getNextUpcomingDue();
     const dueTitle = nextDue ? nextDue.badge : 'Next due';
     const dueLine = nextDue ? `${nextDue.name} · ${peso(nextDue.amount)}` : 'No upcoming PayLater or bills';
@@ -1871,7 +2038,7 @@ function syncWidget() {
     if (typeof AndroidBridge.updateWidgetV2 === 'function') {
       AndroidBridge.updateWidgetV2(JSON.stringify({
         net: netText, badge: badgeText, meta: metaText, period: cur.label,
-        gross: money(dispGross), ded: settings.hide ? MASK : '−' + peso(D.d.total),
+        gross: money(D.grossAll), ded: settings.hide ? MASK : '−' + peso(D.d.total),
         extra, remBudget, dueTitle, dueLine, dueUrgent, appHide: !!settings.hide, pinLocked,
         theme, accent, accentText
       }));
@@ -1883,27 +2050,16 @@ function syncWidget() {
 function openGoalSettings() { go('settings'); setTimeout(() => { const el = $('set-goal'); if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.focus(); } }, 220); }
 function renderHome() {
   const P = periodFromKey(selKey), D = periodData(selKey), cur = curPeriod(), isCur = P.key === cur.key, isPast = P.sort < cur.sort, td = today();
-  const allMode = settings.incomeScope === 'all' && gigs.length > 0;
-  const dispNet = allMode ? D.netAll : D.net;
-  const scBtn = $('w-scope-btn');
-  if (scBtn) {
-    scBtn.classList.toggle('hidden', !gigs.length);
-    scBtn.classList.toggle('all', allMode);
-    setText(scBtn, allMode ? 'All income' : 'Payroll');
-  }
+  // Slide 0: Main Payroll Net Pay
   setText($('w-label'), P.badge + (isCur ? '' : (isPast ? ' · past' : ' · upcoming')));
   $('w-live').style.display = isCur ? '' : 'none';
-  setAmt(dispNet);
-  // sub line: payday + planned + side gigs
+  setAmt(D.net);
   const planned = D.list.filter(s => shiftStatusOf(s) === 'scheduled'), planSum = planned.reduce((a, s) => a + s.gross, 0), lag = Math.max(0, +settings.payLag || 0), parts = [];
   if (lag > 0) { const pdte = addDays(P.end, lag), diff = dayNum(dstr(pdte)) - dayNum(td); parts.push(`Payday ${MON[pdte.getMonth()]} ${pdte.getDate()}${diff >= 0 && diff <= 14 ? (diff === 0 ? ' · today' : ` · in ${diff}d`) : ''}`); }
   if (planSum > 0) parts.push(settings.hide ? `${planned.length} planned` : `${peso(planSum)} planned`);
-  if (allMode && D.gigPaid > 0) parts.push(settings.hide ? '+ side gigs' : `+${peso(D.gigPaid)} gigs`);
-  setText($('w-sub'), parts.join(' · ') || (D.t.n || D.gList.length ? '' : 'No shifts in this cutoff yet'));
-  // strip
-  const stripGross = allMode ? r2(D.grossAll + D.gigPaid) : D.grossAll;
-  setText($('ws-g'), money(stripGross)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n > 1 ? 's' : ''}` : '0h');
-  // ring: cutoff progress
+  if (D.gigPaid > 0) parts.push('Swipe left for side gigs');
+  setText($('w-sub'), parts.join(' · ') || (D.t.n ? '' : 'No shifts in this cutoff yet'));
+  setText($('ws-g'), money(D.grossAll)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n > 1 ? 's' : ''}` : '0h');
   const left = dayNum(P.endStr) - dayNum(td), total = dayNum(P.endStr) - dayNum(P.startStr) + 1;
   let f, n, u;
   if (isCur) { f = Math.min(1, (dayNum(td) - dayNum(P.startStr) + 1) / total); n = left === 0 ? '0' : String(left); u = left === 1 ? 'day' : 'days'; }
@@ -1911,15 +2067,14 @@ function renderHome() {
   else { const st = dayNum(P.startStr) - dayNum(td); f = 0; n = String(st); u = 'to start'; }
   setText($('ring-n'), n); setText($('ring-u'), u); $('ring-pg').style.strokeDashoffset = String(100.5 * (1 - f));
   $('ring').title = isCur ? `Cutoff ends ${MON[P.end.getMonth()]} ${P.end.getDate()}` : 'Cutoff status';
-  // goal (smart planner: shows peso left + estimated shifts needed)
   const goal = +settings.goal || 0; $('w-goal').classList.toggle('hidden', !(goal > 0));
   if (goal > 0) {
-    const pc = Math.min(100, Math.round(dispNet / goal * 100));
+    const pc = Math.min(100, Math.round(D.net / goal * 100));
     let gLabel = 'Goal';
     if (!settings.hide) {
       if (pc >= 100) gLabel = 'Goal reached ✓';
       else {
-        const rem = r2(goal - dispNet);
+        const rem = r2(goal - D.net);
         const avgShift = D.t.n > 0 ? (D.t.gross / D.t.n) : (settings.hourlyRate * 6);
         const needSh = avgShift > 0 ? Math.max(0.5, Math.round((rem / avgShift) * 10) / 10) : 0;
         gLabel = `Goal ${pc}% · ${peso(rem)} left${needSh ? ` (~${needSh} sh)` : ''}`;
@@ -1927,11 +2082,33 @@ function renderHome() {
     }
     setText($('g-txt'), gLabel); $('g-fill').style.transform = `scaleX(${pc / 100})`;
   }
-  // spark
   const W = Math.max(200, Math.min(document.documentElement.clientWidth || 360, innerWidth >= 600 ? 560 : 520) - (innerWidth >= 600 ? 76 : 60)), ti = isCur ? dayRange(P).indexOf(td) : (isPast ? dayRange(P).length - 1 : -1);
   renderSpark(P, D.list.filter(isShiftActive), ti, W);
-  // recent shifts + side gigs combined
-  const recItems = [...D.list.map(s => ({ k: 's', date: s.date, id: s.id, st: s.startTime || '', o: s })), ...(allMode ? D.gList.map(g => ({ k: 'g', date: g.date, id: g.id, st: '23:59', o: g })) : [])]
+
+  // Slide 1: Dedicated Side Gigs Earnings Card
+  setText($('wg-label'), `Side gigs · ${P.badge}`);
+  setGigAmt(D.gigPaid);
+  const gCnt = D.gList.length;
+  setText($('gig-ring-n'), String(gCnt)); setText($('gig-ring-u'), gCnt === 1 ? 'gig' : 'gigs');
+  const paidRatio = D.gigTotal > 0 ? Math.min(1, D.gigPaid / D.gigTotal) : 0;
+  if ($('gig-ring-pg')) $('gig-ring-pg').style.strokeDashoffset = String(100.5 * (1 - paidRatio));
+  const byStream = new Map();
+  D.gList.forEach(g => { byStream.set(g.stream, (byStream.get(g.stream) || 0) + g.amount); });
+  const topStream = [...byStream.entries()].sort((a, b) => b[1] - a[1])[0];
+  const gSubParts = [];
+  if (topStream) gSubParts.push(`Top: ${topStream[0]}`);
+  if (D.gigPending > 0) gSubParts.push(settings.hide ? 'pending payouts' : `${peso(D.gigPending)} pending`);
+  setText($('wg-sub'), gSubParts.join(' · ') || 'No side gigs logged in this cutoff yet');
+  const pPct = D.gigTotal > 0 ? Math.round(D.gigPaid / D.gigTotal * 100) : 0;
+  const pePct = D.gigTotal > 0 ? Math.max(0, 100 - pPct) : 0;
+  if ($('wg-bar-paid')) $('wg-bar-paid').style.width = pPct + '%';
+  if ($('wg-bar-pend')) $('wg-bar-pend').style.width = pePct + '%';
+  setText($('wg-total-line'), `Total earnings for budget: ${money(D.netAll)}`);
+  setText($('wgs-paid'), money(D.gigPaid)); setText($('wgs-pend'), money(D.gigPending)); setText($('wgs-tot'), money(D.gigTotal));
+  setText($('wd-gig-cnt'), gCnt > 0 ? `(${gCnt})` : '');
+
+  // Recent activity (shifts + side gigs)
+  const recItems = [...D.list.map(s => ({ k: 's', date: s.date, id: s.id, st: s.startTime || '', o: s })), ...D.gList.map(g => ({ k: 'g', date: g.date, id: g.id, st: g.startTime || '23:59', o: g }))]
     .sort((a, b) => b.date.localeCompare(a.date) || b.st.localeCompare(a.st) || b.id - a.id);
   const rec = recItems.slice(0, 3);
   setText($('recent-h'), recItems.length > 3 ? `Latest of ${recItems.length} entries` : 'Activity this cutoff');
@@ -1939,7 +2116,7 @@ function renderHome() {
   const lb = +localStorage.getItem(BK_KEY) || 0, nag = $('backup-nag'), need = shifts.length && (!lb || Date.now() - lb > 14 * 864e5);
   nag.classList.toggle('hidden', !need); if (need) setText(nag, `⚠ ${lb ? 'Last backup was over 2 weeks ago' : 'You have no backup yet'} — tap to back up`);
   renderCheckin();
-  renderBudget(dispNet);
+  renderBudget(D.netAll, D.net, D.gigPaid);
   renderTrend();
   syncWidget();
   syncDueAndPlanAlarms();
@@ -2243,7 +2420,7 @@ function payDebt(id) {
   const d = debts.find(x => x.id === id); if (!d || d.settled) return;
   applyDebtPayment(d, d.kind === 'paylater' ? d.amount : debtRemaining(d));
 }
-function renderBudget(net) {
+function renderBudget(net, payNet = net, gigNet = 0) {
   budNet = net;
   const n = +settings.budgetNeeds, w = +settings.budgetWants, s = +settings.budgetSavings, an = r2(net * n / 100), aw = r2(net * w / 100), as = r2(net * s / 100);
   const exList = expensesIn(selKey);
@@ -2258,7 +2435,12 @@ function renderBudget(net) {
     if (spTot > 0) setText(sl, settings.hide ? `${exList.length} expenses logged` : `Spent ${peso(spTot)} · ${leftAll >= 0 ? peso(leftAll) + ' remaining' : peso(Math.abs(leftAll)) + ' over net'}`);
   }
   let off = 0; [['dn', n], ['dw', w], ['ds', s]].forEach(([id, p]) => { const el = $(id), full = DONUT_C * p / 100, len = Math.max(0, full - (p > 0 && p < 100 ? 3 : 0)); el.style.strokeDasharray = `${len} ${DONUT_C - len}`; el.style.strokeDashoffset = String(-off); off += full; });
-  setText($('d-lbl'), spTot > 0 ? 'Remaining' : 'Net pay');
+  const btl = $('bc-tot-line');
+  if (btl) {
+    btl.classList.toggle('hidden', !(gigNet > 0));
+    if (gigNet > 0) setText(btl, settings.hide ? 'Total: Payroll + Side gigs' : `Total ${peso(net)} (Payroll ${peso(payNet)} + Gigs ${peso(gigNet)})`);
+  }
+  setText($('d-lbl'), spTot > 0 ? 'Remaining' : (gigNet > 0 ? 'Total earnings' : 'Net pay'));
   setText($('d-net'), money(spTot > 0 ? leftAll : net));
   setText($('bud-period2'), periodFromKey(selKey).label);
   const remN = r2(an - spN), remW = r2(aw - spW);
@@ -2272,8 +2454,8 @@ function renderBudget(net) {
   const ebn = $('eb-n'), ebw = $('eb-w');
   if (ebn) { ebn.style.transform = `scaleX(${rn.toFixed(3)})`; ebn.className = spN > an ? 'bad' : (rn > 0.85 ? 'warn' : 'needs'); }
   if (ebw) { ebw.style.transform = `scaleX(${rw.toFixed(3)})`; ebw.className = spW > aw ? 'bad' : (rw > 0.85 ? 'warn' : 'wants'); }
-  setText($('bud-net'), 'Net: ' + money(net));
-  setText($('bud-period'), (settings.incomeScope === 'all' && gigs.length ? 'All income · ' : 'Payroll · ') + periodFromKey(selKey).label);
+  setText($('bud-net'), (gigNet > 0 ? 'Total: ' : 'Net: ') + money(net));
+  setText($('bud-period'), gigNet > 0 ? (settings.hide ? `Total earnings · ${periodFromKey(selKey).label}` : `Payroll ${peso(payNet)} + Gigs ${peso(gigNet)} · ${periodFromKey(selKey).label}`) : `Payroll · ${periodFromKey(selKey).label}`);
   const actDues = debts.filter(d => !d.settled && d.kind !== 'owed');
   const duesBal = r2(actDues.reduce((a, d) => a + debtRemaining(d), 0));
   const vList = Array.isArray(settings.vaults) ? settings.vaults : [];
@@ -2510,6 +2692,7 @@ function renderCalendar() {
 }
 function renderShifts() {
   renderCalendar();
+  updateHolidayFixBanners();
   const searching = !!ui.q;
   const dayBar = $('cal-day-bar');
   if (dayBar) { dayBar.classList.toggle('hidden', !ui.calDay || searching); if (ui.calDay) setText($('cal-day-txt'), `Showing ${fmtDay(ui.calDay)}`); }
@@ -2547,6 +2730,7 @@ function renderShifts() {
   setHTML($('shift-list'), groups.map(g => `<div class="day-h"><span>${fmtDay(g.d)}</span><span class="num">${peso(g.l.filter(isShiftActive).reduce((a, s) => a + s.gross, 0))}</span></div>` + g.l.map(s => shiftRow(s, true)).join('')).join('') + (total > shown.length ? `<button type="button" class="btn ghost block press" onclick="moreShifts()">Show ${Math.min(60, total - shown.length)} more · ${total - shown.length} left</button>` : '') + gigHtml);
 }
 function renderPayslip() {
+  updateHolidayFixBanners();
   const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d;
   setText($('ps-badge'), P.badge);
   setText($('ps-hours'), `${fh(t.reg)} regular · ${fh(t.ndH)} night · ${fh(t.otH)} overtime`);
@@ -2695,6 +2879,8 @@ function setStatOpt() { settings.deductMode = $('stat-mode').value; settings.mwe
 function populateTimes() {
   let h = ''; for (let m = 0; m < 1440; m += 30) { const v = `${p2(Math.floor(m / 60))}:${p2(m % 60)}`; h += `<option value="${v}">${t12(v)}</option>`; }
   ['m-start', 'm-end', 'notif-time', 'due-notif-time', 'bk-start', 'bk-end'].forEach(id => { if ($(id)) $(id).innerHTML = h; });
+  const optH = '<option value="">Any time</option>' + h;
+  ['g-start', 'g-end'].forEach(id => { if ($(id)) $(id).innerHTML = optH; });
 }
 function ensureTimeOpt(sel, val) {
   if (!sel || !val || !/^\d{2}:\d{2}$/.test(val)) return;
@@ -2753,7 +2939,7 @@ function updatePreview() {
 }
 function onDateChange(keepMult) {
   const date = $('m-date').value || today(), h = holidayFor(date), box = $('m-holiday');
-  if (h) { box.textContent = `${h.name} · ${h.mult >= 2 ? 'Regular holiday (2×)' : 'Special day (1.3×)'}`; box.classList.remove('hidden'); if (!keepMult) $('m-mult').value = h.mult.toFixed(2); }
+  if (h) { box.textContent = holidayBadgeText(h); box.classList.remove('hidden'); if (!keepMult) $('m-mult').value = h.mult.toFixed(2); }
   else { box.classList.add('hidden'); if (!keepMult) $('m-mult').value = '1.00'; }
   if (!keepMult) setShiftStatus(date > today() ? 'scheduled' : 'worked');
   updatePreview();
@@ -2766,7 +2952,7 @@ function openShift(id = null) {
   $('m-del').classList.toggle('hidden', !s);
   $('g-del').classList.add('hidden'); $('g-save').textContent = 'Save side gig';
   const cur = curPeriod(), P = periodFromKey(selKey);
-  $('g-date').value = P.key === cur.key ? today() : P.endStr; $('g-amt').value = ''; $('g-title').value = ''; $('g-stream').value = ''; setGigStatus('paid');
+  $('g-date').value = P.key === cur.key ? today() : P.endStr; $('g-amt').value = ''; $('g-title').value = ''; $('g-stream').value = ''; if ($('g-start')) $('g-start').value = ''; if ($('g-end')) $('g-end').value = ''; setGigStatus('paid');
   $('m-rate-box').classList.add('hidden');
   if (s) {
     $('m-date').value = s.date; ensureTimeOpt($('m-start'), s.startTime || '16:00'); ensureTimeOpt($('m-end'), s.endTime || '22:00');
@@ -2788,6 +2974,8 @@ function openGig(id = null) {
   $('g-amt').value = g ? g.amount : '';
   $('g-stream').value = g ? g.stream : '';
   $('g-title').value = g ? g.title : '';
+  if ($('g-start')) { if (g && g.startTime) ensureTimeOpt($('g-start'), g.startTime); else $('g-start').value = ''; }
+  if ($('g-end')) { if (g && g.endTime) ensureTimeOpt($('g-end'), g.endTime); else $('g-end').value = ''; }
   setGigStatus(g ? g.status : 'paid');
   setLogKind('gig'); openSheet('shift-sheet');
 }
@@ -2805,19 +2993,61 @@ function renderGigStreams() {
   syncGigChips();
 }
 function syncGigChips() { const v = ($('g-stream').value || '').trim().toLowerCase(); $$('#g-streams .schip').forEach(b => b.classList.toggle('on', b.dataset.gsChip === v)); }
-function saveGig() {
+function saveGig(forceAllowUntimed = false) {
   const amt = r2(Math.max(0, parseFloat($('g-amt').value) || 0));
   if (!(amt > 0)) return toast('Enter an amount earned');
   const date = $('g-date').value || today(), stream = $('g-stream').value.trim() || 'Side Gig', title = $('g-title').value.trim(), status = modalGigStatus;
+  const startTime = ($('g-start') && $('g-start').value) || '', endTime = ($('g-end') && $('g-end').value) || '';
+  if ((startTime && !endTime) || (!startTime && endTime)) return toast('Pick both start and end times, or leave both as Any time');
+  if (startTime && endTime && startTime === endTime) return toast('Gig end time must differ from start time');
+
+  if (startTime && endTime) {
+    const ovSh = findOverlappingShifts(date, startTime, endTime, null);
+    const ovGg = findOverlappingGigs(date, startTime, endTime, editingGigId);
+    const conflicts = [...ovSh.map(s => ({ type: 'shift', o: s })), ...ovGg.map(g => ({ type: 'gig', o: g }))];
+    if (conflicts.length) {
+      openConflictSheet({
+        title: 'Overlapping schedule',
+        body: 'This side gig overlaps an existing duty or gig. Edit or delete the conflicting entry, or adjust your hours.',
+        items: conflicts,
+        canKeepBoth: false,
+        onReplace: () => {
+          deleteConflictItems(conflicts);
+          commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status });
+        }
+      });
+      return;
+    }
+  } else if (!forceAllowUntimed) {
+    const sameShifts = shifts.filter(s => s.date === date && isShiftActive(s));
+    if (sameShifts.length) {
+      const conflicts = sameShifts.map(s => ({ type: 'shift', o: s }));
+      openConflictSheet({
+        title: 'Duty & side gig on same day',
+        body: 'You already have a shift logged on this day. Add gig start/end times to check overlap automatically, or choose what to do below.',
+        items: conflicts,
+        canKeepBoth: true,
+        onReplace: () => {
+          deleteConflictItems(conflicts);
+          commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status });
+        },
+        onKeepBoth: () => commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status })
+      });
+      return;
+    }
+  }
+  commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status });
+}
+function commitSaveGig({ date, startTime, endTime, stream, title, amount, status }) {
   const wasEdit = editingGigId !== null;
   if (wasEdit) {
     const g = gigs.find(x => x.id === editingGigId);
-    if (g) Object.assign(g, { date, stream, title, amount: amt, status });
+    if (g) Object.assign(g, { date, startTime, endTime, stream, title, amount, status });
   } else {
-    gigs.push({ id: nextId(), date, stream, title, amount: amt, status });
+    gigs.push({ id: nextId(), date, startTime, endTime, stream, title, amount, status });
   }
   persistGigs(); selKey = periodOf(date).key; closeShift(); render();
-  toast(wasEdit ? 'Side gig updated' : `Added ${peso(amt)} (${stream})`);
+  toast(wasEdit ? 'Side gig updated' : `Added ${peso(amount)} (${stream})`);
 }
 async function deleteGig(id) {
   const g = gigs.find(x => x.id === id); if (!g) return;
@@ -2890,20 +3120,82 @@ function renderStationChips() {
 function syncStationHighlight() { const v = ($('m-note').value || '').trim().toLowerCase(); $$('#m-stations .schip').forEach(b => b.classList.toggle('on', b.dataset.st === v)); }
 function preset(a, b, label, brk, forceLabel) { $('m-start').value = a; $('m-end').value = b; if (forceLabel || !$('m-note').value) $('m-note').value = label || ''; syncStationHighlight(); setBreak(brk || 0); }
 function extendEnd(h) { const e = $('m-end'); const n = (tmin(e.value) + h * 60) % 1440; e.value = `${p2(Math.floor(n / 60))}:${p2(n % 60)}`; updatePreview(); toast(`End time +${h}h`); }
-function overlaps(v) {
-  if (modalStatus === 'cancelled') return null;
-  const base = dayNum(v.date) * 1440, a0 = base + tmin(v.start); let a1 = base + tmin(v.end); if (tmin(v.end) <= tmin(v.start)) a1 += 1440;
-  return shifts.find(s => { if (s.id === editingId || !isShiftActive(s) || !s.startTime || !s.endTime) return false; const b = dayNum(s.date) * 1440; const b0 = b + tmin(s.startTime); let b1 = b + tmin(s.endTime); if (tmin(s.endTime) <= tmin(s.startTime)) b1 += 1440; return a0 < b1 && b0 < a1; });
+function intervalOf(date, start, end) {
+  const base = dayNum(date) * 1440, a0 = base + tmin(start);
+  let a1 = base + tmin(end);
+  if (tmin(end) <= tmin(start)) a1 += 1440;
+  return [a0, a1];
 }
-async function saveShift() {
-  const v = readModal();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(v.date)) return toast('Choose a valid shift date');
-  if (!v.start || !v.end || !v.r) return toast('End time must differ from start time');
-  if (v.r.gross <= 0) return toast('Choose a valid time range');
-  if (modalStatus !== 'cancelled' && v.r.paid > 16 && !await askConfirm({ title: 'Very long shift', body: `This shift is <b>${fh(v.r.paid)}</b> of paid time. Is that right?`, ok: 'Yes, save it', danger: false })) return;
-  const ov = overlaps(v);
-  if (ov && !await askConfirm({ title: 'Overlapping shift', body: `This overlaps with <b>${esc(shiftLabel(ov))}</b> on ${fmtDay(ov.date)} (${t12(ov.startTime)} – ${t12(ov.endTime)}). Save anyway?`, ok: 'Save anyway', danger: false })) return;
-  const note = $('m-note').value.trim(); let old = null;
+function intervalsOverlap(a, b) { return a[0] < b[1] && b[0] < a[1]; }
+function findOverlappingShifts(date, start, end, excludeId) {
+  if (!date || !start || !end) return [];
+  const iv = intervalOf(date, start, end);
+  return shifts.filter(s => {
+    if (s.id === excludeId || !isShiftActive(s) || !s.startTime || !s.endTime) return false;
+    return intervalsOverlap(iv, intervalOf(s.date, s.startTime, s.endTime));
+  });
+}
+function findOverlappingGigs(date, start, end, excludeGigId) {
+  if (!date || !start || !end) return [];
+  const iv = intervalOf(date, start, end);
+  return gigs.filter(g => {
+    if (g.id === excludeGigId || !g.startTime || !g.endTime) return false;
+    return intervalsOverlap(iv, intervalOf(g.date, g.startTime, g.endTime));
+  });
+}
+let _conflictCtx = null;
+function openConflictSheet({ title, body, items, canKeepBoth = false, onReplace, onKeepBoth }) {
+  _conflictCtx = { items, onReplace, onKeepBoth };
+  setText($('cfl-title'), title);
+  setText($('cfl-body'), body);
+  $('cfl-keep-btn').classList.toggle('hidden', !canKeepBoth);
+  setText($('cfl-replace-btn'), items.length > 1 ? `Delete ${items.length} conflicting & save new` : 'Delete conflicting & save new');
+  setHTML($('cfl-list'), items.map((it, idx) => {
+    if (it.type === 'shift') {
+      const s = it.o;
+      return `<div class="conflict-item"><div class="grow" style="min-width:0"><p style="font-weight:700;font-size:13px">${esc(shiftLabel(s))}</p><p class="card-s num">${fmtDay(s.date)} · ${t12(s.startTime)}–${t12(s.endTime)} · ${peso(s.gross)}</p></div><button type="button" class="btn soft sm press" style="min-height:32px;padding:0 11px" onclick="conflictEditItem(${idx})">Edit</button></div>`;
+    }
+    const g = it.o;
+    const tr = g.startTime && g.endTime ? ` · ${t12(g.startTime)}–${t12(g.endTime)}` : ' · Any time';
+    return `<div class="conflict-item"><div class="grow" style="min-width:0"><p style="font-weight:700;font-size:13px">${esc(g.title || g.stream)} <span class="dot-b gg">Gig</span></p><p class="card-s num">${fmtDay(g.date)}${tr} · +${peso(g.amount)}</p></div><button type="button" class="btn soft sm press" style="min-height:32px;padding:0 11px" onclick="conflictEditItem(${idx})">Edit</button></div>`;
+  }).join(''));
+  openSheet('conflict-sheet');
+}
+function closeConflictSheet() { closeSheet('conflict-sheet'); _conflictCtx = null; }
+function conflictEditItem(idx) {
+  const it = _conflictCtx && _conflictCtx.items[idx];
+  closeConflictSheet();
+  if (!it) return;
+  if (it.type === 'shift') openShift(it.o.id);
+  else openGig(it.o.id);
+}
+function conflictReplace() {
+  const fn = _conflictCtx && _conflictCtx.onReplace;
+  closeConflictSheet();
+  if (fn) fn();
+}
+function conflictKeepBoth() {
+  const fn = _conflictCtx && _conflictCtx.onKeepBoth;
+  closeConflictSheet();
+  if (fn) fn();
+}
+function deleteConflictItems(items) {
+  const shiftIds = new Set(items.filter(x => x.type === 'shift').map(x => x.o.id));
+  const gigIds = new Set(items.filter(x => x.type === 'gig').map(x => x.o.id));
+  const days = new Set();
+  if (shiftIds.size) {
+    shifts.filter(s => shiftIds.has(s.id)).forEach(s => days.add(s.date));
+    shifts = shifts.filter(s => !shiftIds.has(s.id));
+    days.forEach(ds => { recalcDay(ds); unlockCutoffSnapshot(periodOf(ds).key, true); });
+    persistShifts();
+  }
+  if (gigIds.size) {
+    gigs = gigs.filter(g => !gigIds.has(g.id));
+    persistGigs();
+  }
+}
+function commitSaveShift(v, note) {
+  let old = null;
   if (editingId !== null) {
     const s = shifts.find(x => x.id === editingId);
     if (s) { old = s.date; Object.assign(s, { date: v.date, startTime: v.start, endTime: v.end, note, hourlyRate: v.rate, multiplier: v.mult, breakMin: v.brk, status: modalStatus }); }
@@ -2914,6 +3206,45 @@ async function saveShift() {
   settings.last = { start: v.start, end: v.end, brk: v.brk }; persistSettings(); persistShifts();
   selKey = P.key; const wasEdit = editingId !== null;
   closeShift(); render(); toast((wasEdit ? `Updated in ${P.label}` : `Added to ${P.label}`) + (unlockedEdited ? ' · cutoff unlocked' : ''));
+}
+async function saveShift(forceAllowUntimedGig = false) {
+  const v = readModal();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v.date)) return toast('Choose a valid shift date');
+  if (!v.start || !v.end || !v.r) return toast('End time must differ from start time');
+  if (v.r.gross <= 0) return toast('Choose a valid time range');
+  if (modalStatus !== 'cancelled' && v.r.paid > 16 && !await askConfirm({ title: 'Very long shift', body: `This shift is <b>${fh(v.r.paid)}</b> of paid time. Is that right?`, ok: 'Yes, save it', danger: false })) return;
+  const note = $('m-note').value.trim();
+  if (modalStatus !== 'cancelled') {
+    const ovSh = findOverlappingShifts(v.date, v.start, v.end, editingId);
+    const ovGg = findOverlappingGigs(v.date, v.start, v.end, null);
+    const hardConflicts = [...ovSh.map(s => ({ type: 'shift', o: s })), ...ovGg.map(g => ({ type: 'gig', o: g }))];
+    if (hardConflicts.length) {
+      openConflictSheet({
+        title: 'Duplicate or overlapping hours',
+        body: 'Overlapping duty hours are not allowed. Update/edit the conflicting shift below or delete it to save this one.',
+        items: hardConflicts,
+        canKeepBoth: false,
+        onReplace: () => { deleteConflictItems(hardConflicts); commitSaveShift(v, note); }
+      });
+      return;
+    }
+    if (!forceAllowUntimedGig) {
+      const untimedGigs = gigs.filter(g => g.date === v.date && (!g.startTime || !g.endTime));
+      if (untimedGigs.length) {
+        const items = untimedGigs.map(g => ({ type: 'gig', o: g }));
+        openConflictSheet({
+          title: 'Side gig on the same day',
+          body: 'You have an untimed side gig on this day. Choose whether to edit/delete it or keep both if the hours do not overlap.',
+          items,
+          canKeepBoth: true,
+          onReplace: () => { deleteConflictItems(items); commitSaveShift(v, note); },
+          onKeepBoth: () => commitSaveShift(v, note)
+        });
+        return;
+      }
+    }
+  }
+  commitSaveShift(v, note);
 }
 /* ================= weekly roster bulk logger ================= */
 let bulkMon = null, bulkSel = new Set(), bulkBrk = 0, _bkPresetItems = [];
@@ -2968,14 +3299,14 @@ function saveBulkShifts() {
   if (!days.length || st === en) return;
   let added = 0, skipped = 0;
   days.forEach((ds, idx) => {
-    if (shifts.some(s => s.date === ds && s.startTime === st && s.endTime === en && isShiftActive(s))) { skipped++; return; }
+    if (findOverlappingShifts(ds, st, en, null).length || findOverlappingGigs(ds, st, en, null).length) { skipped++; return; }
     const hol = holidayFor(ds);
     shifts.push({ id: nextId(), date: ds, startTime: st, endTime: en, note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: hol ? hol.mult : 1, gross: 0, breakMin: bulkBrk, status: ds > td ? 'scheduled' : 'worked' });
-    recalcDay(ds); added++;
+    recalcDay(ds); unlockCutoffSnapshot(periodOf(ds).key, true); added++;
   });
   if (added) { settings.last = { start: st, end: en, brk: bulkBrk }; persistSettings(); persistShifts(); selKey = periodOf(days[days.length - 1]).key; }
   closeSheet('bulk-sheet'); render();
-  toast(added ? `Added ${added} shift${added > 1 ? 's' : ''}${skipped ? ` · ${skipped} skipped` : ''}` : 'Those shifts are already logged');
+  toast(added ? `Added ${added} shift${added > 1 ? 's' : ''}${skipped ? ` · ${skipped} skipped (overlap)` : ''}` : 'Skipped — overlapping shift already logged');
 }
 /* ================= yearly insights & statutory ledger ================= */
 let _insCache = null;
@@ -3189,17 +3520,18 @@ function inferYearForMonth(mon1to12) {
 function parseDateStrict(line) {
   let m = line.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (m && +m[2] >= 1 && +m[2] <= 12 && +m[3] >= 1 && +m[3] <= 31) return `${m[1]}-${p2(m[2])}-${p2(m[3])}`;
-  m = line.match(new RegExp(`\\b(${MON_RE_STR})\\.?\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?\\b`, 'i'));
-  if (m && +m[2] >= 1 && +m[2] <= 31) {
-    const mo = MM_MAP[m[1].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[1].toLowerCase().slice(0, 3)];
-    return `${m[3] || inferYearForMonth(mo)}-${p2(mo)}-${p2(m[2])}`;
-  }
-  m = line.match(new RegExp(`\\b(\\d{1,2})\\s+(${MON_RE_STR})\\.?(?:,?\\s*(\\d{4}))?\\b`, 'i'));
+  // Check Day-Month first (e.g. "30-Nov 4-10pm", "30 Nov 4-10pm") so Month-Day never steals the shift start hour
+  m = line.match(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?(?:\\s+|-|\\/)(${MON_RE_STR})\\.?(?:,?\\s*(\\d{4}))?\\b`, 'i'));
   if (m && +m[1] >= 1 && +m[1] <= 31) {
     const mo = MM_MAP[m[2].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[2].toLowerCase().slice(0, 3)];
     return `${m[3] || inferYearForMonth(mo)}-${p2(mo)}-${p2(m[1])}`;
   }
-  m = line.match(/(?:^|\s)(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=\s|$|[-|:])/);
+  m = line.match(new RegExp(`\\b(${MON_RE_STR})(?:\\.?\\s*|-|\\/)(\\d{1,2})(?:st|nd|rd|th)?(?!(?:\\s*(?:am|pm|mn|nn)|:|[-–—]\\s*\\d))(?:,?\\s*(\\d{4}))?\\b`, 'i'));
+  if (m && +m[2] >= 1 && +m[2] <= 31) {
+    const mo = MM_MAP[m[1].toLowerCase().slice(0, 4) === 'sept' ? 'sept' : m[1].toLowerCase().slice(0, 3)];
+    return `${m[3] || inferYearForMonth(mo)}-${p2(mo)}-${p2(m[2])}`;
+  }
+  m = line.match(/(?:^|[\s(\[])(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=[\s)\],|:;-]|$)/);
   if (m && +m[1] >= 1 && +m[1] <= 12 && +m[2] >= 1 && +m[2] <= 31) {
     let y = m[3] ? String(m[3]) : String(inferYearForMonth(+m[1])); if (y.length === 2) y = '20' + y;
     return `${y}-${p2(m[1])}-${p2(m[2])}`;
@@ -3209,9 +3541,9 @@ function parseDateStrict(line) {
 function stripDateFromLine(line) {
   return line
     .replace(/\d{4}-\d{1,2}-\d{1,2}/, ' ')
-    .replace(new RegExp(`\\b${MON_RE_STR}\\.?\\s+\\d{1,2}(?:,?\\s*\\d{4})?\\b`, 'i'), ' ')
-    .replace(new RegExp(`\\b\\d{1,2}\\s+${MON_RE_STR}\\.?(?:,?\\s*\\d{4})?\\b`, 'i'), ' ')
-    .replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/, ' ');
+    .replace(new RegExp(`\\b\\d{1,2}(?:st|nd|rd|th)?(?:\\s+|-|\\/)${MON_RE_STR}\\.?(?:,?\\s*\\d{4})?\\b`, 'i'), ' ')
+    .replace(new RegExp(`\\b${MON_RE_STR}(?:\\.?\\s*|-|\\/)\\d{1,2}(?:st|nd|rd|th)?(?!(?:\\s*(?:am|pm|mn|nn)|:|[-–—]\\s*\\d))(?:,?\\s*\\d{4})?\\b`, 'i'), ' ')
+    .replace(/(?:^|[\s(\[])\d{1,2}\/\d{1,2}(?:\/\d{2,4})?(?=[\s)\],|:;-]|$)/, ' ');
 }
 function isOffLine(s) {
   return /^(?:day\s*off|rest\s*day|off|rd|vl|sl|leave|no\s*duty|no\s*shift|none|[-–—]+)$/i.test(s.trim());
@@ -3295,14 +3627,18 @@ function parseScheduleText(raw) {
       seenKeys.add(sig);
       const hol = holidayFor(date), mult = hol ? hol.mult : 1;
       const r = calcPay({ start: tr.start, end: tr.end, mult, rate: settings.hourlyRate, brk, prior: 0 });
-      const dup = shifts.some(s => s.date === date && s.startTime === tr.start && s.endTime === tr.end && isShiftActive(s));
-      out.push({ date, start: tr.start, end: tr.end, note, labeled, mult, brk, dateGuessed, hol: hol ? hol.name : '', gross: r ? r.gross : 0, dup, checked: !dup });
+      const iv = intervalOf(date, tr.start, tr.end);
+      const ovExisting = findOverlappingShifts(date, tr.start, tr.end, null).length > 0 || findOverlappingGigs(date, tr.start, tr.end, null).length > 0;
+      const ovBatch = out.some(x => intervalsOverlap(iv, intervalOf(x.date, x.start, x.end)));
+      const dup = ovExisting || ovBatch;
+      out.push({ date, start: tr.start, end: tr.end, note, labeled, mult, brk, dateGuessed, hol: hol ? hol.name : '', holKind: hol ? hol.kind : '', gross: r ? r.gross : 0, dup, ovExisting, ovBatch, checked: !dup });
     });
   });
   if ($('io-wk-row')) $('io-wk-row').classList.toggle('hidden', !usedDow);
   return out;
 }
-function queueIoPreview() { clearTimeout(_ioPrevT); _ioPrevT = setTimeout(updateIoPreview, 130); }
+let _ioLastRaw = '';
+function queueIoPreview() { clearTimeout(_ioPrevT); _ioPrevT = setTimeout(updateIoPreview, 110); }
 function toggleIoRow(i, on) { if (_ioParsed[i]) { _ioParsed[i].checked = !!on; syncIoSummary(); } }
 function editIoNote(i, val) { if (_ioParsed[i]) { _ioParsed[i].note = val.trim(); } }
 function cycleIoBreak(i) {
@@ -3325,16 +3661,20 @@ function renderIoList() {
   if ($('io-guess-warn')) $('io-guess-warn').classList.toggle('hidden', !_ioParsed.some(x => x.dateGuessed));
   setHTML($('io-prev-list'), _ioParsed.map((o, i) => {
     const brkLbl = o.brk === 60 ? '1h brk' : (o.brk === 30 ? '30m brk' : '0m brk');
+    const holChip = o.hol ? `<span class="dot-b hl">${o.mult}× ${esc(o.hol)}</span>` : 'Regular';
+    const dupChip = o.ovExisting ? '<span class="dot-b cx">Overlaps saved shift</span>' : (o.ovBatch ? '<span class="dot-b cx">Overlaps row above</span>' : '');
     return `<div class="io-row${o.dup ? ' dup' : ''}">` +
       `<input type="checkbox"${o.checked ? ' checked' : ''} onchange="toggleIoRow(${i},this.checked)" aria-label="Select shift">` +
       `<div class="grow" style="min-width:0"><p style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtDay(o.date)} · ${t12(o.start)}–${t12(o.end)}</p>` +
-      `<p class="card-s" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${o.hol ? `${o.mult}× ${esc(o.hol)}` : 'Regular'}${o.dup ? ' · Already logged' : ''}${o.dateGuessed ? '<span class="dot-b ot">⚠ Date guessed</span>' : ''}</p>` +
+      `<p class="card-s" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${holChip}${dupChip}${o.dateGuessed ? '<span class="dot-b ot">⚠ Date guessed</span>' : ''}</p>` +
       `<div class="row" style="gap:6px;margin-top:4px"><input class="io-note-in grow" style="margin-top:0" value="${esc(o.note)}" placeholder="Station / note (optional)" oninput="editIoNote(${i},this.value)"><button type="button" class="io-brk-btn press${o.brk ? ' on' : ''}" onclick="cycleIoBreak(${i})" title="Tap to change unpaid break">${brkLbl}</button></div></div>` +
       `<b class="num">${peso(o.gross)}</b></div>`;
   }).join(''));
 }
 function updateIoPreview() {
+  clearTimeout(_ioPrevT);
   const raw = ($('io-text').value || '').trim();
+  _ioLastRaw = raw;
   const wrap = $('io-prev-wrap');
   if (!raw) { _ioParsed = []; wrap.classList.add('hidden'); if ($('io-wk-row')) $('io-wk-row').classList.add('hidden'); $('io-imp-btn').disabled = false; setText($('io-imp-btn'), 'Import shifts'); return; }
   _ioParsed = parseScheduleText(raw);
@@ -3343,21 +3683,52 @@ function updateIoPreview() {
   renderIoList();
   syncIoSummary();
 }
-function importText() {
-  const raw = $('io-text').value.trim(); if (!raw) return toast('Paste your schedule first');
-  if (!_ioParsed.length) _ioParsed = parseScheduleText(raw);
-  const picked = _ioParsed.filter(x => x.checked);
-  if (!picked.length) return toast(_ioParsed.length ? 'Select at least one shift to import' : 'No valid shifts found — try the standard template');
+function commitImportPicked(picked) {
   const td = today(), days = new Set();
   picked.forEach(o => {
-    shifts.push({ id: nextId(), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: o.mult, gross: 0, breakMin: o.brk || 0, status: o.date > td ? 'scheduled' : 'worked' });
+    const hol = holidayFor(o.date);
+    const mult = hol ? hol.mult : (o.mult || 1);
+    shifts.push({ id: nextId(), date: o.date, startTime: o.start, endTime: o.end, note: o.note, hourlyRate: settings.hourlyRate, reg: 0, nd: 0, ot: 0, multiplier: mult, gross: 0, breakMin: o.brk || 0, status: o.date > td ? 'scheduled' : 'worked' });
     days.add(o.date);
   });
   days.forEach(ds => { recalcDay(ds); unlockCutoffSnapshot(periodOf(ds).key, true); });
   selKey = periodOf([...days].sort().pop()).key;
-  $('io-text').value = ''; _ioParsed = []; $('io-prev-wrap').classList.add('hidden'); if ($('io-wk-row')) $('io-wk-row').classList.add('hidden');
+  $('io-text').value = ''; _ioParsed = []; _ioLastRaw = ''; $('io-prev-wrap').classList.add('hidden'); if ($('io-wk-row')) $('io-wk-row').classList.add('hidden');
   persistSettings(); persistShifts(); render(); closeSheet('io-sheet');
   toast(`Imported ${picked.length} shift${picked.length > 1 ? 's' : ''}`);
+}
+function importText() {
+  clearTimeout(_ioPrevT);
+  const raw = $('io-text').value.trim(); if (!raw) return toast('Paste your schedule first');
+  if (!_ioParsed.length || _ioLastRaw !== raw) { _ioParsed = parseScheduleText(raw); _ioLastRaw = raw; }
+  const picked = _ioParsed.filter(x => x.checked);
+  if (!picked.length) return toast(_ioParsed.length ? 'Select at least one shift to import' : 'No valid shifts found — try the standard template');
+  // Block intra-batch overlaps among selected rows
+  for (let i = 0; i < picked.length; i++) {
+    const a = intervalOf(picked[i].date, picked[i].start, picked[i].end);
+    for (let j = i + 1; j < picked.length; j++) {
+      if (intervalsOverlap(a, intervalOf(picked[j].date, picked[j].start, picked[j].end))) {
+        return toast(`Selected shifts overlap on ${fmtDay(picked[j].date)} — uncheck one first`);
+      }
+    }
+  }
+  // Check against existing saved shifts & timed gigs
+  const existingConflicts = [], seenC = new Set();
+  picked.forEach(o => {
+    findOverlappingShifts(o.date, o.start, o.end, null).forEach(s => { if (!seenC.has('s' + s.id)) { seenC.add('s' + s.id); existingConflicts.push({ type: 'shift', o: s }); } });
+    findOverlappingGigs(o.date, o.start, o.end, null).forEach(g => { if (!seenC.has('g' + g.id)) { seenC.add('g' + g.id); existingConflicts.push({ type: 'gig', o: g }); } });
+  });
+  if (existingConflicts.length) {
+    openConflictSheet({
+      title: 'Imported shifts overlap existing entries',
+      body: 'Overlapping duty hours are not allowed. Delete the conflicting shift(s) to import these, or cancel and edit.',
+      items: existingConflicts,
+      canKeepBoth: false,
+      onReplace: () => { deleteConflictItems(existingConflicts); commitImportPicked(picked); }
+    });
+    return;
+  }
+  commitImportPicked(picked);
 }
 
 /* ================= settings screen ================= */
@@ -3929,6 +4300,7 @@ function sanitizeRestoredSettings(raw) {
   if (/^\d{2}:\d{2}$/.test(s.dueNotifTime || '')) out.dueNotifTime = s.dueNotifTime;
   if (typeof s.planNudgeEnabled === 'boolean') out.planNudgeEnabled = s.planNudgeEnabled;
   if (typeof s.maskWidgetWhenLocked === 'boolean') out.maskWidgetWhenLocked = s.maskWidgetWhenLocked;
+  if (typeof s.allowScreenshots === 'boolean') out.allowScreenshots = s.allowScreenshots;
   if (s.incomeScope === 'payroll' || s.incomeScope === 'all') out.incomeScope = s.incomeScope;
   if (s.last && /^\d{2}:\d{2}$/.test(s.last.start || '') && /^\d{2}:\d{2}$/.test(s.last.end || '')) {
     out.last = { start: s.last.start, end: s.last.end, brk: Math.round(num(s.last.brk, 0, 180, 0)) };
@@ -4180,7 +4552,7 @@ function startLockCountdown() {
 }
 function lockUI(title, sub, open) {
   setText($('lock-title'), title); setText($('lock-sub'), sub || ''); pinBuf = '';
-  const pillMap = { unlock: 'Secured', set1: 'Step 1 of 2', set2: 'Step 2 of 2', 'verify-change': 'Verify PIN', 'verify-remove': 'Confirm removal' };
+  const pillMap = { unlock: 'Secured', set1: 'Step 1 of 2', set2: 'Step 2 of 2', 'verify-change': 'Verify PIN', 'verify-remove': 'Confirm removal', 'verify-screenshots': 'Verify screen lock' };
   setText($('lock-pill-txt'), pillMap[pinMode] || 'Secured');
   if ($('pin-len-seg')) {
     $('pin-len-seg').classList.toggle('hidden', pinMode !== 'set1');
@@ -4220,6 +4592,7 @@ async function pinKey(k) {
     try {
       const salt = randomSalt(), old = cfg || {};
       localStorage.setItem(LOCK_KEY, JSON.stringify({ v: 2, salt, hash: await hashPinV2(p, salt), len: pinLen, auto: old.auto ?? 30, fp: old.fp }));
+      if (!old.hash) { settings.allowScreenshots = false; persistSettings(); }
       unlockDone(); renderSecurity(); toast(`${pinLen}-digit PIN lock enabled`);
     } finally { pinBusy = false; }
     return;
@@ -4236,12 +4609,13 @@ async function pinKey(k) {
   clearLockoutState();
   if (pinMode === 'unlock') unlockDone();
   else if (pinMode === 'verify-change') { pinLen = (cfg && cfg.len === 6) ? 6 : 4; pinMode = 'set1'; lockUI('Create new PIN', `${pinLen} digits to protect your pay data`); }
-  else if (pinMode === 'verify-remove') { localStorage.removeItem(LOCK_KEY); unlockDone(); renderSecurity(); toast('PIN lock removed'); }
+  else if (pinMode === 'verify-remove') { localStorage.removeItem(LOCK_KEY); settings.allowScreenshots = false; persistSettings(); unlockDone(); renderSecurity(); toast('PIN lock removed'); }
+  else if (pinMode === 'verify-screenshots') { unlockDone(); finishPendingScreenLockAuth(true); }
 }
 function failPin(msg, retitle) { const d = $('pin-dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); if (navigator.vibrate) navigator.vibrate(60); setTimeout(() => lockUI(retitle || $('lock-title').textContent, msg), 340); }
 function lockSetupFlow() { const c = lockCfg(); if (c) { pinMode = 'verify-change'; lockUI('Enter current PIN', 'Verify before changing', true); } else { pinLen = 4; pinMode = 'set1'; lockUI('Create PIN', '4 digits to protect your pay data', true); } }
 function lockRemoveFlow() { pinMode = 'verify-remove'; lockUI('Enter PIN to remove', 'Verify your current PIN', true); }
-function lockCancel() { clearInterval(lockTimer); lockTimer = 0; if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} root.classList.remove('pin-open'); }
+function lockCancel() { clearInterval(lockTimer); lockTimer = 0; _pendingSlAuth = null; if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} root.classList.remove('pin-open'); }
 document.addEventListener('keydown', e => {
   if (!lockVisible()) return;
   if (/^[0-9]$/.test(e.key)) { e.preventDefault(); pinKey(e.key); }
@@ -4253,14 +4627,80 @@ async function lockForgot() {
   if (!await askConfirm({ title: 'Reset PIN?', body: 'Resetting the PIN <b>erases all shifts and settings</b> on this device — your PIN is what guards your data. You can restore from a backup afterwards.', ok: 'Erase & reset' })) return;
   [SHIFTS_KEY, SETTINGS_KEY, GIGS_KEY, EXP_KEY, DEBTS_KEY, LOCK_KEY, 'sp_lock_until', 'sp_lock_mono', 'sp_pin_fails', TOUR_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
 }
+let _pendingSlAuth = null;
 function tryFingerprint() { if (!window.AndroidBridge || !lockVisible()) return; fpPurpose = 'unlock'; setText($('lock-sub'), 'Touch the fingerprint sensor'); AndroidBridge.fpAuth(); }
 window.onFingerprint = function (ok) {
+  if (fpPurpose === 'screenshots') {
+    if (ok === null) { setText($('sl-fp-msg'), 'Not recognized — try again'); return; }
+    fpPurpose = '';
+    if (ok) { closeSheet('screenlock-sheet'); finishPendingScreenLockAuth(true); }
+    else { setText($('sl-fp-msg'), 'Use device screen lock or app PIN below'); }
+    return;
+  }
   if (ok === null) { setText($('lock-sub'), 'Not recognized — try again'); return; }
   if (!ok) { if (lockVisible()) setText($('lock-sub'), 'Use your PIN'); fpPurpose = ''; return; }
   if (fpPurpose === 'enable') { const c = lockCfg(); c.fp = true; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); renderSecurity(); toast('Fingerprint unlock enabled'); }
   else if (fpPurpose === 'unlock') { clearLockoutState(); unlockDone(); }
   fpPurpose = '';
 };
+window.onDeviceAuth = function (ok) {
+  if (!_pendingSlAuth) return;
+  if (ok) { closeSheet('screenlock-sheet'); finishPendingScreenLockAuth(true); }
+  else { toast('Screen lock verification cancelled'); }
+};
+function finishPendingScreenLockAuth(ok) {
+  const act = _pendingSlAuth; _pendingSlAuth = null;
+  if (!ok || !act) return;
+  if (act.kind === 'screenshots') {
+    settings.allowScreenshots = !!act.nextVal;
+    persistSettings();
+    renderSecurity();
+    toast(settings.allowScreenshots ? 'Screenshots allowed' : 'Screenshots blocked');
+  }
+}
+function cancelScreenLockAuth() {
+  _pendingSlAuth = null;
+  if (fpPurpose === 'screenshots') { fpPurpose = ''; if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} }
+  closeSheet('screenlock-sheet');
+}
+function triggerDeviceScreenLock() {
+  if (fpPurpose === 'screenshots') { fpPurpose = ''; if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} }
+  if (window.AndroidBridge && typeof AndroidBridge.requestDeviceAuth === 'function') {
+    const started = AndroidBridge.requestDeviceAuth('Verify screen lock', 'Confirm your screen lock to change screenshot protection');
+    if (started) return;
+  }
+  triggerAppPinForAuth();
+}
+function triggerAppPinForAuth() {
+  if (fpPurpose === 'screenshots') { fpPurpose = ''; if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} }
+  closeSheet('screenlock-sheet');
+  pinMode = 'verify-screenshots';
+  lockUI('Verify screen lock', 'Enter your SweldoPulse PIN to continue', true);
+}
+function onScreenshotToggleClick(ev) {
+  if (ev && ev.preventDefault) ev.preventDefault();
+  if (!lockCfg()) return false;
+  const nextVal = !settings.allowScreenshots;
+  _pendingSlAuth = { kind: 'screenshots', nextVal };
+  let fpOk = false, devOk = false;
+  try { fpOk = !!(window.AndroidBridge && AndroidBridge.fpAvailable()); } catch (e) {}
+  try { devOk = !!(window.AndroidBridge && typeof AndroidBridge.deviceAuthAvailable === 'function' && AndroidBridge.deviceAuthAvailable()); } catch (e) {}
+  if (!fpOk && !devOk) {
+    triggerAppPinForAuth();
+    return false;
+  }
+  setText($('sl-title'), nextVal ? 'Allow screenshots?' : 'Block screenshots?');
+  setText($('sl-desc'), 'Verify with your screen lock to apply this change');
+  $('sl-fp-box').classList.toggle('hidden', !fpOk);
+  $('sl-dev-btn').classList.toggle('hidden', !devOk);
+  if (fpOk) {
+    setText($('sl-fp-msg'), 'Touch the fingerprint sensor');
+    fpPurpose = 'screenshots';
+    try { AndroidBridge.fpAuth(); } catch (e) {}
+  }
+  openSheet('screenlock-sheet');
+  return false;
+}
 function toggleFingerprint() { const c = lockCfg(); if (!c) return; if (c.fp) { c.fp = false; localStorage.setItem(LOCK_KEY, JSON.stringify(c)); renderSecurity(); toast('Fingerprint unlock off'); return; } fpPurpose = 'enable'; toast('Touch the fingerprint sensor to confirm'); AndroidBridge.fpAuth(); }
 function renderSecurity() {
   const c = lockCfg();
@@ -4268,11 +4708,14 @@ function renderSecurity() {
   $('lock-main-btn').textContent = c ? 'Change' : 'Set PIN'; $('lock-remove-btn').classList.toggle('hidden', !c); $('lock-auto-row').classList.toggle('hidden', !c);
   if ($('lock-widget-row')) $('lock-widget-row').classList.toggle('hidden', !c);
   if ($('lock-widget-mask')) $('lock-widget-mask').checked = settings.maskWidgetWhenLocked !== false;
+  if ($('lock-ss-row')) $('lock-ss-row').classList.toggle('hidden', !c);
+  if ($('lock-ss-toggle')) $('lock-ss-toggle').checked = !!settings.allowScreenshots;
+  if ($('lock-ss-sub')) setText($('lock-ss-sub'), settings.allowScreenshots ? 'Allowed · screen lock required to change' : 'Blocked while PIN lock is on · screen lock required');
   if (c) $('lock-auto').value = String(c.auto ?? 30);
   let fpOk = false; try { fpOk = !!(window.AndroidBridge && AndroidBridge.fpAvailable()); } catch (e) {}
   $('lock-fp-row').classList.toggle('hidden', !(c && fpOk)); if (c) { $('lock-fp-status').textContent = c.fp ? 'On — scan to unlock' : 'Off'; $('lock-fp-btn').textContent = c.fp ? 'Turn off' : 'Enable'; }
   if (window.AndroidBridge) {
-    try { AndroidBridge.setSecure(!!c); } catch (e) {}
+    try { AndroidBridge.setSecure(!!c && !settings.allowScreenshots); } catch (e) {}
     try { if (typeof AndroidBridge.setWidgetPinLocked === 'function') AndroidBridge.setWidgetPinLocked(!!(c && settings.maskWidgetWhenLocked !== false)); } catch (e) {}
   }
   syncBackupStatus();
@@ -4336,6 +4779,8 @@ function showWhatsNew() { $('wn-ver').textContent = APP_VERSION.replace(/\.0$/, 
 window.handleAndroidBack = function () {
   if (root.classList.contains('locked')) return false;
   if (root.classList.contains('pin-open')) { lockCancel(); return true; }
+  if ($('screenlock-sheet').classList.contains('open')) { cancelScreenLockAuth(); return true; }
+  if ($('conflict-sheet').classList.contains('open')) { closeConflictSheet(); return true; }
   if ($('confirm').classList.contains('open')) { confirmAnswer(false); return true; }
   if ($('payslip-modal').classList.contains('on')) { closePayslip(); return true; }
   if ($('tour').classList.contains('on')) { endTour(); return true; }
