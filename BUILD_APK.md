@@ -1,33 +1,21 @@
-# SweldoPulse v2.7.0 — Production Polish, Low-End Optimization, Desktop Responsive, PH Work Profiles & Real-Time Updates
+# SweldoPulse v2.7.1 — Banking & Trading UI Redesign
 
 ## Building & Publishing via GitHub Actions (Recommended)
 Repo: `https://github.com/Kakashimoto14/SuweldoPulse`
 
-1. Extract this folder over your local `SuweldoPulse` repo (your private `signing/sweldopulse.jks` stays untouched and excluded by `.gitignore`).
-2. Commit, push, and tag `v2.7.0`:
+1. Extract `SweldoPulse_v2_7_1_Source_and_Build_Kit.zip` over your local `SuweldoPulse` repo (your private `signing/sweldopulse.jks` stays untouched).
+2. Commit, push, and tag `v2.7.1`:
    ```cmd
    git add -A
-   git commit -m "v2.7.0: modular split, low-end optimization, desktop responsive layout, PH DOLE work profiles, smart real-time updates & updated tour"
+   git commit -m "v2.7.1: banking & trading UI redesign, unified Payroll/Side Gigs cards, Surface/Obsidian/Tinted finishes & Monochrome theme"
    git push origin main
-   git tag v2.7.0
-   git push origin v2.7.0
+   git tag v2.7.1
+   git push origin v2.7.1
    ```
-3. GitHub Actions (`Build APK`) bundles `index.html`, `app.css`, and `app.js` into Android assets, compiles `SweldoPulse-v2.7.0.apk`, signs it with your keystore secrets, and publishes it to the `v2.7.0` GitHub Release automatically.
+3. GitHub Actions (`Build APK`) automatically compiles, signs, and attaches `SweldoPulse-v2.7.1.apk` to your `v2.7.1` GitHub Release.
 
-## What's New in v2.7.0
-- **Clean Split Architecture:** Separated HTML, unified deduplicated CSS (`app.css`), and modular JavaScript (`app.js`) for fast caching, cleaner maintenance, and zero legacy style overrides.
-- **Smooth & Stable on Low-End Android Devices (e.g. OPPO CPH2269):**
-  - Replaced minute-by-minute `calcPay()` loops with exact O(1) interval math.
-  - Replaced `color-mix()` gradients with precomputed CSS variables compatible with older Android System WebViews.
-  - Removed forced layout reflows, idle `will-change` layers, and background timers; added automatic + manual **Lite Motion Mode** and `onTrimMemory()` WebView cache cleanup.
-- **True Responsive Layout (Mobile, Tablet & Laptop/PC):**
-  - Persistent left sidebar and 2-column desktop workspace (`>= 1024px`) with side-by-side Payroll + Side Gigs cards, centered floating dialogs, and keyboard shortcuts (`Esc`).
-- **PH DOLE 2026 Standards & Work Situation Profiles:**
-  - Updated 2026 DOLE regional minimum wage presets (NCR, CALABARZON, Central Luzon, Western/Central Visayas, Davao, or Custom with daily rate readout).
-  - One-tap **Work Situation Profiles** (Part-Time Crew / Working Student, Full-Time Hourly / Retail, BPO / Night Shift, Daily-Paid / Weekly, Freelance / Side Gigs).
-  - Configurable **Pre-Holiday (`1.30x`)** rule (ON by default, toggleable to Standard DOLE), **Night Diff %** (`0% / 10% / 15% / 20%`), **OT threshold** (`8h / 9h / None`), and **`11-25 / 26-10`** semi-monthly cutoff cycle.
-- **Smart Real-Time Update Checker & Background Notifications:**
-  - Checks on boot (even behind PIN lock), every app resume (3-min throttle), network reconnect, every 15 mins while active, and every 4 hours natively in the background via Android AlarmManager (`ReminderReceiver`).
-  - Uses GitHub `ETag` (`If-None-Match`) + `version.json` fast-check so frequent checks stay within rate limits and immediately post a native notification when a new release drops.
-- **Guaranteed Post-Update "What's New" & Updated 7-Step Tour:**
-  - Queues **What's New** cleanly behind PIN unlock so it is never skipped after installing an update, and updates the spotlight tour for all current features across mobile and desktop.
+## What's New in v2.7.1
+- **Unified Banking/Trading Sibling Account Cards:** Main Payroll and Side Gigs now share a cohesive institutional design (no hardcoded green card, no loud AI gradients or glowing drop-shadows), complete with trading delta badges (`▲ +%` vs previous cutoff), dual sparklines (`#spark` & `#gig-spark`), hairline 3-column metrics tables, and a mobile Account Switcher showing live balances.
+- **Selectable Card Finishes (`Settings → Appearance`):** Choose between **Surface** (MariBank / Trading neutral card), **Obsidian** (GoTyme / Maya matte black metallic card), or **Tinted** (restrained deep matte accent card).
+- **Monochrome Black & White Theme:** High-contrast black/white fintech palette with crisp WCAG-safe button foregrounds, cleaner neutral dark charcoal (`#0B0D12`), bank-statement ledger rows, and a flush modern bottom navigation bar.
+- **Built on v2.7.0 Core:** Split assets (`index.html` + `app.css` + `app.js`), O(1) pay engine, auto Lite Motion Mode for low-end devices (OPPO CPH2269), responsive desktop sidebar, PH DOLE 2026 wage profiles, real-time update checks with native background notifications, guaranteed post-update What's New, and updated 7-step tour.

@@ -1,4 +1,4 @@
-const APP_VERSION = '2.7.0';
+const APP_VERSION = '2.7.1';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', DEBTS_KEY = 'sweldo_pulse_debts_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -39,24 +39,25 @@ let settings = {
   cutoffData: {}, customPresets: [], vaults: [], bills: [], incomeScope: 'all',
   autoDownloadUpd: true, updWifiOnly: true, autoBackup: true, lastAutoBk: 0,
   dueNotifEnabled: true, dueNotifTime: '09:00', planNudgeEnabled: true, maskWidgetWhenLocked: true, allowScreenshots: false,
-  workProfile: 'crew', preHolidayRule: true, ndRate: 0.10, otThreshold: 8, liteMode: 'auto', notifiedUpdVer: '', updEtag: '', updCachedRel: null
+  workProfile: 'crew', preHolidayRule: true, ndRate: 0.10, otThreshold: 8, liteMode: 'auto', cardStyle: 'surface', notifiedUpdVer: '', updEtag: '', updCachedRel: null
 };
 let selKey = '', periodKeys = [], curView = 'home';
 const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '', budTab: 'overview', dueF: 'all', insTab: 'overview', insYear: new Date().getFullYear(), insMonth: new Date().getMonth() };
 let editingId = null, editingGigId = null, editingVaultId = null, editingBillId = null, editingDebtId = null, modalKind = 'shift', modalBrk = 0, modalStatus = 'worked', modalGigStatus = 'paid', expCat = 'needs', billCat = 'needs', debtKind = 'paylater', budNet = 0, checkinShiftId = null;
 
 const ACCENTS = {
-  midnight: { a: '#1E3A8A', ad: '#3556B8', h: '#1E40AF', sl: '#EAF0FF', bl: '#BCCBF5', tl: '#1E3A8A', sd: 'rgba(59,91,184,.22)', bd: 'rgba(96,130,220,.4)', td: '#A9BEF5', g: 'rgba(30,58,138,.36)', w1: '#3B63C9', w2: '#1E3A8A', w3: '#0E1C4A', lg: 'rgba(53,86,184,.24)' },
-  forest: { a: '#166534', ad: '#1F8A4C', h: '#14532D', sl: '#E8F7EE', bl: '#B6E3C6', tl: '#166534', sd: 'rgba(34,150,80,.22)', bd: 'rgba(52,180,100,.4)', td: '#86E0A9', g: 'rgba(22,101,52,.36)', w1: '#269B57', w2: '#166534', w3: '#09341B', lg: 'rgba(31,138,76,.24)' },
-  graphite: { a: '#1F2937', ad: '#475569', h: '#111827', sl: '#EEF1F5', bl: '#CBD2DC', tl: '#1F2937', sd: 'rgba(100,116,139,.24)', bd: 'rgba(148,163,184,.4)', td: '#CBD5E1', g: 'rgba(31,41,55,.38)', w1: '#4B5563', w2: '#1F2937', w3: '#0B0F17', lg: 'rgba(71,85,105,.24)' },
-  wine: { a: '#881337', ad: '#B0204F', h: '#6B0F2B', sl: '#FFF0F4', bl: '#F3BFCD', tl: '#881337', sd: 'rgba(176,32,79,.22)', bd: 'rgba(220,70,120,.4)', td: '#F5A3BE', g: 'rgba(136,19,55,.36)', w1: '#C5285A', w2: '#881337', w3: '#45081B', lg: 'rgba(176,32,79,.24)' },
-  teal: { a: '#115E59', ad: '#168B84', h: '#0F4C48', sl: '#E6F6F4', bl: '#B3E0DB', tl: '#115E59', sd: 'rgba(22,139,132,.22)', bd: 'rgba(45,180,170,.4)', td: '#7EE0D7', g: 'rgba(17,94,89,.36)', w1: '#1CA199', w2: '#115E59', w3: '#08312E', lg: 'rgba(22,139,132,.24)' },
-  plum: { a: '#581C87', ad: '#7E34B8', h: '#4A1773', sl: '#F5ECFD', bl: '#DDBFF3', tl: '#581C87', sd: 'rgba(126,52,184,.22)', bd: 'rgba(165,100,225,.4)', td: '#D3A8F5', g: 'rgba(88,28,135,.36)', w1: '#8D3FD0', w2: '#581C87', w3: '#2C0D47', lg: 'rgba(126,52,184,.24)' },
-  indigo: { a: '#4F46E5', h: '#4338CA', sl: '#EEF2FF', bl: '#C7D2FE', tl: '#4338CA', sd: 'rgba(99,102,241,.18)', bd: 'rgba(99,102,241,.38)', td: '#A5B4FC', g: 'rgba(79,70,229,.30)', w1: '#6B63F0', w2: '#4F46E5', w3: '#221D73', lg: 'rgba(79,70,229,.22)' },
-  purple: { a: '#9333EA', h: '#7E22CE', sl: '#FAF5FF', bl: '#E9D5FF', tl: '#7E22CE', sd: 'rgba(168,85,247,.18)', bd: 'rgba(168,85,247,.38)', td: '#D8B4FE', g: 'rgba(147,51,234,.30)', w1: '#A855F7', w2: '#9333EA', w3: '#481675', lg: 'rgba(147,51,234,.22)' },
-  rose: { a: '#E11D48', h: '#BE123C', sl: '#FFF1F2', bl: '#FECDD3', tl: '#BE123C', sd: 'rgba(244,63,94,.18)', bd: 'rgba(244,63,94,.38)', td: '#FDA4AF', g: 'rgba(225,29,72,.30)', w1: '#F43F5E', w2: '#E11D48', w3: '#6B0E24', lg: 'rgba(225,29,72,.22)' },
-  amber: { a: '#D97706', h: '#B45309', sl: '#FFFBEB', bl: '#FDE68A', tl: '#B45309', sd: 'rgba(245,158,11,.18)', bd: 'rgba(245,158,11,.38)', td: '#FCD34D', g: 'rgba(217,119,6,.30)', w1: '#F59E0B', w2: '#D97706', w3: '#693704', lg: 'rgba(217,119,6,.22)' },
-  emerald: { a: '#059669', h: '#047857', sl: '#ECFDF5', bl: '#A7F3D0', tl: '#047857', sd: 'rgba(16,185,129,.18)', bd: 'rgba(16,185,129,.38)', td: '#6EE7B7', g: 'rgba(5,150,105,.30)', w1: '#10B981', w2: '#059669', w3: '#064E3B', lg: 'rgba(5,150,105,.22)' }
+  mono: { a: '#111827', ad: '#F8FAFC', fgd: '#0B0D12', h: '#030712', sl: '#EDF0F5', bl: '#CFD6E2', tl: '#111827', sd: 'rgba(248,250,252,.10)', bd: 'rgba(248,250,252,.22)', td: '#F8FAFC', g: 'rgba(15,23,42,.18)', w1: '#1C2029', w2: '#12151C', w3: '#0A0C10', lg: 'rgba(148,163,184,.14)', cl: '#111827', cd: '#F8FAFC' },
+  midnight: { a: '#1E3A8A', ad: '#3B63C9', h: '#1E40AF', sl: '#EAF0FF', bl: '#BCCBF5', tl: '#1E3A8A', sd: 'rgba(59,99,201,.18)', bd: 'rgba(96,130,220,.34)', td: '#93B4FA', g: 'rgba(30,58,138,.26)', w1: '#1B2D5E', w2: '#132044', w3: '#0B1329', lg: 'rgba(59,99,201,.18)', cl: '#1E3A8A', cd: '#60A5FA' },
+  forest: { a: '#166534', ad: '#10B981', h: '#14532D', sl: '#E8F7EE', bl: '#B6E3C6', tl: '#166534', sd: 'rgba(16,185,129,.16)', bd: 'rgba(16,185,129,.34)', td: '#6EE7B7', g: 'rgba(22,101,52,.26)', w1: '#123D2A', w2: '#0D2B1E', w3: '#071B12', lg: 'rgba(16,185,129,.16)', cl: '#15803D', cd: '#34D399' },
+  graphite: { a: '#1F2937', ad: '#64748B', h: '#111827', sl: '#EEF1F5', bl: '#CBD2DC', tl: '#1F2937', sd: 'rgba(100,116,139,.18)', bd: 'rgba(148,163,184,.34)', td: '#CBD5E1', g: 'rgba(31,41,55,.26)', w1: '#232936', w2: '#171C26', w3: '#0E1118', lg: 'rgba(100,116,139,.18)', cl: '#334155', cd: '#94A3B8' },
+  wine: { a: '#881337', ad: '#C5285A', h: '#6B0F2B', sl: '#FFF0F4', bl: '#F3BFCD', tl: '#881337', sd: 'rgba(197,40,90,.18)', bd: 'rgba(220,70,120,.34)', td: '#FDA4AF', g: 'rgba(136,19,55,.26)', w1: '#4D1429', w2: '#360D1D', w3: '#210711', lg: 'rgba(197,40,90,.18)', cl: '#9F1239', cd: '#FB7185' },
+  teal: { a: '#0F766E', ad: '#14B8A6', h: '#115E59', sl: '#E6F7F5', bl: '#B3E0DB', tl: '#0F766E', sd: 'rgba(20,184,166,.16)', bd: 'rgba(20,184,166,.34)', td: '#5EEAD4', g: 'rgba(15,118,110,.26)', w1: '#103F3D', w2: '#0B2D2C', w3: '#061C1B', lg: 'rgba(20,184,166,.16)', cl: '#0F766E', cd: '#2DD4BF' },
+  plum: { a: '#581C87', ad: '#8B5CF6', h: '#4A1773', sl: '#F5ECFD', bl: '#DDBFF3', tl: '#581C87', sd: 'rgba(139,92,246,.16)', bd: 'rgba(139,92,246,.34)', td: '#C4B5FD', g: 'rgba(88,28,135,.26)', w1: '#351952', w2: '#241138', w3: '#150922', lg: 'rgba(139,92,246,.18)', cl: '#6D28D9', cd: '#A78BFA' },
+  indigo: { a: '#4F46E5', ad: '#6366F1', h: '#4338CA', sl: '#EEF2FF', bl: '#C7D2FE', tl: '#4338CA', sd: 'rgba(99,102,241,.16)', bd: 'rgba(99,102,241,.34)', td: '#A5B4FC', g: 'rgba(79,70,229,.24)', w1: '#23265A', w2: '#171A40', w3: '#0E1029', lg: 'rgba(99,102,241,.18)', cl: '#4F46E5', cd: '#818CF8' },
+  purple: { a: '#7C3AED', ad: '#A855F7', h: '#6D28D9', sl: '#F5F3FF', bl: '#DDD6FE', tl: '#6D28D9', sd: 'rgba(168,85,247,.16)', bd: 'rgba(168,85,247,.34)', td: '#D8B4FE', g: 'rgba(124,58,237,.24)', w1: '#361A5C', w2: '#251142', w3: '#150928', lg: 'rgba(168,85,247,.18)', cl: '#7C3AED', cd: '#C084FC' },
+  rose: { a: '#E11D48', ad: '#F43F5E', h: '#BE123C', sl: '#FFF1F2', bl: '#FECDD3', tl: '#BE123C', sd: 'rgba(244,63,94,.16)', bd: 'rgba(244,63,94,.34)', td: '#FDA4AF', g: 'rgba(225,29,72,.24)', w1: '#521527', w2: '#3B0E1C', w3: '#240811', lg: 'rgba(244,63,94,.18)', cl: '#E11D48', cd: '#FB7185' },
+  amber: { a: '#D97706', ad: '#F59E0B', h: '#B45309', sl: '#FFFBEB', bl: '#FDE68A', tl: '#B45309', sd: 'rgba(245,158,11,.16)', bd: 'rgba(245,158,11,.34)', td: '#FCD34D', g: 'rgba(217,119,6,.24)', w1: '#4A2C0A', w2: '#331E07', w3: '#1F1204', lg: 'rgba(245,158,11,.16)', cl: '#D97706', cd: '#FBBF24' },
+  emerald: { a: '#059669', ad: '#10B981', h: '#047857', sl: '#ECFDF5', bl: '#A7F3D0', tl: '#047857', sd: 'rgba(16,185,129,.16)', bd: 'rgba(16,185,129,.34)', td: '#6EE7B7', g: 'rgba(5,150,105,.24)', w1: '#0D3B2E', w2: '#092920', w3: '#051913', lg: 'rgba(16,185,129,.16)', cl: '#059669', cd: '#34D399' }
 };
 
 /* ================= 2026 DOLE PH Wage Presets & Work Situation Profiles ================= */
@@ -97,6 +98,7 @@ function loadState() {
   if (!isFinite(Number(settings.ndRate))) settings.ndRate = 0.10;
   if (!isFinite(Number(settings.otThreshold))) settings.otThreshold = 8;
   if (!['auto', 'on', 'off'].includes(settings.liteMode)) settings.liteMode = 'auto';
+  if (!['surface', 'obsidian', 'tinted'].includes(settings.cardStyle)) settings.cardStyle = 'surface';
   if (!settings.workProfile) settings.workProfile = 'crew';
   let repairedIds = false;
   try { const rawS = JSON.parse(localStorage.getItem(SHIFTS_KEY) || '[]'); shifts = normalizeShifts(rawS, () => { repairedIds = true; }); } catch (e) { shifts = []; }
@@ -204,22 +206,34 @@ function setLiteMode(val) {
   persistSettings(); applyLiteMode();
   toast(isLiteActive() ? 'Lite motion enabled for smoother performance' : 'Full animations enabled');
 }
+function setCardStyle(mode) {
+  settings.cardStyle = ['surface', 'obsidian', 'tinted'].includes(mode) ? mode : 'surface';
+  persistSettings(); applyTheme();
+  const names = { surface: 'Surface (clean banking)', obsidian: 'Obsidian (dark card)', tinted: 'Tinted (matte accent)' };
+  toast(`Card finish: ${names[settings.cardStyle]}`);
+}
 function applyTheme(first) {
   const tsvg = document.querySelector('.theme-svg');
   if (first && tsvg) { tsvg.classList.add('no-t'); requestAnimationFrame(() => requestAnimationFrame(() => tsvg.classList.remove('no-t'))); }
   const dark = isDark(), P = ACCENTS[settings.accentTheme] || ACCENTS.indigo, st = root.style;
+  const cs = settings.cardStyle || 'surface';
   root.classList.toggle('dark', dark); root.classList.toggle('amoled', settings.themeMode === 'amoled');
+  root.classList.toggle('card-obsidian', cs === 'obsidian'); root.classList.toggle('card-tinted', cs === 'tinted');
   st.setProperty('--accent', dark && P.ad ? P.ad : P.a); st.setProperty('--accent-hover', P.h);
+  st.setProperty('--btn-primary-fg', (dark && P.fgd) ? P.fgd : '#FFFFFF');
   st.setProperty('--accent-soft', dark ? P.sd : P.sl); st.setProperty('--accent-soft-border', dark ? P.bd : P.bl);
   st.setProperty('--accent-text', dark ? P.td : P.tl); st.setProperty('--accent-glow', P.g);
-  st.setProperty('--w-g1', P.w1 || P.a); st.setProperty('--w-g2', dark && P.ad ? P.ad : (P.w2 || P.a)); st.setProperty('--w-g3', P.w3 || P.h);
-  st.setProperty('--lock-glow', dark ? (P.lg || P.sd) : P.sl);
+  const darkChart = dark || cs === 'obsidian';
+  st.setProperty('--chart-line', darkChart ? (P.cd || P.ad || P.a) : (P.cl || P.a));
+  st.setProperty('--w-g1', P.w1 || P.a); st.setProperty('--w-g2', P.w2 || P.a); st.setProperty('--w-g3', P.w3 || P.h);
+  st.setProperty('--lock-glow', dark ? (P.lg || P.sd) : 'rgba(15,23,42,.06)');
   applyLiteMode();
-  const barBg = settings.themeMode === 'amoled' ? '#000000' : (dark ? '#090D16' : '#F6F7FB');
+  const barBg = settings.themeMode === 'amoled' ? '#000000' : (dark ? '#0B0D12' : '#F4F5F8');
   const m = $('meta-theme'); if (m) m.setAttribute('content', barBg);
   if (window.AndroidBridge && typeof AndroidBridge.setSystemBars === 'function') { try { AndroidBridge.setSystemBars(barBg, dark); } catch (e) {} }
   const cut = $('moon-cutout'); if (cut) { cut.setAttribute('cx', dark ? '16.5' : '24'); cut.setAttribute('cy', dark ? '8.5' : '4'); cut.setAttribute('r', dark ? '5.2' : '0'); }
   $$('#theme-seg button').forEach(b => b.classList.toggle('on', b.dataset.m === settings.themeMode));
+  $$('#card-style-seg button').forEach(b => b.classList.toggle('on', b.dataset.cs === cs));
   $$('.theme-sw').forEach(b => b.classList.toggle('on', b.dataset.theme === settings.accentTheme));
   if (!first && typeof syncWidget === 'function') syncWidget();
 }
@@ -684,21 +698,24 @@ function gigRow(g, del) {
 }
 const sortShifts = (a, b) => b.date.localeCompare(a.date) || (b.startTime || '').localeCompare(a.startTime || '') || b.id - a.id;
 function dayRange(P) { const out = []; for (let d = P.start; dstr(d) <= P.endStr; d = addDays(d, 1)) out.push(dstr(d)); return out; }
-function renderSpark(P, list, ti, W) {
-  const el = $('spark'), H = 40, days = dayRange(P), n = days.length, by = {};
-  list.forEach(s => { by[s.date] = (by[s.date] || 0) + s.gross; });
+const _sparkSigs = {};
+function renderSpark(P, list, ti, W, elId = 'spark', valFn = s => s.gross) {
+  const el = $(elId); if (!el) return;
+  const H = 38, days = dayRange(P), n = days.length, by = {};
+  list.forEach(s => { by[s.date] = (by[s.date] || 0) + (+valFn(s) || 0); });
   let cum = 0; const pts = days.map(d => (cum += by[d] || 0)), max = cum;
-  const x = i => n > 1 ? i / (n - 1) * W : 0, y = v => max > 0 ? H - 5 - (v / max) * (H - 13) : H - 6;
-  let html = '';
-  if (max <= 0) { const m = W / 2; html = `<path class="idle" d="M0 ${H - 8} H${m - 40} l9 0 l7 -15 l9 25 l7 -14 l6 4 H${W}"/>`; }
-  else {
+  const x = i => n > 1 ? i / (n - 1) * W : 0, y = v => max > 0 ? H - 5 - (v / max) * (H - 12) : H - 6;
+  let html = `<line class="base" x1="0" y1="${H - 5}" x2="${W}" y2="${H - 5}"/>`;
+  if (max <= 0) {
+    html += `<line class="idle" x1="0" y1="${H - 5}" x2="${W}" y2="${H - 5}"/>`;
+  } else {
     const seg = (a, b) => pts.slice(a, b + 1).map((v, k) => `${k ? 'L' : 'M'}${x(a + k).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
-    if (ti >= 1) { const d = seg(0, ti); html += `<path class="area" d="${d} L${x(ti).toFixed(1)} ${H} L0 ${H} Z"/><path class="ln" d="${d}"/>`; }
+    if (ti >= 1) { const d = seg(0, ti); html += `<path class="area" d="${d} L${x(ti).toFixed(1)} ${H - 5} L0 ${H - 5} Z"/><path class="ln" d="${d}"/>`; }
     if (ti < n - 1) html += `<path class="fu" d="${seg(Math.max(0, ti), n - 1)}"/>`;
-    if (ti >= 0 && ti < n) html += `<circle class="hd-r" cx="${x(ti).toFixed(1)}" cy="${y(pts[ti]).toFixed(1)}" r="5"/><circle class="hd" cx="${x(ti).toFixed(1)}" cy="${y(pts[ti]).toFixed(1)}" r="2.6"/>`;
+    if (ti >= 0 && ti < n) html += `<circle class="hd-r" cx="${x(ti).toFixed(1)}" cy="${y(pts[ti]).toFixed(1)}" r="5.5"/><circle class="hd" cx="${x(ti).toFixed(1)}" cy="${y(pts[ti]).toFixed(1)}" r="2.6"/>`;
   }
   const sig = selKey + '|' + W + '|' + html;
-  if (sig === sparkSig) return; sparkSig = sig;
+  if (sig === _sparkSigs[elId]) return; _sparkSigs[elId] = sig;
   el.setAttribute('viewBox', `0 0 ${W} ${H}`); el.innerHTML = html;
 }
 const activeNetOf = D => D.netAll;
@@ -707,14 +724,14 @@ function slideWallet(idx) {
   const c = $('wallet-carousel'); if (!c) return;
   _walletIdx = idx ? 1 : 0;
   c.scrollTo({ left: _walletIdx * (c.clientWidth + 10), behavior: 'smooth' });
-  $$('#wallet-dots .w-dot').forEach(b => b.classList.toggle('on', +b.dataset.wi === _walletIdx));
+  $$('#wallet-dots .acct-tab').forEach(b => b.classList.toggle('on', +b.dataset.wi === _walletIdx));
 }
 function onWalletScroll() {
   const c = $('wallet-carousel'); if (!c || !c.clientWidth) return;
   const idx = c.scrollLeft > c.clientWidth * 0.45 ? 1 : 0;
   if (idx !== _walletIdx) {
     _walletIdx = idx;
-    $$('#wallet-dots .w-dot').forEach(b => b.classList.toggle('on', +b.dataset.wi === _walletIdx));
+    $$('#wallet-dots .acct-tab').forEach(b => b.classList.toggle('on', +b.dataset.wi === _walletIdx));
   }
 }
 function openGigsFromCard() {
@@ -777,16 +794,30 @@ function syncWidget() {
 function openGoalSettings() { go('settings'); setTimeout(() => { const el = $('set-goal'); if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.focus(); } }, 220); }
 function renderHome() {
   const P = periodFromKey(selKey), D = periodData(selKey), cur = curPeriod(), isCur = P.key === cur.key, isPast = P.sort < cur.sort, td = today();
-  // Slide 0: Main Payroll Net Pay
-  setText($('w-label'), P.badge + (isCur ? '' : (isPast ? ' · past' : ' · upcoming')));
+  // Slide 0: Main Payroll Account Card (Banking / Trading style)
+  setText($('w-label'), `Main payroll · ${P.badge}${isCur ? '' : (isPast ? ' · closed' : ' · upcoming')}`);
   $('w-live').style.display = isCur ? '' : 'none';
   setAmt(D.net);
+  const prevP = periodOf(dstr(addDays(P.start, -1))), prevD = periodData(prevP.key);
+  const wDelta = $('w-delta');
+  if (wDelta) {
+    if (prevD.net > 0 && D.net > 0) {
+      const pct = Math.round(((D.net - prevD.net) / prevD.net) * 1000) / 10;
+      const up = pct >= 0;
+      wDelta.className = 'w-delta num ' + (up ? 'up' : 'dn');
+      setText(wDelta, settings.hide ? (up ? '▲ Up' : '▼ Down') : `${up ? '▲ +' : '▼ '}${pct}% vs prev`);
+    } else if (D.net > 0) {
+      wDelta.className = 'w-delta num up';
+      setText(wDelta, `${D.t.n} shift${D.t.n === 1 ? '' : 's'} logged`);
+    } else {
+      wDelta.className = 'w-delta num hidden';
+    }
+  }
   const planned = D.list.filter(s => shiftStatusOf(s) === 'scheduled'), planSum = planned.reduce((a, s) => a + s.gross, 0), lag = Math.max(0, +settings.payLag || 0), parts = [];
   if (lag > 0) { const pdte = addDays(P.end, lag), diff = dayNum(dstr(pdte)) - dayNum(td); parts.push(`Payday ${MON[pdte.getMonth()]} ${pdte.getDate()}${diff >= 0 && diff <= 14 ? (diff === 0 ? ' · today' : ` · in ${diff}d`) : ''}`); }
   if (planSum > 0) parts.push(settings.hide ? `${planned.length} planned` : `${peso(planSum)} planned`);
-  if (D.gigPaid > 0) parts.push('Swipe left for side gigs');
   setText($('w-sub'), parts.join(' · ') || (D.t.n ? '' : 'No shifts in this cutoff yet'));
-  setText($('ws-g'), money(D.grossAll)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n} shift${D.t.n > 1 ? 's' : ''}` : '0h');
+  setText($('ws-g'), money(D.grossAll)); setText($('ws-d'), settings.hide ? MASK : '−' + peso(D.d.total)); setText($('ws-h'), D.t.n ? `${fh(D.t.hrs)} · ${D.t.n}sh` : '0h');
   const left = dayNum(P.endStr) - dayNum(td), total = dayNum(P.endStr) - dayNum(P.startStr) + 1;
   let f, n, u;
   if (isCur) { f = Math.min(1, (dayNum(td) - dayNum(P.startStr) + 1) / total); n = left === 0 ? '0' : String(left); u = left === 1 ? 'day' : 'days'; }
@@ -809,10 +840,10 @@ function renderHome() {
     }
     setText($('g-txt'), gLabel); $('g-fill').style.transform = `scaleX(${pc / 100})`;
   }
-  const W = Math.max(200, Math.min(document.documentElement.clientWidth || 360, innerWidth >= 600 ? 560 : 520) - (innerWidth >= 600 ? 76 : 60)), ti = isCur ? dayRange(P).indexOf(td) : (isPast ? dayRange(P).length - 1 : -1);
-  renderSpark(P, D.list.filter(isShiftActive), ti, W);
+  const W = Math.max(200, Math.min(document.documentElement.clientWidth || 360, innerWidth >= 768 ? 420 : 500) - 56), ti = isCur ? dayRange(P).indexOf(td) : (isPast ? dayRange(P).length - 1 : -1);
+  renderSpark(P, D.list.filter(isShiftActive), ti, W, 'spark', s => s.gross);
 
-  // Slide 1: Dedicated Side Gigs Earnings Card
+  // Slide 1: Sibling Side Gigs Account Card (Unified Fintech Theme)
   setText($('wg-label'), `Side gigs · ${P.badge}`);
   setGigAmt(D.gigPaid);
   const gCnt = D.gList.length;
@@ -822,17 +853,28 @@ function renderHome() {
   const byStream = new Map();
   D.gList.forEach(g => { byStream.set(g.stream, (byStream.get(g.stream) || 0) + g.amount); });
   const topStream = [...byStream.entries()].sort((a, b) => b[1] - a[1])[0];
-  const gSubParts = [];
-  if (topStream) gSubParts.push(`Top: ${topStream[0]}`);
-  if (D.gigPending > 0) gSubParts.push(settings.hide ? 'pending payouts' : `${peso(D.gigPending)} pending`);
-  setText($('wg-sub'), gSubParts.join(' · ') || 'No side gigs logged in this cutoff yet');
+  const wgDelta = $('wg-delta');
+  if (wgDelta) {
+    if (D.gigPending > 0) {
+      wgDelta.className = 'w-delta num warn';
+      setText(wgDelta, settings.hide ? 'Pending' : `${peso(D.gigPending)} pending`);
+    } else if (D.gigPaid > 0) {
+      wgDelta.className = 'w-delta num up';
+      setText(wgDelta, '100% settled');
+    } else {
+      wgDelta.className = 'w-delta num hidden';
+    }
+  }
+  setText($('wg-sub'), topStream ? `Top stream: ${topStream[0]}` : 'No side gigs logged in this cutoff yet');
+  renderSpark(P, D.gList.filter(g => g.status !== 'pending'), ti, W, 'gig-spark', g => g.amount);
   const pPct = D.gigTotal > 0 ? Math.round(D.gigPaid / D.gigTotal * 100) : 0;
   const pePct = D.gigTotal > 0 ? Math.max(0, 100 - pPct) : 0;
   if ($('wg-bar-paid')) $('wg-bar-paid').style.width = pPct + '%';
   if ($('wg-bar-pend')) $('wg-bar-pend').style.width = pePct + '%';
-  setText($('wg-total-line'), `Total earnings for budget: ${money(D.netAll)}`);
-  setText($('wgs-paid'), money(D.gigPaid)); setText($('wgs-pend'), money(D.gigPending)); setText($('wgs-tot'), money(D.gigTotal));
+  setText($('wgs-paid'), money(D.gigPaid)); setText($('wgs-pend'), money(D.gigPending)); setText($('wgs-tot'), money(D.netAll));
   setText($('wd-gig-cnt'), gCnt > 0 ? `(${gCnt})` : '');
+  setText($('wt-pay-amt'), shortPeso(D.net));
+  setText($('wt-gig-amt'), shortPeso(D.gigPaid));
 
   // Recent activity (shifts + side gigs)
   const recItems = [...D.list.map(s => ({ k: 's', date: s.date, id: s.id, st: s.startTime || '', o: s })), ...D.gList.map(g => ({ k: 'g', date: g.date, id: g.id, st: g.startTime || '23:59', o: g }))]
@@ -3135,6 +3177,7 @@ function sanitizeRestoredSettings(raw) {
   if (s.ndRate !== undefined) out.ndRate = r2(num(s.ndRate, 0, 0.5, 0.10));
   if (s.otThreshold !== undefined) out.otThreshold = Math.round(num(s.otThreshold, 0, 16, 8));
   if (['auto', 'on', 'off'].includes(s.liteMode)) out.liteMode = s.liteMode;
+  if (['surface', 'obsidian', 'tinted'].includes(s.cardStyle)) out.cardStyle = s.cardStyle;
   if (WORK_PROFILES[s.workProfile] || s.workProfile === 'custom') out.workProfile = s.workProfile;
   if (['first', 'split', 'last'].includes(s.deductMode)) out.deductMode = s.deductMode;
   if (s.statMinGross !== undefined) out.statMinGross = r2(num(s.statMinGross, 0, 100000, 2000));
@@ -3596,22 +3639,22 @@ function initBrand() {
   setTimeout(dismissSplash, matchMedia('(prefers-reduced-motion: reduce)').matches ? 500 : 1300);
 }
 const RELEASE_NOTES = {
-  version: '2.7',
-  sub: 'Faster on low-end phones, PC-ready & smart real-time updates',
+  version: '2.7.1',
+  sub: 'Banking & trading-grade UI redesign + unified account cards',
   items: [
-    ['Speed', 'ok', 'Rebuilt with O(1) pay math, clean split assets, zero layout reflows & auto Lite Motion Mode for smooth performance on 3–4 GB RAM phones (like OPPO A16/CPH2269).'],
-    ['Responsive', '', 'Adapts seamlessly to phones, tablets, and laptops/PCs with a desktop sidebar, side-by-side Payroll & Side Gigs cards, and centered dialogs.'],
-    ['PH Rules', '', '2026 DOLE regional wage presets, 1-tap Work Situation Profiles, 11–25/26–10 cutoff option, plus customizable Pre-Holiday (1.30×), Night Diff & OT rules.'],
-    ['Updates', 'ok', 'Real-time update checks on open, resume, reconnect & background Android notifications so you always hear about new releases right away.']
+    ['Fintech UI', 'ok', 'Redesigned Main Payroll & Side Gigs into sibling banking/trading account cards (inspired by GoTyme, MariBank & Maya) with hairline tables, trading delta pills, and dual sparklines.'],
+    ['Card Finishes', '', 'Side Gigs is no longer locked to green — both cards follow your theme and new Balance Card Finish (Surface, Obsidian black card, or matte Tinted) under Settings → Appearance.'],
+    ['Monochrome', '', 'Added a crisp Black & White Monochrome accent theme, neutral bank-ledger shift rows, flush bottom bar, and zero neon glow shadows.'],
+    ['Performance', 'ok', 'Keeps the v2.7 O(1) pay engine, auto Lite Motion Mode for low-end devices, desktop sidebar workspace, PH 2026 wage profiles, and real-time update notifications.']
   ]
 };
 
 const isDesktopLayout = () => window.innerWidth >= 1024;
 const TOUR = [
-  { view: 'home', t: 'Welcome to SweldoPulse 2.7', b: 'Track shifts, side gigs, payslips, and budgets effortlessly on phone or PC. Here is a quick tour of what you can do.' },
+  { view: 'home', t: 'Welcome to SweldoPulse 2.7.1', b: 'Track shifts, side gigs, payslips, and budgets in a clean banking-grade workspace on phone or PC. Here is a quick tour.' },
   { view: 'settings', sel: '#set-payroll-card', t: '1 · Work profile & PH wage rules', b: 'Pick your work situation (Working Student, Full-Time, BPO, Weekly, or Freelance), choose your 2026 DOLE regional wage or custom rate, and tune Pre-Holiday 1.3×, Night Diff, and OT rules.' },
   { view: 'home', sel: () => isDesktopLayout() ? '#sb-add-btn' : '.fab', t: '2 · Log shifts, side gigs & overlap guard', b: 'Tap + to log hourly shifts or timed side gigs. Overlapping hours are caught automatically so duplicate duties never inflate your pay.' },
-  { view: 'home', sel: '#hero', t: '3 · Payroll & Side Gigs cards', b: 'Your Main Payroll net pay is front and center. Swipe left on mobile (or look right on tablet/PC) to view your emerald Side Gigs card — Budgeting totals both automatically.' },
+  { view: 'home', sel: '#hero', t: '3 · Sibling Payroll & Side Gigs accounts', b: 'Switch between Payroll and Side Gigs via the top account tabs or swipe (side-by-side on PC/tablet). Both share your chosen Surface, Obsidian, or Tinted finish with live sparklines and performance deltas.' },
   { view: 'shifts', sel: '#cal-toggle', t: '4 · Calendar & Smart Importer', b: 'Toggle the monthly calendar to inspect shifts by day, or tap the menu (⋯) to bulk-log a week or paste crew schedules with automatic holiday & pre-holiday detection.' },
   { view: 'budget', sel: '#bud-tabs', t: '5 · Budget, Dues & Vaults', b: 'Track Needs/Wants spending, recurring bills, PayLater/Utang (with partial payments), and Savings Vaults — powered by your combined Payroll + Side Gigs earnings.' },
   { view: 'deductions', sel: '#recon-card', t: '6 · Payslip & Actual Pay Check', b: 'Compare your employer payout against SweldoPulse estimates. Entering Actual Pay automatically locks the cutoff snapshot so future rate edits never alter past slips.' },

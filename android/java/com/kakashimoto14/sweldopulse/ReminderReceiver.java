@@ -370,7 +370,7 @@ public class ReminderReceiver extends BroadcastReceiver {
     static void runBackgroundUpdateCheck(Context ctx) {
         SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String repo = sp.getString(KEY_UPD_REPO, "Kakashimoto14/SuweldoPulse");
-        String curVer = sp.getString(KEY_UPD_CUR, "2.7.0");
+        String curVer = sp.getString(KEY_UPD_CUR, "2.7.1");
         String lastNotified = sp.getString(KEY_UPD_NOTIFIED, "");
         if (repo == null || !repo.matches("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")) return;
         HttpURLConnection conn = null;
@@ -425,7 +425,7 @@ public class ReminderReceiver extends BroadcastReceiver {
         SharedPreferences.Editor ed = sp.edit()
             .putBoolean(KEY_UPD_ON, enabled)
             .putString(KEY_UPD_REPO, (repo != null && repo.length() > 0) ? repo : "Kakashimoto14/SuweldoPulse")
-            .putString(KEY_UPD_CUR, (curVer != null && curVer.length() > 0) ? curVer : "2.7.0");
+            .putString(KEY_UPD_CUR, (curVer != null && curVer.length() > 0) ? curVer : "2.7.1");
         ed.apply();
         if (enabled) scheduleUpdateAlarm(ctx);
         else cancelAlarm(ctx, ACTION_UPD, REQ_UPD);
