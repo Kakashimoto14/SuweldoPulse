@@ -1,4 +1,4 @@
-const APP_VERSION = '2.7.1';
+const APP_VERSION = '2.7.2';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', DEBTS_KEY = 'sweldo_pulse_debts_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -698,13 +698,14 @@ function gigRow(g, del) {
 }
 const sortShifts = (a, b) => b.date.localeCompare(a.date) || (b.startTime || '').localeCompare(a.startTime || '') || b.id - a.id;
 function dayRange(P) { const out = []; for (let d = P.start; dstr(d) <= P.endStr; d = addDays(d, 1)) out.push(dstr(d)); return out; }
-const _sparkSigs = {};
+const _sparkSigs = {}, _sparkMeta = {}, _sparkTimers = {};
 function renderSpark(P, list, ti, W, elId = 'spark', valFn = s => s.gross) {
   const el = $(elId); if (!el) return;
   const H = 38, days = dayRange(P), n = days.length, by = {};
   list.forEach(s => { by[s.date] = (by[s.date] || 0) + (+valFn(s) || 0); });
-  let cum = 0; const pts = days.map(d => (cum += by[d] || 0)), max = cum;
+  let cum = 0; const daily = days.map(d => r2(by[d] || 0)), pts = daily.map(v => (cum = r2(cum + v))), max = cum;
   const x = i => n > 1 ? i / (n - 1) * W : 0, y = v => max > 0 ? H - 5 - (v / max) * (H - 12) : H - 6;
+  _sparkMeta[elId] = { days, pts, daily, max, W, H, ti };
   let html = `<line class="base" x1="0" y1="${H - 5}" x2="${W}" y2="${H - 5}"/>`;
   if (max <= 0) {
     html += `<line class="idle" x1="0" y1="${H - 5}" x2="${W}" y2="${H - 5}"/>`;
@@ -714,9 +715,77 @@ function renderSpark(P, list, ti, W, elId = 'spark', valFn = s => s.gross) {
     if (ti < n - 1) html += `<path class="fu" d="${seg(Math.max(0, ti), n - 1)}"/>`;
     if (ti >= 0 && ti < n) html += `<circle class="hd-r" cx="${x(ti).toFixed(1)}" cy="${y(pts[ti]).toFixed(1)}" r="5.5"/><circle class="hd" cx="${x(ti).toFixed(1)}" cy="${y(pts[ti]).toFixed(1)}" r="2.6"/>`;
   }
+  html += `<g id="${elId}-scrub" class="hidden"><line class="scrub-ln" x1="0" y1="2" x2="0" y2="${H - 5}"/><circle class="scrub-r" cx="0" cy="0" r="6"/><circle class="scrub-dot" cx="0" cy="0" r="3"/></g>`;
   const sig = selKey + '|' + W + '|' + html;
   if (sig === _sparkSigs[elId]) return; _sparkSigs[elId] = sig;
   el.setAttribute('viewBox', `0 0 ${W} ${H}`); el.innerHTML = html;
+  clearSparkScrub(elId);
+}
+function clearSparkScrub(elId) {
+  clearTimeout(_sparkTimers[elId]);
+  const g = $(elId + '-scrub'), tip = $(elId + '-tip');
+  if (g) g.classList.add('hidden');
+  if (tip) tip.classList.add('hidden');
+}
+function updateSparkScrub(elId, clientX) {
+  const m = _sparkMeta[elId], svg = $(elId), tip = $(elId + '-tip'), g = $(elId + '-scrub');
+  if (!m || !svg || !tip || !g || !m.days.length) return;
+  const rect = svg.getBoundingClientRect();
+  if (!rect.width) return;
+  const frac = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  const n = m.days.length, idx = n > 1 ? Math.round(frac * (n - 1)) : 0;
+  const sx = n > 1 ? (idx / (n - 1)) * m.W : 0;
+  const sy = m.max > 0 ? m.H - 5 - (m.pts[idx] / m.max) * (m.H - 12) : m.H - 6;
+  const ln = g.firstChild, rC = g.children[1], dC = g.children[2];
+  if (ln) { ln.setAttribute('x1', sx.toFixed(1)); ln.setAttribute('x2', sx.toFixed(1)); }
+  if (rC) { rC.setAttribute('cx', sx.toFixed(1)); rC.setAttribute('cy', sy.toFixed(1)); }
+  if (dC) { dC.setAttribute('cx', sx.toFixed(1)); dC.setAttribute('cy', sy.toFixed(1)); }
+  g.classList.remove('hidden');
+  const dObj = pd(m.days[idx]), dLbl = `${MON[dObj.getMonth()]} ${dObj.getDate()}`;
+  const valStr = settings.hide ? MASK : peso(m.pts[idx]);
+  const addStr = (!settings.hide && m.daily[idx] > 0) ? ` (+${shortPeso(m.daily[idx])})` : '';
+  setText(tip, `${dLbl} · ${valStr}${addStr}`);
+  tip.classList.remove('hidden');
+  const tw = tip.offsetWidth || 120, px = frac * rect.width;
+  const left = Math.max(0, Math.min(rect.width - tw, px - tw / 2));
+  tip.style.left = left.toFixed(1) + 'px';
+}
+function initSparkScrub() {
+  [['spark-box', 'spark'], ['gig-spark-box', 'gig-spark']].forEach(([boxId, elId]) => {
+    const box = $(boxId); if (!box || box._scrubInit) return;
+    box._scrubInit = true;
+    let active = false, startX = 0, moved = false;
+    box.addEventListener('pointerdown', e => {
+      active = true; moved = false; startX = e.clientX;
+      clearTimeout(_sparkTimers[elId]);
+      e.stopPropagation();
+      try { box.setPointerCapture(e.pointerId); } catch (err) {}
+      updateSparkScrub(elId, e.clientX);
+    });
+    box.addEventListener('pointermove', e => {
+      if (active) {
+        if (Math.abs(e.clientX - startX) > 6) moved = true;
+        e.stopPropagation();
+        updateSparkScrub(elId, e.clientX);
+      } else if (e.pointerType === 'mouse') {
+        updateSparkScrub(elId, e.clientX);
+      }
+    });
+    const endScrub = e => {
+      if (!active) return;
+      active = false;
+      try { box.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (!moved) {
+        clearTimeout(_sparkTimers[elId]);
+        _sparkTimers[elId] = setTimeout(() => clearSparkScrub(elId), 2000);
+      } else {
+        clearSparkScrub(elId);
+      }
+    };
+    box.addEventListener('pointerup', endScrub);
+    box.addEventListener('pointercancel', endScrub);
+    box.addEventListener('pointerleave', e => { if (!active && e.pointerType === 'mouse') clearSparkScrub(elId); });
+  });
 }
 const activeNetOf = D => D.netAll;
 let _walletIdx = 0;
@@ -770,7 +839,9 @@ function syncWidget() {
     const dark = isDark(), theme = settings.themeMode === 'amoled' ? 'amoled' : (dark ? 'dark' : 'light');
     const P = ACCENTS[settings.accentTheme] || ACCENTS.indigo;
     const accent = dark && P.ad ? P.ad : P.a;
+    const accentFg = (dark && P.fgd) ? P.fgd : '#FFFFFF';
     const accentText = dark ? P.td : P.tl;
+    const cardStyle = settings.cardStyle || 'surface';
     const exListCur = expensesIn(cur.key);
     const spCur = r2(exListCur.reduce((a, e) => a + e.amount, 0));
     const remBudget = money(r2(D.netAll - spCur));
@@ -784,7 +855,7 @@ function syncWidget() {
         net: netText, badge: badgeText, meta: metaText, period: cur.label,
         gross: money(D.grossAll), ded: settings.hide ? MASK : '−' + peso(D.d.total),
         extra, remBudget, dueTitle, dueLine, dueUrgent, appHide: !!settings.hide, pinLocked,
-        theme, accent, accentText
+        theme, cardStyle, accent, accentFg, accentText
       }));
     } else if (typeof AndroidBridge.updateWidget === 'function') {
       AndroidBridge.updateWidget(netText, badgeText, metaText, cur.label);
@@ -1046,7 +1117,7 @@ function renderDues() {
     return `<div class="due-card${d.settled ? ' settled' : ''}">` +
       `<div class="row between"><div class="grow" onclick="openDebtSheet(${d.id})" role="button" tabindex="0"><p class="card-t">${esc(d.name)}</p><p class="card-s num">${kindTag}${d.note ? ' · ' + esc(d.note) : ''}</p></div>` +
       `<div class="row" style="gap:6px">${!d.settled && d.dueDate ? `<span class="chip ${dm.cls} num">${dm.label}</span>` : ''}${actions}</div></div>` +
-      `<div class="row between" style="font-size:12.5px"><span class="muted num">${subLeft}</span><b class="num ${isOwed ? 'pos-ok' : ''}">${d.settled ? money(d.amount) : `${money(remBal)} left`}</b></div>` +
+      `<div class="due-meta"><span class="muted num">${subLeft}</span><b class="num ${isOwed ? 'pos-ok' : ''}">${d.settled ? money(d.amount) : `${money(remBal)} left`}</b></div>` +
       ((isPL || paidAmt > 0) ? `<div class="env-bar" style="margin-top:0"><i class="ok" style="transform:scaleX(${(pc / 100).toFixed(3)})"></i></div>` : '') +
       `</div>`;
   }).join(''));
@@ -3262,73 +3333,155 @@ function payslipText() {
   return lines.join('\n');
 }
 async function copyPayslip() { toast((await copyText(payslipText())) ? 'Payslip copied' : "Couldn't copy"); }
-async function viewPayslip() {
-  try { await document.fonts.load('700 40px Inter'); await document.fonts.load('500 40px Inter'); } catch (e) {}
-  const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d, W = 1080;
-  const rows = [['Basic pay', t.basic], ['Night differential', t.nd], ['Overtime & holiday', t.otp]];
-  if (D.allow > 0) rows.push(['Allowances & add-ons', D.allow]);
-  rows.push(['Gross pay', D.grossAll, 1], ['SSS', -d.sss], ['PhilHealth', -d.ph], ['Pag-IBIG', -d.pi], ['Withholding tax', -d.tax], ['Other deductions', -d.oth], ['Total deductions', -d.total, 1]);
-  if (D.actual !== null) rows.push(['Actual received', D.actual, 1]);
-  const H = 560 + rows.length * 78 + 250, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
-  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#161B33'); g.addColorStop(1, '#07090F'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-  const gold = x.createLinearGradient(0, 0, W, 0); gold.addColorStop(0, '#FFE08A'); gold.addColorStop(.5, '#F5A524'); gold.addColorStop(1, '#F0643C');
-  x.save(); x.translate(72, 72); x.scale(2.6, 2.6); x.fillStyle = '#0B0F1E'; x.beginPath(); if (x.roundRect) x.roundRect(0, 0, 64, 64, 16); else x.rect(0, 0, 64, 64); x.fill();
+function exportPalette() {
+  const dark = isDark() || settings.cardStyle === 'obsidian';
+  const P = ACCENTS[settings.accentTheme] || ACCENTS.indigo;
+  const accent = dark ? (P.cd || P.ad || P.a) : (P.cl || P.a);
+  return dark
+    ? { dark: true, bg: '#090B10', card: '#12151E', subCard: '#181C28', line: '#232938', t1: '#F8FAFC', t2: '#CBD5E1', t3: '#7C8AA2', ok: '#10B981', bad: '#F43F5E', accent }
+    : { dark: false, bg: '#EEF0F5', card: '#FFFFFF', subCard: '#F6F7FA', line: '#DCE2EC', t1: '#0B0F19', t2: '#334155', t3: '#64748B', ok: '#059669', bad: '#DC2626', accent };
+}
+function drawBrandMark(x, px, py, sc) {
+  const gold = x.createLinearGradient(0, 0, 64, 64); gold.addColorStop(0, '#FFE08A'); gold.addColorStop(.5, '#F5A524'); gold.addColorStop(1, '#F0643C');
+  x.save(); x.translate(px, py); x.scale(sc, sc);
+  x.fillStyle = '#0B0F1E'; x.beginPath(); if (x.roundRect) x.roundRect(0, 0, 64, 64, 16); else x.rect(0, 0, 64, 64); x.fill();
   x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = gold; x.lineWidth = 4.4; x.beginPath(); x.arc(32, 32, 19, 0, 7); x.stroke();
   const pl = () => { x.beginPath(); x.moveTo(7, 34); x.lineTo(22, 34); x.lineTo(27, 22); x.lineTo(33, 46); x.lineTo(38, 34); x.lineTo(57, 34); };
-  x.strokeStyle = '#0B0F1E'; x.lineWidth = 10; pl(); x.stroke(); x.strokeStyle = '#fff'; x.lineWidth = 4; pl(); x.stroke(); x.fillStyle = '#F5A524'; x.beginPath(); x.arc(57, 34, 2.8, 0, 7); x.fill(); x.restore();
-  x.fillStyle = '#fff'; x.font = '700 54px Inter, sans-serif'; x.fillText('SweldoPulse', 270, 124);
-  x.fillStyle = '#8A8AA8'; x.font = '500 30px Inter, sans-serif'; x.fillText('Payslip estimate', 270, 168);
-  x.fillStyle = '#fff'; x.font = '600 40px Inter, sans-serif'; x.fillText(P.label, 72, 300);
-  x.fillStyle = '#8A8AA8'; x.font = '500 28px Inter, sans-serif'; x.fillText(`${t.n} shift${t.n === 1 ? '' : 's'} · ${fh(t.hrs)} · ${peso(settings.hourlyRate)}/hr`, 72, 350);
-  let y = 440; x.strokeStyle = 'rgba(255,255,255,.12)'; x.lineWidth = 2;
-  rows.forEach(r => { x.beginPath(); x.moveTo(72, y - 50); x.lineTo(W - 72, y - 50); x.stroke(); x.font = (r[2] ? '700 ' : '500 ') + '32px Inter, sans-serif'; x.fillStyle = r[2] ? '#fff' : '#C9CBE0'; x.textAlign = 'left'; x.fillText(r[0], 72, y);
-    x.textAlign = 'right'; x.fillStyle = r[1] < 0 ? '#FB7185' : (r[2] ? '#fff' : '#C9CBE0'); x.fillText((r[1] < 0 ? '-' : '') + peso(Math.abs(r[1])), W - 72, y); y += 78; });
-  x.textAlign = 'left'; x.fillStyle = '#8A8AA8'; x.font = '600 28px Inter, sans-serif'; x.fillText('NET TAKE-HOME', 72, y + 50);
-  x.fillStyle = gold; x.font = '700 92px Inter, sans-serif'; x.fillText(peso(D.net), 72, y + 150);
-  x.fillStyle = '#5E6180'; x.font = '500 22px Inter, sans-serif'; x.fillText('Estimate by SweldoPulse · ' + new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }) + ' · not an official payslip', 72, H - 44);
+  x.strokeStyle = '#0B0F1E'; x.lineWidth = 10; pl(); x.stroke(); x.strokeStyle = '#fff'; x.lineWidth = 4; pl(); x.stroke();
+  x.fillStyle = '#F5A524'; x.beginPath(); x.arc(57, 34, 2.8, 0, 7); x.fill(); x.restore();
+}
+function drawRoundBox(x, bx, by, bw, bh, r, fill, stroke) {
+  x.beginPath(); if (x.roundRect) x.roundRect(bx, by, bw, bh, r); else x.rect(bx, by, bw, bh);
+  if (fill) { x.fillStyle = fill; x.fill(); }
+  if (stroke) { x.strokeStyle = stroke; x.lineWidth = 2; x.stroke(); }
+}
+async function viewPayslip() {
+  try { await document.fonts.load('700 40px Inter'); await document.fonts.load('500 40px Inter'); } catch (e) {}
+  const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d, W = 1080, K = exportPalette();
+  const rows = [['Basic regular pay', t.basic], ['Night differential', t.nd], ['Overtime & holiday', t.otp]];
+  if (D.allow > 0) rows.push(['Allowances & add-ons', D.allow]);
+  rows.push(['Gross earnings', D.grossAll, 1], ['SSS', -d.sss], ['PhilHealth', -d.ph], ['Pag-IBIG', -d.pi], ['Withholding tax', -d.tax], ['Other / cash advance', -d.oth], ['Total deductions', -d.total, 1]);
+  if (D.actual !== null) rows.push(['Actual pay received', D.actual, 1]);
+  const H = 680 + rows.length * 70 + 130, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.fillStyle = K.bg; x.fillRect(0, 0, W, H);
+  // Institutional Statement Sheet
+  drawRoundBox(x, 44, 44, W - 88, H - 88, 32, K.card, K.line);
+  // Subtle top accent hairline bar
+  x.fillStyle = K.accent; x.fillRect(84, 44, W - 168, 6);
+  // Header
+  drawBrandMark(x, 88, 92, 1.45);
+  x.textAlign = 'left';
+  x.fillStyle = K.t1; x.font = '700 38px Inter, sans-serif'; x.fillText('SweldoPulse', 202, 134);
+  x.fillStyle = K.t3; x.font = '600 22px Inter, sans-serif'; x.fillText('PAYSLIP STATEMENT · ' + P.badge.toUpperCase(), 202, 168);
+  x.textAlign = 'right';
+  x.fillStyle = K.t2; x.font = '600 24px Inter, sans-serif'; x.fillText(P.label, W - 88, 134);
+  x.fillStyle = K.t3; x.font = '500 22px Inter, sans-serif'; x.fillText(`${t.n} shift${t.n === 1 ? '' : 's'} · ${fh(t.hrs)} · ${peso(settings.hourlyRate)}/hr`, W - 88, 168);
+  // Hero Net Take-Home Band
+  drawRoundBox(x, 88, 224, W - 176, 210, 22, K.subCard, K.line);
+  x.textAlign = 'left';
+  x.fillStyle = K.t3; x.font = '700 21px Inter, sans-serif'; x.fillText('NET TAKE-HOME PAY', 124, 272);
+  x.fillStyle = K.t1; x.font = '700 76px Inter, sans-serif'; x.fillText(peso(D.net), 124, 360);
+  if (D.gigPaid > 0) {
+    x.fillStyle = K.ok; x.font = '600 22px Inter, sans-serif';
+    x.fillText(`+ ${peso(D.gigPaid)} paid side gigs (Total pool: ${peso(D.netAll)})`, 124, 406);
+  } else {
+    x.fillStyle = K.t3; x.font = '500 22px Inter, sans-serif';
+    x.fillText(`${fh(t.reg)} reg · ${fh(t.ndH)} night · ${fh(t.otH)} OT`, 124, 406);
+  }
+  // 3-Column Hairline Metrics Strip
+  const mY = 464, colW = (W - 176) / 3;
+  drawRoundBox(x, 88, mY, W - 176, 108, 18, K.card, K.line);
+  const strip = [['GROSS PAY', peso(D.grossAll), K.t1], ['DEDUCTIONS', '−' + peso(d.total), K.bad], ['HOURS WORKED', fh(t.hrs), K.t1]];
+  strip.forEach((it, idx) => {
+    const cx = 88 + idx * colW;
+    if (idx > 0) { x.strokeStyle = K.line; x.lineWidth = 2; x.beginPath(); x.moveTo(cx, mY + 20); x.lineTo(cx, mY + 88); x.stroke(); }
+    x.textAlign = 'left';
+    x.fillStyle = K.t3; x.font = '700 18px Inter, sans-serif'; x.fillText(it[0], cx + 26, mY + 42);
+    x.fillStyle = it[2]; x.font = '700 30px Inter, sans-serif'; x.fillText(it[1], cx + 26, mY + 84);
+  });
+  // Statement Ledger Table
+  let y = 636;
+  x.textAlign = 'left'; x.fillStyle = K.t3; x.font = '700 20px Inter, sans-serif'; x.fillText('ITEMIZED BREAKDOWN', 88, y - 22);
+  x.textAlign = 'right'; x.fillText('AMOUNT (PHP)', W - 88, y - 22);
+  rows.forEach(r => {
+    x.strokeStyle = K.line; x.lineWidth = r[2] ? 2.2 : 1.5;
+    x.beginPath(); x.moveTo(88, y - 4); x.lineTo(W - 88, y - 4); x.stroke();
+    y += 44;
+    if (r[2]) { x.fillStyle = K.subCard; x.fillRect(88, y - 42, W - 176, 58); }
+    x.textAlign = 'left'; x.font = (r[2] ? '700 ' : '500 ') + '28px Inter, sans-serif';
+    x.fillStyle = r[2] ? K.t1 : K.t2; x.fillText(r[0], 104, y);
+    x.textAlign = 'right';
+    x.fillStyle = r[1] < 0 ? K.bad : (r[2] ? K.t1 : K.t2);
+    x.fillText((r[1] < 0 ? '−' : '') + peso(Math.abs(r[1])), W - 104, y);
+    y += 26;
+  });
+  // Footer
+  x.textAlign = 'left'; x.fillStyle = K.t3; x.font = '500 20px Inter, sans-serif';
+  x.fillText(`Generated by SweldoPulse v${APP_VERSION} · ${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })} · Estimate only`, 88, H - 82);
   window.__payslipCanvas = c; window.__payslipName = `SweldoPulse-payslip-${today()}.png`; $('payslip-img').src = c.toDataURL('image/png'); $('payslip-modal').classList.add('on');
 }
 async function viewInsightsCard() {
   try { await document.fonts.load('700 40px Inter'); await document.fonts.load('500 40px Inter'); } catch (e) {}
-  const D = _insCache || computeYearData(ui.insYear), W = 1080, H = 1320;
+  const D = _insCache || computeYearData(ui.insYear), W = 1080, H = 1340, K = exportPalette();
   const allMode = settings.incomeScope === 'all' && D.totGigs > 0;
   const yearNet = allMode ? r2(D.totNet + D.totGigs) : D.totNet;
   const eff = D.totHrs > 0 ? r2(D.totGross / D.totHrs) : 0;
   const statTot = r2(D.st.sss + D.st.ph + D.st.pi + D.st.tax);
   const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
-  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#161B33'); g.addColorStop(1, '#07090F'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-  const gold = x.createLinearGradient(0, 0, W, 0); gold.addColorStop(0, '#FFE08A'); gold.addColorStop(.5, '#F5A524'); gold.addColorStop(1, '#F0643C');
-  x.save(); x.translate(72, 68); x.scale(2.4, 2.4); x.fillStyle = '#0B0F1E'; x.beginPath(); if (x.roundRect) x.roundRect(0, 0, 64, 64, 16); else x.rect(0, 0, 64, 64); x.fill();
-  x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = gold; x.lineWidth = 4.4; x.beginPath(); x.arc(32, 32, 19, 0, 7); x.stroke();
-  const pl = () => { x.beginPath(); x.moveTo(7, 34); x.lineTo(22, 34); x.lineTo(27, 22); x.lineTo(33, 46); x.lineTo(38, 34); x.lineTo(57, 34); };
-  x.strokeStyle = '#0B0F1E'; x.lineWidth = 10; pl(); x.stroke(); x.strokeStyle = '#fff'; x.lineWidth = 4; pl(); x.stroke(); x.fillStyle = '#F5A524'; x.beginPath(); x.arc(57, 34, 2.8, 0, 7); x.fill(); x.restore();
-  x.fillStyle = '#fff'; x.font = '700 50px Inter, sans-serif'; x.fillText('SweldoPulse', 256, 118);
-  x.fillStyle = '#94A3B8'; x.font = '500 28px Inter, sans-serif'; x.fillText(`${D.yr} Year-in-Review`, 256, 160);
-  x.fillStyle = '#94A3B8'; x.font = '600 26px Inter, sans-serif'; x.fillText(allMode ? 'TOTAL NET INCOME (PAYROLL + GIGS)' : 'TOTAL NET PAYROLL', 72, 290);
-  x.fillStyle = gold; x.font = '700 88px Inter, sans-serif'; x.fillText(peso(yearNet), 72, 388);
+  x.fillStyle = K.bg; x.fillRect(0, 0, W, H);
+  drawRoundBox(x, 44, 44, W - 88, H - 88, 32, K.card, K.line);
+  x.fillStyle = K.accent; x.fillRect(84, 44, W - 168, 6);
+  drawBrandMark(x, 88, 92, 1.45);
+  x.textAlign = 'left';
+  x.fillStyle = K.t1; x.font = '700 38px Inter, sans-serif'; x.fillText('SweldoPulse', 202, 134);
+  x.fillStyle = K.t3; x.font = '600 22px Inter, sans-serif'; x.fillText(`${D.yr} ANNUAL EARNINGS SUMMARY`, 202, 168);
+  x.textAlign = 'right';
+  x.fillStyle = K.t2; x.font = '600 24px Inter, sans-serif'; x.fillText(`${D.cutoffCount} Active Cutoff${D.cutoffCount === 1 ? '' : 's'}`, W - 88, 134);
+  x.fillStyle = K.t3; x.font = '500 22px Inter, sans-serif'; x.fillText(allMode ? 'Payroll + Side Gigs' : 'Main Payroll', W - 88, 168);
+  // Hero Annual Net Box
+  drawRoundBox(x, 88, 224, W - 176, 200, 22, K.subCard, K.line);
+  x.textAlign = 'left';
+  x.fillStyle = K.t3; x.font = '700 21px Inter, sans-serif'; x.fillText(allMode ? 'TOTAL NET INCOME (YTD)' : 'TOTAL NET PAYROLL (YTD)', 124, 272);
+  x.fillStyle = K.t1; x.font = '700 80px Inter, sans-serif'; x.fillText(peso(yearNet), 124, 362);
+  if (D.totGigs > 0) {
+    x.fillStyle = K.ok; x.font = '600 22px Inter, sans-serif'; x.fillText(`Includes ${peso(D.totGigs)} from side gigs`, 124, 404);
+  }
+  // 2x2 Hairline KPI Matrix
+  const mX = 88, mY = 454, mW = W - 176, mH = 248;
+  drawRoundBox(x, mX, mY, mW, mH, 20, K.card, K.line);
+  x.strokeStyle = K.line; x.lineWidth = 2;
+  x.beginPath(); x.moveTo(mX + mW / 2, mY); x.lineTo(mX + mW / 2, mY + mH); x.stroke();
+  x.beginPath(); x.moveTo(mX, mY + mH / 2); x.lineTo(mX + mW, mY + mH / 2); x.stroke();
   const kpis = [
-    ['Effective Rate', eff > 0 ? `${peso(eff)}/hr` : '—'],
-    ['Hours Worked', `${fh(D.totHrs)} (${D.totShifts} sh)`],
-    ['13th-Month YTD', peso(D.basicYr / 12)],
-    ['Statutory Total', peso(statTot)]
+    ['EFFECTIVE RATE', eff > 0 ? `${peso(eff)}/hr` : '—', K.t1],
+    ['HOURS WORKED', `${fh(D.totHrs)} (${D.totShifts} sh)`, K.t1],
+    ['13TH-MONTH YTD', peso(D.basicYr / 12), K.ok],
+    ['STATUTORY TOTAL', '−' + peso(statTot), K.bad]
   ];
   kpis.forEach((k, i) => {
-    const bx = 72 + (i % 2) * 484, by = 438 + Math.floor(i / 2) * 144;
-    x.fillStyle = 'rgba(255,255,255,.06)'; x.beginPath(); if (x.roundRect) x.roundRect(bx, by, 452, 120, 24); else x.rect(bx, by, 452, 120); x.fill();
-    x.fillStyle = '#94A3B8'; x.font = '600 24px Inter, sans-serif'; x.fillText(k[0], bx + 28, by + 44);
-    x.fillStyle = '#FFFFFF'; x.font = '700 38px Inter, sans-serif'; x.fillText(k[1], bx + 28, by + 94);
+    const cx = mX + (i % 2) * (mW / 2) + 28, cy = mY + Math.floor(i / 2) * (mH / 2);
+    x.textAlign = 'left';
+    x.fillStyle = K.t3; x.font = '700 19px Inter, sans-serif'; x.fillText(k[0], cx, cy + 44);
+    x.fillStyle = k[2]; x.font = '700 36px Inter, sans-serif'; x.fillText(k[1], cx, cy + 94);
   });
-  x.fillStyle = '#94A3B8'; x.font = '600 26px Inter, sans-serif'; x.fillText('MONTHLY NET TREND', 72, 785);
+  // Trading-Style Monthly Bar Chart with Hairline Grid
+  x.textAlign = 'left'; x.fillStyle = K.t3; x.font = '700 21px Inter, sans-serif'; x.fillText('MONTHLY NET PERFORMANCE', 88, 766);
+  const cX = 88, cY = 796, cW = W - 176, cH = 340;
+  drawRoundBox(x, cX, cY, cW, cH, 20, K.subCard, K.line);
   const vals = D.months.map(m => allMode ? r2(m.net + m.gigs) : m.net), maxV = Math.max(1, ...vals);
+  for (let g = 1; g <= 3; g++) {
+    const gy = cY + 46 + g * 58;
+    x.strokeStyle = K.line; x.lineWidth = 1.5; x.beginPath(); x.moveTo(cX + 26, gy); x.lineTo(cX + cW - 26, gy); x.stroke();
+  }
+  const baseY = cY + 278, slotW = (cW - 56) / 12;
   vals.forEach((v, i) => {
-    const cx = 72 + i * 79, bh = Math.max(14, Math.round((v / maxV) * 230));
-    x.fillStyle = v > 0 ? '#6366F1' : 'rgba(255,255,255,.1)';
-    x.beginPath(); if (x.roundRect) x.roundRect(cx, 1045 - bh, 52, bh, 12); else x.rect(cx, 1045 - bh, 52, bh); x.fill();
-    x.fillStyle = '#94A3B8'; x.font = '600 22px Inter, sans-serif'; x.textAlign = 'center'; x.fillText(MON[i][0], cx + 26, 1085);
+    const bx = cX + 28 + i * slotW + (slotW - 44) / 2, bh = v > 0 ? Math.max(12, Math.round((v / maxV) * 212)) : 6;
+    drawRoundBox(x, bx, baseY - bh, 44, bh, 8, v > 0 ? K.accent : K.line, null);
+    x.fillStyle = v > 0 ? K.t1 : K.t3; x.font = '700 20px Inter, sans-serif'; x.textAlign = 'center';
+    x.fillText(MON[i], bx + 22, baseY + 34);
   });
-  x.textAlign = 'left';
-  if (D.totGigs > 0) { x.fillStyle = '#34D399'; x.font = '600 26px Inter, sans-serif'; x.fillText(`Includes ${peso(D.totGigs)} from side gigs`, 72, 1155); }
-  x.fillStyle = '#64748B'; x.font = '500 22px Inter, sans-serif'; x.fillText('Generated by SweldoPulse v' + APP_VERSION + ' · ' + new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }), 72, H - 56);
+  x.textAlign = 'left'; x.fillStyle = K.t3; x.font = '500 20px Inter, sans-serif';
+  x.fillText(`Generated by SweldoPulse v${APP_VERSION} · ${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })}`, 88, H - 82);
   window.__payslipCanvas = c; window.__payslipName = `SweldoPulse-insights-${D.yr}.png`;
   $('payslip-img').src = c.toDataURL('image/png'); $('payslip-modal').classList.add('on');
 }
@@ -3639,22 +3792,22 @@ function initBrand() {
   setTimeout(dismissSplash, matchMedia('(prefers-reduced-motion: reduce)').matches ? 500 : 1300);
 }
 const RELEASE_NOTES = {
-  version: '2.7.1',
-  sub: 'Banking & trading-grade UI redesign + unified account cards',
+  version: '2.7.2',
+  sub: 'Interactive trading sparklines, statement exports, widget contrast fix & splash animation',
   items: [
-    ['Fintech UI', 'ok', 'Redesigned Main Payroll & Side Gigs into sibling banking/trading account cards (inspired by GoTyme, MariBank & Maya) with hairline tables, trading delta pills, and dual sparklines.'],
-    ['Card Finishes', '', 'Side Gigs is no longer locked to green — both cards follow your theme and new Balance Card Finish (Surface, Obsidian black card, or matte Tinted) under Settings → Appearance.'],
-    ['Monochrome', '', 'Added a crisp Black & White Monochrome accent theme, neutral bank-ledger shift rows, flush bottom bar, and zero neon glow shadows.'],
-    ['Performance', 'ok', 'Keeps the v2.7 O(1) pay engine, auto Lite Motion Mode for low-end devices, desktop sidebar workspace, PH 2026 wage profiles, and real-time update notifications.']
+    ['Sparklines', 'ok', 'Drag or hover across the Payroll and Side Gigs sparklines to scrub day-by-day running totals and daily earnings with a live trading crosshair.'],
+    ['Widgets', 'ok', 'Fixed Monochrome dark-mode widget button contrast and updated all 3 Android home widgets to match the Surface & Obsidian banking finishes.'],
+    ['Exports', '', 'Redesigned Payslip & Yearly Insights PNG exports into crisp bank-statement cards that automatically adapt to Light and Dark/Obsidian themes.'],
+    ['Budget & Splash', '', 'Upgraded Budget & Insights with hairline matrix KPI grids and trading bar charts, and restored the startup logo draw animation even when Lite Motion Mode is active.']
   ]
 };
 
 const isDesktopLayout = () => window.innerWidth >= 1024;
 const TOUR = [
-  { view: 'home', t: 'Welcome to SweldoPulse 2.7.1', b: 'Track shifts, side gigs, payslips, and budgets in a clean banking-grade workspace on phone or PC. Here is a quick tour.' },
+  { view: 'home', t: 'Welcome to SweldoPulse 2.7.2', b: 'Track shifts, side gigs, payslips, and budgets in a clean banking-grade workspace on phone or PC. Here is a quick tour.' },
   { view: 'settings', sel: '#set-payroll-card', t: '1 · Work profile & PH wage rules', b: 'Pick your work situation (Working Student, Full-Time, BPO, Weekly, or Freelance), choose your 2026 DOLE regional wage or custom rate, and tune Pre-Holiday 1.3×, Night Diff, and OT rules.' },
   { view: 'home', sel: () => isDesktopLayout() ? '#sb-add-btn' : '.fab', t: '2 · Log shifts, side gigs & overlap guard', b: 'Tap + to log hourly shifts or timed side gigs. Overlapping hours are caught automatically so duplicate duties never inflate your pay.' },
-  { view: 'home', sel: '#hero', t: '3 · Sibling Payroll & Side Gigs accounts', b: 'Switch between Payroll and Side Gigs via the top account tabs or swipe (side-by-side on PC/tablet). Both share your chosen Surface, Obsidian, or Tinted finish with live sparklines and performance deltas.' },
+  { view: 'home', sel: '#hero', t: '3 · Sibling Payroll & Side Gigs accounts', b: 'Switch between Payroll and Side Gigs via the top account tabs or swipe (side-by-side on PC/tablet). Drag or hover over either sparkline to inspect daily running earnings.' },
   { view: 'shifts', sel: '#cal-toggle', t: '4 · Calendar & Smart Importer', b: 'Toggle the monthly calendar to inspect shifts by day, or tap the menu (⋯) to bulk-log a week or paste crew schedules with automatic holiday & pre-holiday detection.' },
   { view: 'budget', sel: '#bud-tabs', t: '5 · Budget, Dues & Vaults', b: 'Track Needs/Wants spending, recurring bills, PayLater/Utang (with partial payments), and Savings Vaults — powered by your combined Payroll + Side Gigs earnings.' },
   { view: 'deductions', sel: '#recon-card', t: '6 · Payslip & Actual Pay Check', b: 'Compare your employer payout against SweldoPulse estimates. Entering Actual Pay automatically locks the cutoff snapshot so future rate edits never alter past slips.' },
@@ -3726,7 +3879,7 @@ document.addEventListener('keydown', e => {
 });
 
 function boot() {
-  populateTimes(); loadState(); buildFilters(); applyTheme(true);
+  populateTimes(); loadState(); buildFilters(); initSparkScrub(); applyTheme(true);
   syncSettingsUI(); syncNativeReminder(); syncNativeUpdateStatus(); syncBgUpdateAlarm(); go('home'); renderNow(); initBrand();
   if (lockCfg() && !root.classList.contains('locked') && !root.classList.contains('pin-open')) lockNow();
   else if (root.classList.contains('locked')) { pinMode = 'unlock'; lockUI('Enter PIN', 'SweldoPulse is locked'); }

@@ -129,7 +129,7 @@ if(window.AndroidBridge){
       <button type="button" class="sb-it press" id="sb-settings" onclick="go('settings')"><svg class="ic sm"><use href="#i-sliders"/></svg>Settings</button>
     </nav>
     <div class="sb-foot">
-      <span class="num" id="sb-ver">v2.7.1</span>
+      <span class="num" id="sb-ver">v2.7.2</span>
       <button type="button" class="link" style="padding:2px 4px;font-size:11.5px" onclick="showWhatsNew()">What's new</button>
     </div>
   </aside>
@@ -175,7 +175,7 @@ if(window.AndroidBridge){
               </div>
               <div class="ring" id="ring" title="Cutoff progress"><svg viewBox="0 0 40 40"><circle class="tr" cx="20" cy="20" r="16"/><circle class="pg" id="ring-pg" cx="20" cy="20" r="16"/></svg><div class="tx"><b id="ring-n">0</b><small id="ring-u">days</small></div></div>
             </div>
-            <svg class="spark" id="spark" viewBox="0 0 300 38" aria-hidden="true"></svg>
+            <div class="spark-box" id="spark-box" onclick="event.stopPropagation()"><div class="spark-tip num hidden" id="spark-tip"></div><svg class="spark" id="spark" viewBox="0 0 300 38" aria-hidden="true"></svg></div>
             <div class="w-goal hidden" id="w-goal" onclick="event.stopPropagation();openGoalSettings()" title="Tap to edit pay goal"><span id="g-txt"></span><span class="gb"><i id="g-fill"></i></span></div>
             <div class="w-strip"><div><span>Gross</span><b class="num" id="ws-g">₱0.00</b></div><div><span>Deductions</span><b class="num" id="ws-d">₱0.00</b></div><div><span>Hours</span><b class="num" id="ws-h">0h</b></div></div>
           </div>
@@ -192,7 +192,7 @@ if(window.AndroidBridge){
               </div>
               <div class="ring" title="Side gigs count"><svg viewBox="0 0 40 40"><circle class="tr" cx="20" cy="20" r="16"/><circle class="pg" id="gig-ring-pg" cx="20" cy="20" r="16"/></svg><div class="tx"><b id="gig-ring-n">0</b><small id="gig-ring-u">gigs</small></div></div>
             </div>
-            <svg class="spark" id="gig-spark" viewBox="0 0 300 38" aria-hidden="true"></svg>
+            <div class="spark-box" id="gig-spark-box" onclick="event.stopPropagation()"><div class="spark-tip num hidden" id="gig-spark-tip"></div><svg class="spark" id="gig-spark" viewBox="0 0 300 38" aria-hidden="true"></svg></div>
             <div class="wg-bar"><i id="wg-bar-paid" style="width:0%"></i><i class="pend" id="wg-bar-pend" style="width:0%"></i></div>
             <div class="w-strip"><div><span>Paid</span><b class="num" id="wgs-paid">₱0.00</b></div><div><span>Pending</span><b class="num" id="wgs-pend">₱0.00</b></div><div><span>Budget pool</span><b class="num" id="wgs-tot">₱0.00</b></div></div>
           </div>
@@ -268,16 +268,18 @@ if(window.AndroidBridge){
         <div class="card">
           <div class="card-h" style="margin-bottom:12px"><div><p class="card-t">Cutoff envelopes</p><p class="card-s" id="bud-period">Splits your net pay</p></div><button type="button" class="btn soft sm press" onclick="openExpSheet()">+ Spend</button></div>
           <div class="donut"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="d-tr" cx="60" cy="60" r="46"/><circle class="d-seg d-n" id="dn" cx="60" cy="60" r="46"/><circle class="d-seg d-w" id="dw" cx="60" cy="60" r="46"/><circle class="d-seg d-s" id="ds" cx="60" cy="60" r="46"/></svg><div class="d-c"><span class="eyebrow" id="d-lbl">Net pay</span><b class="num" id="d-net">₱0.00</b><small id="bud-period2">this cutoff</small></div></div>
-          <div class="stack" style="margin-top:14px;gap:12px">
-            <div>
-              <div class="row between"><div class="row"><i class="c-needs" style="width:10px;height:10px;border-radius:9px"></i><div><p style="font-weight:600">Needs</p><p class="card-s num" id="bp-n">70% share</p></div></div><div style="text-align:right"><b class="num" id="ba-n">₱0.00</b><p class="card-s num" id="br-n">₱0.00 left</p></div></div>
+          <div class="env-list">
+            <div class="env-item">
+              <div class="row between"><div class="row"><i class="c-needs" style="width:8px;height:8px;border-radius:9px"></i><div><p style="font-weight:600">Needs</p><p class="card-s num" id="bp-n">70% share</p></div></div><div style="text-align:right"><b class="num" id="ba-n">₱0.00</b><p class="card-s num" id="br-n">₱0.00 left</p></div></div>
               <div class="env-bar"><i class="needs" id="eb-n" style="transform:scaleX(0)"></i></div>
             </div>
-            <div>
-              <div class="row between"><div class="row"><i class="c-wants" style="width:10px;height:10px;border-radius:9px"></i><div><p style="font-weight:600">Wants</p><p class="card-s num" id="bp-w">20% share</p></div></div><div style="text-align:right"><b class="num" id="ba-w">₱0.00</b><p class="card-s num" id="br-w">₱0.00 left</p></div></div>
+            <div class="env-item">
+              <div class="row between"><div class="row"><i class="c-wants" style="width:8px;height:8px;border-radius:9px"></i><div><p style="font-weight:600">Wants</p><p class="card-s num" id="bp-w">20% share</p></div></div><div style="text-align:right"><b class="num" id="ba-w">₱0.00</b><p class="card-s num" id="br-w">₱0.00 left</p></div></div>
               <div class="env-bar"><i class="wants" id="eb-w" style="transform:scaleX(0)"></i></div>
             </div>
-            <div class="row between" style="padding-top:4px"><div class="row"><i class="c-save" style="width:10px;height:10px;border-radius:9px"></i><div><p style="font-weight:600">Savings</p><p class="card-s num" id="bp-s">10% share</p></div></div><div style="text-align:right"><b class="num" id="ba-s" style="color:var(--ok)">₱0.00</b><p class="card-s num" id="br-s">Move to Vaults</p></div></div>
+            <div class="env-item" style="padding-bottom:2px">
+              <div class="row between"><div class="row"><i class="c-save" style="width:8px;height:8px;border-radius:9px"></i><div><p style="font-weight:600">Savings</p><p class="card-s num" id="bp-s">10% share</p></div></div><div style="text-align:right"><b class="num" id="ba-s" style="color:var(--ok)">₱0.00</b><p class="card-s num" id="br-s">Move to Vaults</p></div></div>
+            </div>
           </div>
         </div>
         <details class="card fold">
@@ -617,7 +619,7 @@ if(window.AndroidBridge){
 
       <p class="sec-lbl">App &amp; Updates</p>
       <div class="card">
-        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.7.1</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
+        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.7.2</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
         <div id="upd-box" class="hidden" style="margin-top:12px">
           <div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div>
           <p class="note" id="upd-notes" style="margin:4px 0 10px"></p>
@@ -893,7 +895,7 @@ if(window.AndroidBridge){
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
   <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.7.1</span></h2><p class="card-s" id="wn-sub">Faster, responsive &amp; built for every PH worker</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.7.2</span></h2><p class="card-s" id="wn-sub">Faster, responsive &amp; built for every PH worker</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" id="wn-list" style="gap:11px;font-size:13.5px"></div>
     <div class="grid2" style="margin-top:16px">
       <button type="button" class="btn soft press" onclick="closeSheet('whatsnew-sheet');setTimeout(()=>startTour(),180)">Quick tour</button>

@@ -75,7 +75,9 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
             if (o.has("appHide")) ed.putBoolean("appHide", o.optBoolean("appHide", false));
             if (o.has("pinLocked")) ed.putBoolean("pinLocked", o.optBoolean("pinLocked", false));
             if (o.has("theme")) ed.putString("theme", o.optString("theme", "dark"));
+            if (o.has("cardStyle")) ed.putString("cardStyle", o.optString("cardStyle", "surface"));
             if (o.has("accent")) ed.putString("accent", o.optString("accent", "#4F46E5"));
+            if (o.has("accentFg")) ed.putString("accentFg", o.optString("accentFg", "#FFFFFF"));
             if (o.has("accentText")) ed.putString("accentText", o.optString("accentText", "#A5B4FC"));
             ed.apply();
             refreshAll(ctx);
@@ -104,13 +106,21 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
         return fallback;
     }
 
+    static int contrastFg(int bgColor, String hintHex) {
+        if (hintHex != null && hintHex.startsWith("#")) {
+            return safeColor(hintHex, 0xFFFFFFFF);
+        }
+        double lum = (0.299 * Color.red(bgColor) + 0.587 * Color.green(bgColor) + 0.114 * Color.blue(bgColor)) / 255.0;
+        return lum > 0.65 ? 0xFF0B0D12 : 0xFFFFFFFF;
+    }
+
     static Bitmap makeRoundedButton(int color) {
         int size = 96;
         Bitmap bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bmp);
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(color);
-        c.drawRoundRect(new RectF(0f, 0f, size, size), 30f, 30f, p);
+        c.drawRoundRect(new RectF(0f, 0f, size, size), 26f, 26f, p);
         return bmp;
     }
 
@@ -121,7 +131,7 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
         Canvas c = new Canvas(bmp);
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(color);
-        c.drawRoundRect(new RectF(0f, 0f, w, h), 28f, 28f, p);
+        c.drawRoundRect(new RectF(0f, 0f, w, h), 24f, 24f, p);
         return bmp;
     }
 
@@ -139,11 +149,14 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
             String ded = masked ? mask : sp.getString("ded", "₱0.00");
             String extra = pinLocked ? "Locked · unlock app to view amounts" : (masked ? "Amounts hidden on widget" : sp.getString("extra", "Tap card to open payslip"));
             String theme = sp.getString("theme", "dark");
+            String cardStyle = sp.getString("cardStyle", "surface");
             int accentColor = safeColor(sp.getString("accent", "#4F46E5"), 0xFF4F46E5);
+            int accentFg = contrastFg(accentColor, sp.getString("accentFg", null));
             int accentTextColor = safeColor(sp.getString("accentText", "#A5B4FC"), 0xFFA5B4FC);
 
-            boolean isLight = "light".equals(theme);
-            boolean isAmoled = "amoled".equals(theme);
+            boolean isObsidian = "obsidian".equals(cardStyle);
+            boolean isLight = !isObsidian && "light".equals(theme);
+            boolean isAmoled = !isObsidian && "amoled".equals(theme);
 
             int minW = opts != null ? opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 220) : 220;
             int minH = opts != null ? opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110) : 110;
@@ -161,15 +174,23 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
                 layoutId = R.layout.widget_sweldo;
             }
 
-            int bgRes = isLight ? R.drawable.widget_bg_light : (isAmoled ? R.drawable.widget_bg_amoled : R.drawable.widget_bg_dark);
-            int stripRes = isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark);
-            int t1 = isLight ? 0xFF0F172A : 0xFFFFFFFF;
-            int t2 = isLight ? 0xFF475569 : 0xFF94A3B8;
-            int dedColor = isLight ? 0xFFE11D48 : 0xFFFB7185;
+            int bgRes = isObsidian ? R.drawable.widget_bg_obsidian : (isLight ? R.drawable.widget_bg_light : (isAmoled ? R.drawable.widget_bg_amoled : R.drawable.widget_bg_dark));
+            int stripRes = isObsidian ? R.drawable.widget_strip_obsidian : (isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark));
+            int t1 = isLight ? 0xFF0B0F19 : 0xFFF5F7FA;
+            int t2 = isLight ? 0xFF64748B : 0xFF8895AA;
+            int divColor = isLight ? 0xFFE2E6EE : (isObsidian ? 0xFF252B3B : 0xFF232938);
+            int dedColor = isLight ? 0xFFDC2626 : 0xFFF43F5E;
+            if (isObsidian && "light".equals(theme)) {
+                // Ensure meta accent text stays legible on obsidian card when app is in light mode
+                double lum = (0.299 * Color.red(accentTextColor) + 0.587 * Color.green(accentTextColor) + 0.114 * Color.blue(accentTextColor)) / 255.0;
+                if (lum < 0.45) accentTextColor = 0xFFCBD5E1;
+                if (accentColor == 0xFF111827) { accentColor = 0xFFF8FAFC; accentFg = 0xFF0B0D12; }
+            }
 
             RemoteViews rv = new RemoteViews(ctx.getPackageName(), layoutId);
             rv.setInt(R.id.widget_root, "setBackgroundResource", bgRes);
             rv.setImageViewBitmap(R.id.widget_add_bg, makeRoundedButton(accentColor));
+            rv.setTextColor(R.id.widget_add_txt, accentFg);
 
             rv.setTextViewText(R.id.widget_net, net);
             rv.setTextColor(R.id.widget_net, t1);
@@ -195,6 +216,7 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
 
             if (isLarge) {
                 rv.setInt(R.id.widget_strip, "setBackgroundResource", stripRes);
+                rv.setInt(R.id.widget_strip_div, "setBackgroundColor", divColor);
                 rv.setTextViewText(R.id.widget_gross, gross);
                 rv.setTextColor(R.id.widget_gross, t1);
                 rv.setTextColor(R.id.widget_gross_lbl, t2);

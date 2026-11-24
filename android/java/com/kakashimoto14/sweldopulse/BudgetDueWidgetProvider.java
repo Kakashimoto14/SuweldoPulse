@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.RemoteViews;
 
@@ -50,21 +51,30 @@ public class BudgetDueWidgetProvider extends AppWidgetProvider {
             String dueLine = pinLocked ? "Unlock app to view dues" : (masked ? "Tap to view upcoming dues" : sp.getString("dueLine", "No upcoming PayLater or bills"));
             boolean urgent = !pinLocked && sp.getBoolean("dueUrgent", false);
             String theme = sp.getString("theme", "dark");
+            String cardStyle = sp.getString("cardStyle", "surface");
             int accentColor = SweldoWidgetProvider.safeColor(sp.getString("accent", "#4F46E5"), 0xFF4F46E5);
+            int accentFg = SweldoWidgetProvider.contrastFg(accentColor, sp.getString("accentFg", null));
             int accentTextColor = SweldoWidgetProvider.safeColor(sp.getString("accentText", "#A5B4FC"), 0xFFA5B4FC);
 
-            boolean isLight = "light".equals(theme);
-            boolean isAmoled = "amoled".equals(theme);
-            int bgRes = isLight ? R.drawable.widget_bg_light : (isAmoled ? R.drawable.widget_bg_amoled : R.drawable.widget_bg_dark);
-            int stripRes = isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark);
-            int t1 = isLight ? 0xFF0F172A : 0xFFFFFFFF;
-            int t2 = isLight ? 0xFF475569 : 0xFF94A3B8;
-            int warnColor = isLight ? 0xFFE11D48 : 0xFFFB7185;
+            boolean isObsidian = "obsidian".equals(cardStyle);
+            boolean isLight = !isObsidian && "light".equals(theme);
+            boolean isAmoled = !isObsidian && "amoled".equals(theme);
+            int bgRes = isObsidian ? R.drawable.widget_bg_obsidian : (isLight ? R.drawable.widget_bg_light : (isAmoled ? R.drawable.widget_bg_amoled : R.drawable.widget_bg_dark));
+            int stripRes = isObsidian ? R.drawable.widget_strip_obsidian : (isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark));
+            int t1 = isLight ? 0xFF0B0F19 : 0xFFF5F7FA;
+            int t2 = isLight ? 0xFF64748B : 0xFF8895AA;
+            int warnColor = isLight ? 0xFFDC2626 : 0xFFF43F5E;
+            if (isObsidian && "light".equals(theme)) {
+                double lum = (0.299 * Color.red(accentTextColor) + 0.587 * Color.green(accentTextColor) + 0.114 * Color.blue(accentTextColor)) / 255.0;
+                if (lum < 0.45) accentTextColor = 0xFFCBD5E1;
+                if (accentColor == 0xFF111827) { accentColor = 0xFFF8FAFC; accentFg = 0xFF0B0D12; }
+            }
 
             RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_budget_due);
             rv.setInt(R.id.bd_root, "setBackgroundResource", bgRes);
             rv.setInt(R.id.bd_due_box, "setBackgroundResource", stripRes);
             rv.setImageViewBitmap(R.id.bd_spend_bg, SweldoWidgetProvider.makeWideButton(accentColor));
+            rv.setTextColor(R.id.bd_spend_txt, accentFg);
 
             rv.setTextColor(R.id.bd_lbl, t2);
             rv.setTextViewText(R.id.bd_rem, rem);

@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="P0.00"
-            android:textColor="#FFFFFF"
+            android:textColor="#F5F7FA"
             android:textSize="18sp"
             android:textStyle="bold"
             android:singleLine="true"
@@ -52,6 +52,7 @@
             android:src="@drawable/widget_btn_bg"
             android:contentDescription="Log shift"/>
         <TextView
+            android:id="@+id/widget_add_txt"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"

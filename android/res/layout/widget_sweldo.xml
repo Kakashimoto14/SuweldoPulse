@@ -33,8 +33,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="SweldoPulse"
-                android:textColor="#F4F7FB"
-                android:textSize="12sp"
+                android:textColor="#F5F7FA"
+                android:textSize="11.5sp"
                 android:textStyle="bold"
                 android:singleLine="true"
                 android:ellipsize="end"/>
@@ -44,28 +44,28 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Current cutoff"
-                android:textColor="#94A3B8"
-                android:textSize="10.5sp"
+                android:textColor="#76839A"
+                android:textSize="10sp"
                 android:singleLine="true"
                 android:ellipsize="end"/>
         </LinearLayout>
 
         <TextView
             android:id="@+id/widget_eye_btn"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="34dp"
+            android:layout_height="30dp"
             android:layout_marginRight="6dp"
             android:background="@drawable/widget_strip_dark"
             android:gravity="center"
             android:text="HIDE"
-            android:textColor="#94A3B8"
+            android:textColor="#B6C0D0"
             android:textSize="8.5sp"
             android:textStyle="bold"/>
 
         <FrameLayout
             android:id="@+id/widget_add_btn"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
+            android:layout_width="32dp"
+            android:layout_height="32dp">
             <ImageView
                 android:id="@+id/widget_add_bg"
                 android:layout_width="match_parent"
@@ -74,12 +74,13 @@
                 android:src="@drawable/widget_btn_bg"
                 android:contentDescription="Log shift"/>
             <TextView
+                android:id="@+id/widget_add_txt"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="+"
                 android:textColor="#FFFFFF"
-                android:textSize="20sp"
+                android:textSize="19sp"
                 android:textStyle="bold"/>
         </FrameLayout>
     </LinearLayout>
@@ -90,7 +91,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="P0.00"
-        android:textColor="#FFFFFF"
+        android:textColor="#F5F7FA"
         android:textSize="24sp"
         android:textStyle="bold"
         android:singleLine="true"

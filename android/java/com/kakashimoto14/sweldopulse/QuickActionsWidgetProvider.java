@@ -43,17 +43,25 @@ public class QuickActionsWidgetProvider extends AppWidgetProvider {
         try {
             SharedPreferences sp = ctx.getSharedPreferences(SweldoWidgetProvider.PREFS, Context.MODE_PRIVATE);
             String theme = sp.getString("theme", "dark");
+            String cardStyle = sp.getString("cardStyle", "surface");
             int accentColor = SweldoWidgetProvider.safeColor(sp.getString("accent", "#4F46E5"), 0xFF4F46E5);
+            int accentFg = SweldoWidgetProvider.contrastFg(accentColor, sp.getString("accentFg", null));
 
-            boolean isLight = "light".equals(theme);
-            boolean isAmoled = "amoled".equals(theme);
-            int bgRes = isLight ? R.drawable.widget_bg_light : (isAmoled ? R.drawable.widget_bg_amoled : R.drawable.widget_bg_dark);
-            int stripRes = isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark);
-            int t1 = isLight ? 0xFF0F172A : 0xFFFFFFFF;
+            boolean isObsidian = "obsidian".equals(cardStyle);
+            boolean isLight = !isObsidian && "light".equals(theme);
+            boolean isAmoled = !isObsidian && "amoled".equals(theme);
+            int bgRes = isObsidian ? R.drawable.widget_bg_obsidian : (isLight ? R.drawable.widget_bg_light : (isAmoled ? R.drawable.widget_bg_amoled : R.drawable.widget_bg_dark));
+            int stripRes = isObsidian ? R.drawable.widget_strip_obsidian : (isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark));
+            int t1 = isLight ? 0xFF0B0F19 : 0xFFF5F7FA;
+            if (isObsidian && "light".equals(theme) && accentColor == 0xFF111827) {
+                accentColor = 0xFFF8FAFC;
+                accentFg = 0xFF0B0D12;
+            }
 
             RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_quick_actions);
             rv.setInt(R.id.qa_root, "setBackgroundResource", bgRes);
             rv.setImageViewBitmap(R.id.qa_shift_bg, SweldoWidgetProvider.makeWideButton(accentColor));
+            rv.setTextColor(R.id.qa_shift_txt, accentFg);
             rv.setInt(R.id.qa_bulk, "setBackgroundResource", stripRes);
             rv.setInt(R.id.qa_spend, "setBackgroundResource", stripRes);
             rv.setInt(R.id.qa_dues, "setBackgroundResource", stripRes);
