@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.RemoteViews;
 
 public class QuickActionsWidgetProvider extends AppWidgetProvider {
@@ -47,19 +48,31 @@ public class QuickActionsWidgetProvider extends AppWidgetProvider {
             int accentColor = SweldoWidgetProvider.safeColor(sp.getString("accent", "#4F46E5"), 0xFF4F46E5);
             int accentFg = SweldoWidgetProvider.contrastFg(accentColor, sp.getString("accentFg", null));
 
-            boolean isObsidian = "obsidian".equals(cardStyle);
-            boolean isLight = !isObsidian && "light".equals(theme);
-            boolean isAmoled = !isObsidian && "amoled".equals(theme);
+            boolean isTinted = "tinted".equals(cardStyle);
+            boolean isObsidian = !isTinted && "obsidian".equals(cardStyle);
+            boolean isLight = !isTinted && !isObsidian && "light".equals(theme);
+            boolean isAmoled = !isTinted && !isObsidian && "amoled".equals(theme);
+            int tintBgColor = SweldoWidgetProvider.safeColor(sp.getString("tintBg", "#171A40"), 0xFF171A40);
             int bgRes = isObsidian ? R.drawable.widget_bg_obsidian : (isLight ? R.drawable.widget_bg_light : (isAmoled ? R.drawable.widget_bg_amoled : R.drawable.widget_bg_dark));
-            int stripRes = isObsidian ? R.drawable.widget_strip_obsidian : (isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark));
-            int t1 = isLight ? 0xFF0B0F19 : 0xFFF5F7FA;
-            if (isObsidian && "light".equals(theme) && accentColor == 0xFF111827) {
+            int stripRes = isTinted ? R.drawable.widget_strip_tinted : (isObsidian ? R.drawable.widget_strip_obsidian : (isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark)));
+            int t1 = isLight ? 0xFF0B0F19 : 0xFFFFFFFF;
+            if (isTinted) {
+                accentColor = 0xFFFFFFFF;
+                accentFg = tintBgColor;
+            } else if (isObsidian && "light".equals(theme) && accentColor == 0xFF111827) {
                 accentColor = 0xFFF8FAFC;
                 accentFg = 0xFF0B0D12;
             }
 
             RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_quick_actions);
-            rv.setInt(R.id.qa_root, "setBackgroundResource", bgRes);
+            if (isTinted) {
+                rv.setViewVisibility(R.id.qa_tint_bg, View.VISIBLE);
+                rv.setInt(R.id.qa_tint_bg, "setColorFilter", tintBgColor);
+                rv.setInt(R.id.qa_root, "setBackgroundColor", 0x00000000);
+            } else {
+                rv.setViewVisibility(R.id.qa_tint_bg, View.GONE);
+                rv.setInt(R.id.qa_root, "setBackgroundResource", bgRes);
+            }
             rv.setImageViewBitmap(R.id.qa_shift_bg, SweldoWidgetProvider.makeWideButton(accentColor));
             rv.setTextColor(R.id.qa_shift_txt, accentFg);
             rv.setInt(R.id.qa_bulk, "setBackgroundResource", stripRes);

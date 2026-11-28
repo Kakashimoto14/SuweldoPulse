@@ -1,4 +1,4 @@
-const APP_VERSION = '2.7.2';
+const APP_VERSION = '2.8.0';
 const DEFAULT_REPO = 'Kakashimoto14/SuweldoPulse';
 const SHIFTS_KEY = 'sweldo_pulse_shifts_v2', SETTINGS_KEY = 'sweldo_pulse_settings_v2', GIGS_KEY = 'sweldo_pulse_gigs_v1', EXP_KEY = 'sweldo_pulse_expenses_v1', DEBTS_KEY = 'sweldo_pulse_debts_v1', LOCK_KEY = 'sweldo_pulse_lock_v1', BK_KEY = 'sweldo_pulse_last_backup', TOUR_KEY = 'sweldo_pulse_tour_done_v1';
 const $ = id => document.getElementById(id), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -39,7 +39,8 @@ let settings = {
   cutoffData: {}, customPresets: [], vaults: [], bills: [], incomeScope: 'all',
   autoDownloadUpd: true, updWifiOnly: true, autoBackup: true, lastAutoBk: 0,
   dueNotifEnabled: true, dueNotifTime: '09:00', planNudgeEnabled: true, maskWidgetWhenLocked: true, allowScreenshots: false,
-  workProfile: 'crew', preHolidayRule: true, ndRate: 0.10, otThreshold: 8, liteMode: 'auto', cardStyle: 'surface', notifiedUpdVer: '', updEtag: '', updCachedRel: null
+  workProfile: 'crew', preHolidayRule: true, midnightHolidaySplit: true, ndRate: 0.10, otThreshold: 8, liteMode: 'auto', cardStyle: 'surface', notifiedUpdVer: '', updEtag: '', updCachedRel: null,
+  rosterTemplates: [], activeTimer: null, jobs: [], activeJobId: ''
 };
 let selKey = '', periodKeys = [], curView = 'home';
 const ui = { f: 'all', q: '', sort: 'desc', limit: 60, cal: false, calDay: '', budTab: 'overview', dueF: 'all', insTab: 'overview', insYear: new Date().getFullYear(), insMonth: new Date().getMonth() };
@@ -62,6 +63,8 @@ const ACCENTS = {
 
 /* ================= 2026 DOLE PH Wage Presets & Work Situation Profiles ================= */
 const PH_WAGE_PRESETS = {
+  ncr_2027_nonagri: { rate: 97.50, daily: 780, chip: 'NCR 2027' },
+  ncr_2027_retail: { rate: 92.88, daily: 743, chip: 'NCR 2027' },
   ncr_nonagri: { rate: 94.38, daily: 755, chip: 'NCR 2026' },
   ncr_retail: { rate: 89.75, daily: 718, chip: 'NCR 2026' },
   '80.63': { rate: 80.63, daily: 645, chip: 'Region IV-A' },
@@ -95,6 +98,9 @@ function loadState() {
   if (!hadCutoffData && +settings.otherDed > 0) { const ck = curPeriod().key; settings.cutoffData[ck] = { ...(settings.cutoffData[ck] || {}), otherDed: +settings.otherDed }; settings.otherDed = 0; }
   if (settings.statMinGross === undefined || settings.statMinGross === null) settings.statMinGross = 2000;
   if (typeof settings.preHolidayRule !== 'boolean') settings.preHolidayRule = true;
+  if (typeof settings.midnightHolidaySplit !== 'boolean') settings.midnightHolidaySplit = true;
+  if (!Array.isArray(settings.rosterTemplates)) settings.rosterTemplates = [];
+  if (!Array.isArray(settings.jobs)) settings.jobs = [];
   if (!isFinite(Number(settings.ndRate))) settings.ndRate = 0.10;
   if (!isFinite(Number(settings.otThreshold))) settings.otThreshold = 8;
   if (!['auto', 'on', 'off'].includes(settings.liteMode)) settings.liteMode = 'auto';
@@ -105,7 +111,8 @@ function loadState() {
   try { gigs = normalizeGigs(JSON.parse(localStorage.getItem(GIGS_KEY) || '[]')); } catch (e) { gigs = []; }
   try { expenses = normalizeExpenses(JSON.parse(localStorage.getItem(EXP_KEY) || '[]')); } catch (e) { expenses = []; }
   try { debts = normalizeDebts(JSON.parse(localStorage.getItem(DEBTS_KEY) || '[]')); } catch (e) { debts = []; }
-  if (repairedIds) { try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} }
+  ensureJobs();
+  if (repairedIds) { safeSetItem(SHIFTS_KEY, JSON.stringify(shifts)); }
 }
 function uniqueIdOf(rawId, seen, onRepair) {
   const n = Number(rawId);
@@ -134,7 +141,8 @@ function normalizeGigs(arr) {
     startTime: /^\d{2}:\d{2}$/.test(g.startTime || '') ? g.startTime : '',
     endTime: /^\d{2}:\d{2}$/.test(g.endTime || '') ? g.endTime : '',
     stream: String(g.stream || 'Side Gig').trim() || 'Side Gig',
-    title: String(g.title || '').trim(), amount: r2(Math.max(0, +g.amount || 0)), status: g.status === 'pending' ? 'pending' : 'paid'
+    title: String(g.title || '').trim(), amount: r2(Math.max(0, +g.amount || 0)), status: g.status === 'pending' ? 'pending' : 'paid',
+    dueDate: /^\d{4}-\d{2}-\d{2}$/.test(g.dueDate || '') ? g.dueDate : ''
   }));
 }
 function normalizeExpenses(arr) {
@@ -150,8 +158,25 @@ const shiftStatusOf = s => s.status || (s.date > today() ? 'scheduled' : 'worked
 const isShiftActive = s => shiftStatusOf(s) !== 'cancelled';
 let dv = 0, _idx = null, _idxV = -1, _gidx = null, _gidxV = -1, _eidx = null, _eidxV = -1; const _pdc = new Map();
 let _psT = 0;
-const persistShifts = () => { dv++; try { localStorage.setItem(SHIFTS_KEY, JSON.stringify(shifts)); } catch (e) {} scheduleAutoBackup(); syncDueAndPlanAlarms(); };
-const persistGigs = () => { dv++; try { localStorage.setItem(GIGS_KEY, JSON.stringify(gigs)); } catch (e) {} scheduleAutoBackup(); };
+let _quotaWarnAt = 0;
+function safeSetItem(key, val) {
+  try { localStorage.setItem(key, val); return true; }
+  catch (e) {
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith('sp_snapshot_')).forEach(k => localStorage.removeItem(k));
+      localStorage.setItem(key, val);
+      return true;
+    } catch (e2) {
+      if (Date.now() - _quotaWarnAt > 15000) {
+        _quotaWarnAt = Date.now();
+        if (typeof toast === 'function') toast('Storage almost full — export a backup to avoid losing logs');
+      }
+      return false;
+    }
+  }
+}
+const persistShifts = () => { dv++; safeSetItem(SHIFTS_KEY, JSON.stringify(shifts)); scheduleAutoBackup(); syncDueAndPlanAlarms(); };
+const persistGigs = () => { dv++; safeSetItem(GIGS_KEY, JSON.stringify(gigs)); scheduleAutoBackup(); };
 function normalizeDebts(arr) {
   if (!Array.isArray(arr)) return [];
   const seen = new Set();
@@ -176,11 +201,11 @@ function debtRemaining(d) {
   if (d.kind === 'paylater') return r2(d.amount * Math.max(1, d.totalTerms - d.paidTerms));
   return r2(Math.max(0, d.amount - (+d.paidAmount || 0)));
 }
-const persistExpenses = () => { dv++; try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses)); } catch (e) {} scheduleAutoBackup(); };
-const persistDebts = () => { dv++; try { localStorage.setItem(DEBTS_KEY, JSON.stringify(debts)); } catch (e) {} scheduleAutoBackup(); syncDueAndPlanAlarms(); };
-const persistSettings = () => { dv++; if (_psT) { clearTimeout(_psT); _psT = 0; } try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} };
-const persistSettingsDebounced = () => { dv++; clearTimeout(_psT); _psT = setTimeout(() => { _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }, 220); };
-const flushSettings = () => { if (_psT) { clearTimeout(_psT); _psT = 0; try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} } };
+const persistExpenses = () => { dv++; safeSetItem(EXP_KEY, JSON.stringify(expenses)); scheduleAutoBackup(); };
+const persistDebts = () => { dv++; safeSetItem(DEBTS_KEY, JSON.stringify(debts)); scheduleAutoBackup(); syncDueAndPlanAlarms(); };
+const persistSettings = () => { dv++; if (_psT) { clearTimeout(_psT); _psT = 0; } syncActiveJobFromSettings(); safeSetItem(SETTINGS_KEY, JSON.stringify(settings)); };
+const persistSettingsDebounced = () => { dv++; clearTimeout(_psT); _psT = setTimeout(() => { _psT = 0; syncActiveJobFromSettings(); safeSetItem(SETTINGS_KEY, JSON.stringify(settings)); }, 220); };
+const flushSettings = () => { if (_psT) { clearTimeout(_psT); _psT = 0; syncActiveJobFromSettings(); safeSetItem(SETTINGS_KEY, JSON.stringify(settings)); } };
 document.addEventListener('visibilitychange', () => { if (document.hidden) flushSettings(); });
 window.addEventListener('pagehide', flushSettings);
 
@@ -415,38 +440,57 @@ function ndOverlapMin(a, b) {
   if (b > 2760 && a < 3240) tot += Math.max(0, Math.min(b, 3240) - Math.max(a, 2760));
   return tot;
 }
-function calcPay({ start, end, mult, rate, brk = 0, prior = 0, ndRate = null, otHrs = null }) {
+function nextDayMultFor(ds) {
+  if (!ds || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return null;
+  const nextHol = holidayFor(dstr(addDays(pd(ds), 1)));
+  return nextHol ? nextHol.mult : 1;
+}
+function calcPay({ start, end, mult, rate, brk = 0, prior = 0, ndRate = null, otHrs = null, nextMult = null }) {
   let s = tmin(start), e = tmin(end);
   if (s === e) return null;
   if (e < s) e += 1440;
   const span = e - s;
   brk = Math.min(brk, Math.max(0, span - 1));
   const bs = s + Math.floor((span - brk) / 2), be = bs + brk;
-  const segs = brk > 0 ? [[s, bs], [be, e]] : [[s, e]];
+  const rawSegs = brk > 0 ? [[s, bs], [be, e]] : [[s, e]];
+  const splitActive = nextMult !== null && Math.abs(nextMult - mult) > 0.001 && e > 1440;
+  const segs = [];
+  for (let i = 0; i < rawSegs.length; i++) {
+    const a = rawSegs[i][0], b = rawSegs[i][1];
+    if (b <= a) continue;
+    if (splitActive && a < 1440 && b > 1440) {
+      segs.push([a, 1440, mult], [1440, b, nextMult]);
+    } else {
+      segs.push([a, b, (splitActive && a >= 1440) ? nextMult : mult]);
+    }
+  }
   const nr = ndRate !== null ? Math.max(0, +ndRate || 0) : Math.max(0, +(settings.ndRate ?? 0.10) || 0);
   const otH = otHrs !== null ? +otHrs : (+(settings.otThreshold ?? 8));
   const otMin = otH > 0 ? Math.round(otH * 60) : 1e9;
-  const base = rate * mult / 60, otRate = base * (mult > 1 ? 1.30 : 1.25);
-  let done = Math.round(prior * 60), reg = 0, ot = 0, ndReg = 0, ndOt = 0;
+  let done = Math.round(prior * 60), reg = 0, ot = 0, ndTot = 0, gross = 0, ndPay = 0;
   for (let i = 0; i < segs.length; i++) {
-    const a = segs[i][0], b = segs[i][1], len = b - a;
+    const a = segs[i][0], b = segs[i][1], m = segs[i][2], len = b - a;
     if (len <= 0) continue;
+    const base = rate * m / 60, otRate = base * (m > 1 ? 1.30 : 1.25);
     const rLen = Math.min(len, Math.max(0, otMin - done));
     const oLen = len - rLen;
-    if (rLen > 0) { reg += rLen; ndReg += ndOverlapMin(a, a + rLen); }
-    if (oLen > 0) { ot += oLen; ndOt += ndOverlapMin(a + rLen, b); }
+    let ndR = 0, ndO = 0;
+    if (rLen > 0) { reg += rLen; ndR = ndOverlapMin(a, a + rLen); }
+    if (oLen > 0) { ot += oLen; ndO = ndOverlapMin(a + rLen, b); }
+    gross += rLen * base + oLen * otRate;
+    ndPay += (ndR * base + ndO * otRate) * nr;
+    ndTot += ndR + ndO;
     done += len;
   }
-  const gross = reg * base + ot * otRate;
-  const ndPay = (ndReg * base + ndOt * otRate) * nr;
-  return { reg: r2(reg / 60), ot: r2(ot / 60), nd: r2((ndReg + ndOt) / 60), ndPay: r2(ndPay), gross: r2(gross + ndPay), paid: (reg + ot) / 60 };
+  return { reg: r2(reg / 60), ot: r2(ot / 60), nd: r2(ndTot / 60), ndPay: r2(ndPay), gross: r2(gross + ndPay), paid: (reg + ot) / 60, splitApplied: splitActive, nextMult: splitActive ? nextMult : mult };
 }
 function recalcDay(date) {
   const list = shifts.filter(s => s.date === date && s.startTime && s.endTime).sort((a, b) => tmin(a.startTime) - tmin(b.startTime) || a.id - b.id);
+  const nm = settings.midnightHolidaySplit !== false ? nextDayMultFor(date) : null;
   let prior = 0;
   list.forEach(s => {
     const active = isShiftActive(s);
-    const r = calcPay({ start: s.startTime, end: s.endTime, mult: s.multiplier, rate: s.hourlyRate, brk: s.breakMin || 0, prior: active ? prior : 0 });
+    const r = calcPay({ start: s.startTime, end: s.endTime, mult: s.multiplier, rate: s.hourlyRate, brk: s.breakMin || 0, prior: active ? prior : 0, nextMult: nm });
     if (!r) return; s.reg = r.reg; s.ot = r.ot; s.nd = r.nd; s.ndPay = r.ndPay; s.gross = r.gross;
     if (active) prior += r.paid;
   });
@@ -466,12 +510,20 @@ function estimateStatutory(key, gross, basic) {
   const isSemi = sch === 'semi' || sch === 'semi25';
   const isFirst = (sch === 'semi' && /-1$/.test(key)) || (sch === 'semi25' && /-10$/.test(key));
   const isSecond = (sch === 'semi' && /-2$/.test(key)) || (sch === 'semi25' && /-25$/.test(key));
-  const ym = dstr(periodFromKey(key).start).slice(0, 7);
-  // For 1st semi-monthly cutoff, never pull in 2nd-cutoff shifts retroactively
+  const ym = dstr(periodFromKey(key).end).slice(0, 7);
+  // For 1st semi-monthly cutoff, never pull in 2nd-cutoff shifts retroactively;
+  // For 2nd cutoff (both 1-15/16-end and 26-10/11-25), combine exact 1st + 2nd cutoff shifts
   let monthly, monthlyBasic;
   if (isFirst) {
     monthly = gross * 2;
     monthlyBasic = basePay * 2;
+  } else if (isSemi && isSecond) {
+    const firstKey = sch === 'semi25' ? key.replace(/-25$/, '-10') : key.replace(/-2$/, '-1');
+    const paired = [...shiftsIn(firstKey), ...shiftsIn(key)].filter(isShiftActive);
+    const monthActual = paired.reduce((a, s) => a + s.gross, 0);
+    const monthBasicActual = paired.reduce((a, s) => a + s.reg * s.hourlyRate, 0);
+    monthly = Math.max(monthActual, gross * perMonth);
+    monthlyBasic = Math.max(monthBasicActual, basePay * perMonth);
   } else {
     const monthActual = shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.gross, 0);
     const monthBasicActual = shifts.filter(s => s.date.startsWith(ym) && isShiftActive(s)).reduce((a, s) => a + s.reg * s.hourlyRate, 0);
@@ -658,7 +710,7 @@ function confirmTyped() { $('cf-ok').disabled = $('cf-input').value.trim().toUpp
 function confirmAnswer(v) { if (v && cfTyped && $('cf-input').value.trim().toUpperCase() !== cfTyped) return; closeSheet('confirm'); const r = cfRes; cfRes = null; if (r) r(v); }
 
 /* ================= rendering ================= */
-let shownAmt = 0, amtRaf = 0, sparkSig = '';
+let shownAmt = 0, amtRaf = 0;
 function setAmt(val) {
   const box = $('hero-amt'), I = $('amt-int'), De = $('amt-dec'); cancelAnimationFrame(amtRaf);
   box.classList.toggle('mask', !!settings.hide);
@@ -691,7 +743,10 @@ function shiftRow(s, del) {
 }
 function gigRow(g, del) {
   const d = pd(g.date), range = g.startTime && g.endTime ? `<span>${t12(g.startTime)} – ${t12(g.endTime)}</span>` : '', b = [`<span class="dot-b gg">${esc(g.stream)}</span>`];
-  if (g.status === 'pending') b.push('<span class="dot-b sc">Pending</span>');
+  if (g.status === 'pending') {
+    if (g.dueDate) { const dm = dueMeta(g.dueDate); b.push(`<span class="dot-b ${dm.urgent ? 'cx' : 'ot'}">${esc(dm.label)}</span>`); }
+    else b.push('<span class="dot-b sc">Pending</span>');
+  }
   return `<div class="shift press" role="button" tabindex="0" onclick="openGig(${g.id})"><div class="tag gig"><b>${d.getDate()}</b><small>${DOW[d.getDay()]}</small></div>
   <div class="grow"><p class="t">${esc(g.title || g.stream)}</p><p class="s num">${range}${b.join('')}</p></div>
   <span class="amt num pos-ok">+${peso(g.amount)}</span>${del ? `<button type="button" class="trash" onclick="event.stopPropagation();deleteGig(${g.id})" aria-label="Delete side gig"><svg class="ic sm"><use href="#i-trash"/></svg></button>` : ''}</div>`;
@@ -842,6 +897,7 @@ function syncWidget() {
     const accentFg = (dark && P.fgd) ? P.fgd : '#FFFFFF';
     const accentText = dark ? P.td : P.tl;
     const cardStyle = settings.cardStyle || 'surface';
+    const tintBg = P.w2 || P.a;
     const exListCur = expensesIn(cur.key);
     const spCur = r2(exListCur.reduce((a, e) => a + e.amount, 0));
     const remBudget = money(r2(D.netAll - spCur));
@@ -855,7 +911,7 @@ function syncWidget() {
         net: netText, badge: badgeText, meta: metaText, period: cur.label,
         gross: money(D.grossAll), ded: settings.hide ? MASK : '−' + peso(D.d.total),
         extra, remBudget, dueTitle, dueLine, dueUrgent, appHide: !!settings.hide, pinLocked,
-        theme, cardStyle, accent, accentFg, accentText
+        theme, cardStyle, tintBg, accent, accentFg, accentText
       }));
     } else if (typeof AndroidBridge.updateWidget === 'function') {
       AndroidBridge.updateWidget(netText, badgeText, metaText, cur.label);
@@ -866,7 +922,8 @@ function openGoalSettings() { go('settings'); setTimeout(() => { const el = $('s
 function renderHome() {
   const P = periodFromKey(selKey), D = periodData(selKey), cur = curPeriod(), isCur = P.key === cur.key, isPast = P.sort < cur.sort, td = today();
   // Slide 0: Main Payroll Account Card (Banking / Trading style)
-  setText($('w-label'), `Main payroll · ${P.badge}${isCur ? '' : (isPast ? ' · closed' : ' · upcoming')}`);
+  const activeJob = getActiveJob(); const jobPrefix = (activeJob && activeJob.name && activeJob.name !== 'Main job') ? activeJob.name : 'Main payroll';
+  setText($('w-label'), `${jobPrefix} · ${P.badge}${isCur ? '' : (isPast ? ' · closed' : ' · upcoming')}`);
   $('w-live').style.display = isCur ? '' : 'none';
   setAmt(D.net);
   const prevP = periodOf(dstr(addDays(P.start, -1))), prevD = periodData(prevP.key);
@@ -955,6 +1012,7 @@ function renderHome() {
   setHTML($('recent-list'), rec.length ? rec.map(x => x.k === 'g' ? gigRow(x.o, false) : shiftRow(x.o, false)).join('') : `<div class="empty"><b>Nothing logged yet</b>Tap “Log shift” or “Bulk week” to see your pay build up.</div>`);
   const lb = +localStorage.getItem(BK_KEY) || 0, nag = $('backup-nag'), need = shifts.length && (!lb || Date.now() - lb > 14 * 864e5);
   nag.classList.toggle('hidden', !need); if (need) setText(nag, `⚠ ${lb ? 'Last backup was over 2 weeks ago' : 'You have no backup yet'} — tap to back up`);
+  renderTimer();
   renderCheckin();
   renderBudget(D.netAll, D.net, D.gigPaid);
   renderTrend();
@@ -1038,6 +1096,7 @@ function setBudTab(t) {
   ui.budTab = t;
   $$('#bud-tabs button').forEach(b => b.classList.toggle('on', b.dataset.bt === t));
   ['overview', 'expenses', 'dues', 'vaults'].forEach(k => { const el = $('bud-p-' + k); if (el) el.classList.toggle('hidden', k !== t); });
+  if (t === 'overview') renderHome();
   if (t === 'expenses') renderExpenses();
   if (t === 'dues') renderDues();
   if (t === 'vaults') renderVaults();
@@ -1308,6 +1367,7 @@ function renderBudget(net, payNet = net, gigNet = 0) {
     setText($('bs-vaults'), money(vTot)); setText($('bs-vaults-sub'), `${vList.length} goal${vList.length === 1 ? '' : 's'}`);
   }
   if (curView === 'budget') {
+    if (ui.budTab === 'overview') renderCashflow(leftAll);
     if (ui.budTab === 'expenses') renderExpenses();
     if (ui.budTab === 'dues') renderDues();
     if (ui.budTab === 'vaults') renderVaults();
@@ -1643,13 +1703,12 @@ function renderPayslip() {
     gn.classList.toggle('hidden', !(D.gigTotal > 0));
     if (D.gigTotal > 0) setText(gn, `Plus ${peso(D.gigPaid)} paid side gigs${D.gigPending > 0 ? ` (${peso(D.gigPending)} pending)` : ''} in this cutoff — kept separate from employer payroll deductions.`);
   }
-  const y = P.startStr.slice(0, 4), basicYear = shifts.filter(s => s.date.startsWith(y) && isShiftActive(s)).reduce((a, s) => a + s.reg * s.hourlyRate, 0);
+  const y = P.end.getFullYear(), basicYear = shifts.filter(s => isShiftActive(s) && periodOf(s.date).end.getFullYear() === y).reduce((a, s) => a + s.reg * s.hourlyRate, 0);
   setText($('t13-sub'), `Earned in ${y} so far`); setText($('t13-ytd'), peso(basicYear / 12));
   syncDedUI();
   calc13();
 }
 function calc13() { const h = +$('t13-hrs').value || 0, m = +$('t13-mo').value || 12; setText($('t13-res'), peso(h * (52 / 12) * m * settings.hourlyRate / 12)); }
-let _lastRender = 0;
 let _rq = 0;
 const dirty = { home: true, shifts: true, deductions: true, insights: true };
 const RENDERERS = { home: () => renderHome(), budget: () => renderHome(), shifts: () => renderShifts(), deductions: () => renderPayslip(), insights: () => renderInsights() };
@@ -1750,7 +1809,8 @@ function readModal() {
   const rawRate = $('m-rate') ? parseFloat($('m-rate').value) : NaN;
   const fallbackRate = editingId !== null ? (shifts.find(s => s.id === editingId) || {}).hourlyRate || settings.hourlyRate : settings.hourlyRate;
   const rate = (isFinite(rawRate) && rawRate > 0) ? r2(rawRate) : fallbackRate;
-  const r = calcPay({ start, end, mult, rate, brk: modalBrk, prior: priorHours(date, tmin(start), editingId) });
+  const nm = settings.midnightHolidaySplit !== false ? nextDayMultFor(date) : null;
+  const r = calcPay({ start, end, mult, rate, brk: modalBrk, prior: priorHours(date, tmin(start), editingId), nextMult: nm });
   return { date, start, end, mult, rate, brk: modalBrk, r };
 }
 function setLogKind(k) {
@@ -1768,14 +1828,15 @@ function setLogKind(k) {
   }
 }
 function setShiftStatus(st) { modalStatus = st; $$('#m-status button').forEach(b => b.classList.toggle('on', b.dataset.s === st)); updatePreview(); }
-function setGigStatus(st) { modalGigStatus = st; $$('#g-status button').forEach(b => b.classList.toggle('on', b.dataset.gs === st)); }
+function setGigStatus(st) { modalGigStatus = st; $$('#g-status button').forEach(b => b.classList.toggle('on', b.dataset.gs === st)); if ($('g-due-wrap')) $('g-due-wrap').classList.toggle('hidden', st !== 'pending'); }
 function updatePreview() {
   const v = readModal();
   $('m-next').classList.toggle('hidden', !(tmin(v.end) < tmin(v.start)));
   setText($('m-gross-lbl'), modalStatus === 'cancelled' ? 'Cancelled shift' : (modalStatus === 'scheduled' ? 'Projected gross' : 'Gross pay'));
   setText($('m-gross'), modalStatus === 'cancelled' ? '₱0.00' : (v.r ? peso(v.r.gross) : '₱0.00'));
   if ($('m-rate-btn')) setText($('m-rate-btn'), `${peso(v.rate)}/hr`);
-  setText($('shift-hint'), modalStatus === 'cancelled' ? 'Excluded from pay & hours (kept in log history)' : (v.r ? `${fh(v.r.reg)} regular · ${fh(v.r.nd)} night · ${fh(v.r.ot)} overtime` : 'End time must differ from start time'));
+  const spTxt = (v.r && v.r.splitApplied) ? ` · 12AM split ${v.mult}×→${v.r.nextMult}×` : '';
+  setText($('shift-hint'), modalStatus === 'cancelled' ? 'Excluded from pay & hours (kept in log history)' : (v.r ? `${fh(v.r.reg)} reg · ${fh(v.r.nd)} ND · ${fh(v.r.ot)} OT${spTxt}` : 'End time must differ from start time'));
   const P = periodOf(v.date); setText($('m-cut'), `${P.badge}\n${P.label}`); $('m-cut').style.whiteSpace = 'pre-line';
 }
 function onDateChange(keepMult) {
@@ -1793,7 +1854,7 @@ function openShift(id = null) {
   $('m-del').classList.toggle('hidden', !s);
   $('g-del').classList.add('hidden'); $('g-save').textContent = 'Save side gig';
   const cur = curPeriod(), P = periodFromKey(selKey);
-  $('g-date').value = P.key === cur.key ? today() : P.endStr; $('g-amt').value = ''; $('g-title').value = ''; $('g-stream').value = ''; if ($('g-start')) $('g-start').value = ''; if ($('g-end')) $('g-end').value = ''; setGigStatus('paid');
+  $('g-date').value = P.key === cur.key ? today() : P.endStr; $('g-amt').value = ''; $('g-title').value = ''; $('g-stream').value = ''; if ($('g-start')) $('g-start').value = ''; if ($('g-end')) $('g-end').value = ''; if ($('g-due')) $('g-due').value = ''; setGigStatus('paid');
   $('m-rate-box').classList.add('hidden');
   if (s) {
     $('m-date').value = s.date; ensureTimeOpt($('m-start'), s.startTime || '16:00'); ensureTimeOpt($('m-end'), s.endTime || '22:00');
@@ -1817,6 +1878,7 @@ function openGig(id = null) {
   $('g-title').value = g ? g.title : '';
   if ($('g-start')) { if (g && g.startTime) ensureTimeOpt($('g-start'), g.startTime); else $('g-start').value = ''; }
   if ($('g-end')) { if (g && g.endTime) ensureTimeOpt($('g-end'), g.endTime); else $('g-end').value = ''; }
+  if ($('g-due')) $('g-due').value = (g && g.dueDate) ? g.dueDate : '';
   setGigStatus(g ? g.status : 'paid');
   setLogKind('gig'); openSheet('shift-sheet');
 }
@@ -1838,6 +1900,7 @@ function saveGig(forceAllowUntimed = false) {
   const amt = r2(Math.max(0, parseFloat($('g-amt').value) || 0));
   if (!(amt > 0)) return toast('Enter an amount earned');
   const date = $('g-date').value || today(), stream = $('g-stream').value.trim() || 'Side Gig', title = $('g-title').value.trim(), status = modalGigStatus;
+  const dueDate = status === 'pending' && $('g-due') ? ($('g-due').value || '') : '';
   const startTime = ($('g-start') && $('g-start').value) || '', endTime = ($('g-end') && $('g-end').value) || '';
   if ((startTime && !endTime) || (!startTime && endTime)) return toast('Pick both start and end times, or leave both as Any time');
   if (startTime && endTime && startTime === endTime) return toast('Gig end time must differ from start time');
@@ -1854,7 +1917,7 @@ function saveGig(forceAllowUntimed = false) {
         canKeepBoth: false,
         onReplace: () => {
           deleteConflictItems(conflicts);
-          commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status });
+          commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status, dueDate });
         }
       });
       return;
@@ -1870,22 +1933,22 @@ function saveGig(forceAllowUntimed = false) {
         canKeepBoth: true,
         onReplace: () => {
           deleteConflictItems(conflicts);
-          commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status });
+          commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status, dueDate });
         },
-        onKeepBoth: () => commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status })
+        onKeepBoth: () => commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status, dueDate })
       });
       return;
     }
   }
-  commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status });
+  commitSaveGig({ date, startTime, endTime, stream, title, amount: amt, status, dueDate });
 }
-function commitSaveGig({ date, startTime, endTime, stream, title, amount, status }) {
+function commitSaveGig({ date, startTime, endTime, stream, title, amount, status, dueDate = '' }) {
   const wasEdit = editingGigId !== null;
   if (wasEdit) {
     const g = gigs.find(x => x.id === editingGigId);
-    if (g) Object.assign(g, { date, startTime, endTime, stream, title, amount, status });
+    if (g) Object.assign(g, { date, startTime, endTime, stream, title, amount, status, dueDate });
   } else {
-    gigs.push({ id: nextId(), date, startTime, endTime, stream, title, amount, status });
+    gigs.push({ id: nextId(), date, startTime, endTime, stream, title, amount, status, dueDate });
   }
   persistGigs(); selKey = periodOf(date).key; closeShift(); render();
   toast(wasEdit ? 'Side gig updated' : `Added ${peso(amount)} (${stream})`);
@@ -2094,7 +2157,7 @@ function openBulkSheet() {
   bulkMon = mondayOf(new Date()); bulkSel.clear();
   const L = settings.last || { start: '16:00', end: '22:00', brk: 0 };
   ensureTimeOpt($('bk-start'), L.start || '16:00'); ensureTimeOpt($('bk-end'), L.end || '22:00'); $('blk-note').value = ''; setBulkBreak(L.brk || 0);
-  renderBulkPresets(); renderBulkWeek(); openSheet('bulk-sheet');
+  renderBulkTemplates(); renderBulkPresets(); renderBulkWeek(); openSheet('bulk-sheet');
 }
 function stepBulkWeek(dir) { bulkMon = addDays(bulkMon, dir * 7); bulkSel.clear(); renderBulkWeek(); }
 function toggleBulkDay(ds) { if (bulkSel.has(ds)) bulkSel.delete(ds); else bulkSel.add(ds); renderBulkWeek(); }
@@ -2127,7 +2190,8 @@ function updateBulkPreview() {
   let totGross = 0, totHrs = 0;
   days.forEach(ds => {
     const hol = holidayFor(ds), mult = hol ? hol.mult : 1;
-    const r = calcPay({ start: st, end: en, mult, rate: settings.hourlyRate, brk: bulkBrk, prior: 0 });
+    const nm = settings.midnightHolidaySplit !== false ? nextDayMultFor(ds) : null;
+    const r = calcPay({ start: st, end: en, mult, rate: settings.hourlyRate, brk: bulkBrk, prior: 0, nextMult: nm });
     if (r) { totGross += r.gross; totHrs += r.paid; }
   });
   setText($('bk-gross'), peso(totGross));
@@ -2473,7 +2537,8 @@ function parseScheduleText(raw) {
       if (seenKeys.has(sig)) return;
       seenKeys.add(sig);
       const hol = holidayFor(date), mult = hol ? hol.mult : 1;
-      const r = calcPay({ start: tr.start, end: tr.end, mult, rate: settings.hourlyRate, brk, prior: 0 });
+      const nm = settings.midnightHolidaySplit !== false ? nextDayMultFor(date) : null;
+      const r = calcPay({ start: tr.start, end: tr.end, mult, rate: settings.hourlyRate, brk, prior: 0, nextMult: nm });
       const iv = intervalOf(date, tr.start, tr.end);
       const ovExisting = findOverlappingShifts(date, tr.start, tr.end, null).length > 0 || findOverlappingGigs(date, tr.start, tr.end, null).length > 0;
       const ovBatch = out.some(x => intervalsOverlap(iv, intervalOf(x.date, x.start, x.end)));
@@ -2591,6 +2656,8 @@ function syncSettingsUI() {
   $('set-sched').value = settings.schedule;
   if ($('set-profile')) $('set-profile').value = settings.workProfile || 'custom';
   if ($('set-prehol')) $('set-prehol').checked = settings.preHolidayRule !== false;
+  if ($('set-midsplit')) $('set-midsplit').checked = settings.midnightHolidaySplit !== false;
+  syncJobUI();
   if ($('set-nd-rate')) $('set-nd-rate').value = String(+(settings.ndRate ?? 0.10));
   if ($('set-ot-hrs')) $('set-ot-hrs').value = String(+(settings.otThreshold ?? 8));
   updateDailyHint();
@@ -2620,14 +2687,26 @@ function applyWorkProfile(key) {
   }
   persistSettings(); syncSettingsUI(); render();
 }
+function recalcCurrentCutoff() {
+  const k = selKey || curPeriod().key;
+  if (getCutoffSnapshot(k)) return toast('This cutoff is locked — unlock it on Payslip first');
+  const list = shiftsIn(k);
+  if (!list.length) return toast('No shifts in this cutoff to recalculate');
+  const days = new Set(list.map(s => s.date));
+  days.forEach(recalcDay);
+  persistShifts(); render();
+  toast(`Recalculated ${list.length} shift${list.length === 1 ? '' : 's'} with updated rules ✓`);
+}
 function onWorkRulesChange() {
   settings.workProfile = 'custom';
   if ($('set-profile')) $('set-profile').value = 'custom';
   if ($('set-prehol')) settings.preHolidayRule = $('set-prehol').checked;
+  if ($('set-midsplit')) settings.midnightHolidaySplit = $('set-midsplit').checked;
   if ($('set-nd-rate')) settings.ndRate = Math.max(0, parseFloat($('set-nd-rate').value) || 0);
   if ($('set-ot-hrs')) settings.otThreshold = Math.max(0, parseInt($('set-ot-hrs').value, 10) || 0);
   persistSettings(); render();
-  toast('Work rules updated · applies to new & recalculated shifts');
+  const hasUnlocked = shiftsIn(selKey || curPeriod().key).length > 0 && !getCutoffSnapshot(selKey || curPeriod().key);
+  toast('Work rules updated', hasUnlocked ? { label: 'Recalc cutoff', fn: recalcCurrentCutoff } : undefined);
 }
 function applyArea() {
   const v = $('set-area').value; settings.calabarzonArea = v;
@@ -3272,7 +3351,55 @@ function sanitizeRestoredSettings(raw) {
   if (s.last && /^\d{2}:\d{2}$/.test(s.last.start || '') && /^\d{2}:\d{2}$/.test(s.last.end || '')) {
     out.last = { start: s.last.start, end: s.last.end, brk: Math.round(num(s.last.brk, 0, 180, 0)) };
   }
-  out.cutoffData = (s.cutoffData && typeof s.cutoffData === 'object' && !Array.isArray(s.cutoffData)) ? s.cutoffData : {};
+  if (typeof s.midnightHolidaySplit === 'boolean') out.midnightHolidaySplit = s.midnightHolidaySplit;
+  out.cutoffData = {};
+  if (s.cutoffData && typeof s.cutoffData === 'object' && !Array.isArray(s.cutoffData)) {
+    const BAD_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+    Object.keys(s.cutoffData).forEach(k => {
+      if (BAD_KEYS.has(k) || !/^\d{4}-\d{2}(?:-\d{1,2})?$/.test(k)) return;
+      const rec = s.cutoffData[k];
+      if (!rec || typeof rec !== 'object' || Array.isArray(rec)) return;
+      const clean = {};
+      if (rec.allowance !== undefined) clean.allowance = r2(num(rec.allowance, 0, 1e7, 0));
+      if (rec.otherDed !== undefined) clean.otherDed = r2(num(rec.otherDed, 0, 1e7, 0));
+      if (rec.actualNet !== undefined && rec.actualNet !== null && rec.actualNet !== '') clean.actualNet = r2(num(rec.actualNet, 0, 1e7, 0));
+      if (rec.manual && typeof rec.manual === 'object') {
+        clean.manual = { sss: r2(num(rec.manual.sss, 0, 1e6, 0)), ph: r2(num(rec.manual.ph, 0, 1e6, 0)), pi: r2(num(rec.manual.pi, 0, 1e6, 0)), tax: r2(num(rec.manual.tax, 0, 1e6, 0)) };
+      }
+      if (rec.snapshot && typeof rec.snapshot === 'object' && rec.snapshot.t && rec.snapshot.d && isFinite(rec.snapshot.net)) {
+        clean.snapshot = {
+          lockedAt: Math.round(num(rec.snapshot.lockedAt, 0, 1e15, Date.now())),
+          auto: !!rec.snapshot.auto,
+          t: { gross: r2(num(rec.snapshot.t.gross, 0, 1e7, 0)), basic: r2(num(rec.snapshot.t.basic, 0, 1e7, 0)), nd: r2(num(rec.snapshot.t.nd, 0, 1e7, 0)), otp: r2(num(rec.snapshot.t.otp, 0, 1e7, 0)), reg: r2(num(rec.snapshot.t.reg, 0, 1000, 0)), ndH: r2(num(rec.snapshot.t.ndH, 0, 1000, 0)), otH: r2(num(rec.snapshot.t.otH, 0, 1000, 0)), hrs: r2(num(rec.snapshot.t.hrs, 0, 1000, 0)), n: Math.round(num(rec.snapshot.t.n, 0, 500, 0)) },
+          allow: r2(num(rec.snapshot.allow, 0, 1e7, 0)),
+          grossAll: r2(num(rec.snapshot.grossAll, 0, 1e7, 0)),
+          d: { sss: r2(num(rec.snapshot.d.sss, 0, 1e6, 0)), ph: r2(num(rec.snapshot.d.ph, 0, 1e6, 0)), pi: r2(num(rec.snapshot.d.pi, 0, 1e6, 0)), tax: r2(num(rec.snapshot.d.tax, 0, 1e6, 0)), oth: r2(num(rec.snapshot.d.oth, 0, 1e6, 0)), total: r2(num(rec.snapshot.d.total, 0, 1e7, 0)), capped: !!rec.snapshot.d.capped },
+          net: r2(num(rec.snapshot.net, 0, 1e7, 0))
+        };
+      }
+      out.cutoffData[k] = clean;
+    });
+  }
+  out.rosterTemplates = Array.isArray(s.rosterTemplates) ? s.rosterTemplates.filter(t => t && t.name && Array.isArray(t.days) && /^\d{2}:\d{2}$/.test(t.start || '') && /^\d{2}:\d{2}$/.test(t.end || '')).slice(0, 10).map(t => ({
+    id: nextId(), name: String(t.name).trim().slice(0, 40), days: [...new Set(t.days.map(x => parseInt(x, 10)).filter(x => x >= 0 && x <= 6))].sort(),
+    start: t.start, end: t.end, brk: Math.round(num(t.brk, 0, 180, 0)), note: String(t.note || '').trim().slice(0, 40)
+  })) : [];
+  out.jobs = Array.isArray(s.jobs) ? s.jobs.filter(j => j && j.id && j.name).slice(0, 8).map(j => ({
+    id: String(j.id).slice(0, 32), name: String(j.name).trim().slice(0, 40),
+    hourlyRate: r2(num(j.hourlyRate, 0, 100000, out.hourlyRate)),
+    calabarzonArea: (PH_WAGE_PRESETS[String(j.calabarzonArea || '')] || j.calabarzonArea === 'custom') ? String(j.calabarzonArea) : 'custom',
+    schedule: ['semi', 'semi25', 'weekly', 'monthly'].includes(j.schedule) ? j.schedule : out.schedule,
+    workProfile: (WORK_PROFILES[j.workProfile] || j.workProfile === 'custom') ? j.workProfile : 'custom',
+    preHolidayRule: typeof j.preHolidayRule === 'boolean' ? j.preHolidayRule : out.preHolidayRule,
+    midnightHolidaySplit: typeof j.midnightHolidaySplit === 'boolean' ? j.midnightHolidaySplit : out.midnightHolidaySplit,
+    ndRate: r2(num(j.ndRate, 0, 0.5, out.ndRate)),
+    otThreshold: Math.round(num(j.otThreshold, 0, 16, out.otThreshold)),
+    autoDeduct: typeof j.autoDeduct === 'boolean' ? j.autoDeduct : out.autoDeduct,
+    deductMode: ['first', 'split', 'last'].includes(j.deductMode) ? j.deductMode : out.deductMode,
+    statMinGross: r2(num(j.statMinGross, 0, 100000, out.statMinGross)),
+    mwe: typeof j.mwe === 'boolean' ? j.mwe : out.mwe
+  })) : [];
+  out.activeJobId = out.jobs.some(j => j.id === s.activeJobId) ? s.activeJobId : (out.jobs[0] ? out.jobs[0].id : '');
   out.customPresets = Array.isArray(s.customPresets) ? s.customPresets.filter(p => p && /^\d{2}:\d{2}$/.test(p.start || '') && /^\d{2}:\d{2}$/.test(p.end || '')).slice(0, 6) : [];
   out.vaults = Array.isArray(s.vaults) ? s.vaults.filter(v => v && v.name).map(v => ({ id: nextId(), name: String(v.name).trim(), target: r2(num(v.target, 0, 1e8, 0)), saved: r2(num(v.saved, 0, 1e8, 0)) })) : [];
   out.bills = Array.isArray(s.bills) ? s.bills.filter(b => b && b.name).map(b => ({ id: nextId(), name: String(b.name).trim(), amount: r2(num(b.amount, 0, 1e7, 0)), cycle: ['both', '1', '2'].includes(b.cycle) ? b.cycle : 'both', cat: b.cat === 'wants' ? 'wants' : 'needs' })) : [];
@@ -3662,7 +3789,10 @@ async function pinKey(k) {
   else if (pinMode === 'verify-screenshots') { unlockDone(); finishPendingScreenLockAuth(true); }
 }
 function failPin(msg, retitle) { const d = $('pin-dots'); d.classList.remove('shake'); requestAnimationFrame(() => d.classList.add('shake')); if (navigator.vibrate) navigator.vibrate(60); setTimeout(() => lockUI(retitle || $('lock-title').textContent, msg), 340); }
-function lockSetupFlow() { const c = lockCfg(); if (c) { pinMode = 'verify-change'; lockUI('Enter current PIN', 'Verify before changing', true); } else { pinLen = 4; pinMode = 'set1'; lockUI('Create PIN', '4 digits to protect your pay data', true); } }
+function lockSetupFlow() {
+  if (!(window.crypto && crypto.subtle)) toast('Tip: Use HTTPS or the Android app for hardware-grade PBKDF2 PIN hashing');
+  const c = lockCfg(); if (c) { pinMode = 'verify-change'; lockUI('Enter current PIN', 'Verify before changing', true); } else { pinLen = 4; pinMode = 'set1'; lockUI('Create PIN', '4 digits to protect your pay data', true); }
+}
 function lockRemoveFlow() { pinMode = 'verify-remove'; lockUI('Enter PIN to remove', 'Verify your current PIN', true); }
 function lockCancel() { clearInterval(lockTimer); lockTimer = 0; _pendingSlAuth = null; if (window.AndroidBridge) try { AndroidBridge.fpCancel(); } catch (e) {} root.classList.remove('pin-open'); }
 document.addEventListener('keydown', e => {
@@ -3792,19 +3922,19 @@ function initBrand() {
   setTimeout(dismissSplash, matchMedia('(prefers-reduced-motion: reduce)').matches ? 500 : 1300);
 }
 const RELEASE_NOTES = {
-  version: '2.7.2',
-  sub: 'Interactive trading sparklines, statement exports, widget contrast fix & splash animation',
+  version: '2.8.0',
+  sub: 'Live Shift Timer, Midnight Holiday Split, PH 2027 Wages, Multi-Job, Cashflow Timeline & PDF Statements',
   items: [
-    ['Sparklines', 'ok', 'Drag or hover across the Payroll and Side Gigs sparklines to scrub day-by-day running totals and daily earnings with a live trading crosshair.'],
-    ['Widgets', 'ok', 'Fixed Monochrome dark-mode widget button contrast and updated all 3 Android home widgets to match the Surface & Obsidian banking finishes.'],
-    ['Exports', '', 'Redesigned Payslip & Yearly Insights PNG exports into crisp bank-statement cards that automatically adapt to Light and Dark/Obsidian themes.'],
-    ['Budget & Splash', '', 'Upgraded Budget & Insights with hairline matrix KPI grids and trading bar charts, and restored the startup logo draw animation even when Lite Motion Mode is active.']
+    ['Shift Timer', 'ok', 'Clock in right from Home with persistent break tracking, live peso earnings ticker, and 1-tap Clock Out to pre-fill your shift log.'],
+    ['PH 2027 & Math', 'ok', 'Added NCR Jan 20, 2027 Tranche 2 wage presets (₱780/₱743), optional Midnight Holiday Split for graveyard shifts, exact 11–25/26–10 statutory aggregation, and 1-tap rule recalculation.'],
+    ['Tools & Jobs', '', 'Added Multi-Job Workplace Profiles, Saved Weekly Roster Templates in Bulk Week, Pending Side-Gig payout dates, and a 30-day Payday Cashflow Timeline in Budget.'],
+    ['PDF & Widgets', '', 'Added native Print / Save as PDF bank statements on Payslip & Insights, Tinted card finish support on all 3 Android widgets, tablet landscape support, and keyboard accessibility.']
   ]
 };
 
 const isDesktopLayout = () => window.innerWidth >= 1024;
 const TOUR = [
-  { view: 'home', t: 'Welcome to SweldoPulse 2.7.2', b: 'Track shifts, side gigs, payslips, and budgets in a clean banking-grade workspace on phone or PC. Here is a quick tour.' },
+  { view: 'home', t: 'Welcome to SweldoPulse 2.8.0', b: 'Track live shifts, graveyard holiday splits, multiple workplaces, side gigs, cashflow, and PDF payslips on phone or PC. Here is a quick tour.' },
   { view: 'settings', sel: '#set-payroll-card', t: '1 · Work profile & PH wage rules', b: 'Pick your work situation (Working Student, Full-Time, BPO, Weekly, or Freelance), choose your 2026 DOLE regional wage or custom rate, and tune Pre-Holiday 1.3×, Night Diff, and OT rules.' },
   { view: 'home', sel: () => isDesktopLayout() ? '#sb-add-btn' : '.fab', t: '2 · Log shifts, side gigs & overlap guard', b: 'Tap + to log hourly shifts or timed side gigs. Overlapping hours are caught automatically so duplicate duties never inflate your pay.' },
   { view: 'home', sel: '#hero', t: '3 · Sibling Payroll & Side Gigs accounts', b: 'Switch between Payroll and Side Gigs via the top account tabs or swipe (side-by-side on PC/tablet). Drag or hover over either sparkline to inspect daily running earnings.' },
@@ -3833,6 +3963,371 @@ async function showTour(i) {
   if (r) { top = r.bottom + 18; if (top + h > innerHeight - 16) top = r.top - 18 - h; top = Math.max(16, Math.min(top, innerHeight - h - 16)); } else top = (innerHeight - h) / 2;
   const left = r ? Math.max(16, Math.min(innerWidth - w - 16, r.left + r.width / 2 - w / 2)) : Math.max(16, (innerWidth - w) / 2);
   card.style.left = left + 'px'; card.style.top = top + 'px'; card.style.opacity = 1; spot.style.opacity = 1; tourBusy = false;
+}
+
+/* ================= Live Shift Timer (Clock-In / Break / Clock-Out) ================= */
+let _timerInt = 0;
+function fmtHMS(sec) {
+  const s = Math.max(0, Math.floor(sec));
+  return `${p2(Math.floor(s / 3600))}:${p2(Math.floor((s % 3600) / 60))}:${p2(s % 60)}`;
+}
+function timerActiveMs(tm, now = Date.now()) {
+  if (!tm || !tm.startMs) return 0;
+  const liveBrk = tm.breakStartMs ? Math.max(0, now - tm.breakStartMs) : 0;
+  return Math.max(0, now - tm.startMs - (+tm.breakMs || 0) - liveBrk);
+}
+function timerStart() {
+  if (settings.activeTimer) return;
+  settings.activeTimer = { startMs: Date.now(), breakStartMs: 0, breakMs: 0, rate: settings.hourlyRate };
+  persistSettings(); renderTimer(); startTimerTicker();
+  toast('Clocked in — live shift timer started');
+}
+function timerToggleBreak() {
+  const tm = settings.activeTimer; if (!tm) return;
+  const now = Date.now();
+  if (tm.breakStartMs) {
+    tm.breakMs = (+tm.breakMs || 0) + Math.max(0, now - tm.breakStartMs);
+    tm.breakStartMs = 0;
+    toast('Break ended — back on duty');
+  } else {
+    tm.breakStartMs = now;
+    toast('Break started — timer paused');
+  }
+  persistSettings(); renderTimer();
+}
+async function timerDiscard() {
+  if (!settings.activeTimer) return;
+  if (!await askConfirm({ title: 'Discard live timer?', body: 'This stops the running shift timer without logging a shift.', ok: 'Discard' })) return;
+  settings.activeTimer = null; persistSettings(); stopTimerTicker(); renderTimer();
+  toast('Shift timer cancelled');
+}
+function timerClockOut() {
+  const tm = settings.activeTimer; if (!tm || !tm.startMs) return;
+  const now = Date.now();
+  const sDate = new Date(tm.startMs), eDate = new Date(now);
+  const ds = dstr(sDate);
+  const startHHMM = `${p2(sDate.getHours())}:${p2(sDate.getMinutes())}`;
+  let endHHMM = `${p2(eDate.getHours())}:${p2(eDate.getMinutes())}`;
+  if (endHHMM === startHHMM) {
+    const plus1 = new Date(now + 60000);
+    endHHMM = `${p2(plus1.getHours())}:${p2(plus1.getMinutes())}`;
+  }
+  const totalBrkMin = Math.round(((+tm.breakMs || 0) + (tm.breakStartMs ? Math.max(0, now - tm.breakStartMs) : 0)) / 60000);
+  const snappedBrk = totalBrkMin >= 45 ? 60 : (totalBrkMin >= 15 ? 30 : 0);
+  settings.activeTimer = null; persistSettings(); stopTimerTicker(); renderTimer();
+  openShift();
+  $('m-date').value = ds;
+  ensureTimeOpt($('m-start'), startHHMM);
+  ensureTimeOpt($('m-end'), endHHMM);
+  if (tm.rate > 0) $('m-rate').value = tm.rate;
+  onDateChange(false);
+  setShiftStatus('worked');
+  setBreak(snappedBrk);
+  toast('Clocked out — review details & tap Save shift');
+}
+function renderTimer() {
+  const bar = $('timer-bar'), idle = $('timer-idle'), act = $('timer-active');
+  if (!bar || !idle || !act) return;
+  const tm = settings.activeTimer;
+  bar.classList.toggle('live', !!tm);
+  idle.classList.toggle('hidden', !!tm);
+  act.classList.toggle('hidden', !tm);
+  if (!tm || !tm.startMs) { stopTimerTicker(); return; }
+  const now = Date.now(), onBrk = !!tm.breakStartMs;
+  const activeMs = timerActiveMs(tm, now);
+  const sDate = new Date(tm.startMs), eDate = new Date(now);
+  const sStr = `${p2(sDate.getHours())}:${p2(sDate.getMinutes())}`;
+  const eStr = `${p2(eDate.getHours())}:${p2(eDate.getMinutes())}`;
+  const brkMin = Math.round(((+tm.breakMs || 0) + (onBrk ? Math.max(0, now - tm.breakStartMs) : 0)) / 60000);
+  const hol = holidayFor(dstr(sDate)), mult = hol ? hol.mult : 1;
+  const nm = settings.midnightHolidaySplit !== false ? nextDayMultFor(dstr(sDate)) : null;
+  let est = 0;
+  if (activeMs >= 60000 && sStr !== eStr) {
+    const res = calcPay({ start: sStr, end: eStr, mult, rate: tm.rate || settings.hourlyRate, brk: brkMin, prior: 0, nextMult: nm });
+    est = res ? res.gross : 0;
+  } else {
+    est = r2((activeMs / 3600000) * (tm.rate || settings.hourlyRate) * mult);
+  }
+  const dot = $('timer-dot'); if (dot) dot.className = 'timer-dot' + (onBrk ? ' brk' : '');
+  setText($('timer-status-lbl'), onBrk ? `On break (${brkMin}m)` : 'On duty');
+  setText($('timer-clock'), fmtHMS(activeMs / 1000));
+  setText($('timer-earn'), settings.hide ? MASK : peso(est));
+  setText($('timer-meta'), `Started ${t12(sStr)}${brkMin > 0 ? ` · ${brkMin}m brk` : ''}`);
+  setText($('timer-brk-btn'), onBrk ? 'Resume' : 'Break');
+}
+function startTimerTicker() {
+  if (_timerInt || !settings.activeTimer || document.hidden) return;
+  _timerInt = setInterval(() => { if (curView === 'home' && settings.activeTimer) renderTimer(); }, 1000);
+}
+function stopTimerTicker() { if (_timerInt) { clearInterval(_timerInt); _timerInt = 0; } }
+
+/* ================= Saved Weekly Roster Templates ================= */
+function renderBulkTemplates() {
+  const box = $('bk-templates'); if (!box) return;
+  const list = Array.isArray(settings.rosterTemplates) ? settings.rosterTemplates : [];
+  if (!list.length) {
+    setHTML(box, '<span class="note" style="font-size:11.5px">Select duty days &amp; tap “+ Save week” to reuse a roster in 1 tap.</span>');
+    return;
+  }
+  setHTML(box, list.map((t, i) =>
+    `<button type="button" class="fchip on pin-chip" onclick="applyRosterTemplate(${i})"><span>${esc(t.name)}</span><span class="pin-x" role="button" aria-label="Delete template" onclick="event.stopPropagation();deleteRosterTemplate(${i})">×</span></button>`
+  ).join(''));
+}
+function saveRosterTemplate() {
+  const days = [...bulkSel].sort();
+  const st = $('bk-start').value, en = $('bk-end').value;
+  if (!days.length) return toast('Tap at least one duty day first');
+  if (st === en) return toast('Pick valid start and end times');
+  const note = $('blk-note').value.trim();
+  const idxs = [...new Set(days.map(ds => (pd(ds).getDay() + 6) % 7))].sort();
+  const dowLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const dayTag = idxs.map(i => dowLabels[i]).join('/');
+  const name = note ? `${note} (${dayTag})` : `${dayTag} · ${shortT(st)}–${shortT(en)}`;
+  if (!Array.isArray(settings.rosterTemplates)) settings.rosterTemplates = [];
+  settings.rosterTemplates.unshift({ id: nextId(), name: name.slice(0, 40), days: idxs, start: st, end: en, brk: bulkBrk || 0, note });
+  if (settings.rosterTemplates.length > 8) settings.rosterTemplates.pop();
+  persistSettings(); renderBulkTemplates();
+  toast(`Saved template: ${name}`);
+}
+function applyRosterTemplate(idx) {
+  const t = (settings.rosterTemplates || [])[idx]; if (!t || !bulkMon) return;
+  bulkSel.clear();
+  t.days.forEach(dIdx => bulkSel.add(dstr(addDays(bulkMon, dIdx))));
+  ensureTimeOpt($('bk-start'), t.start);
+  ensureTimeOpt($('bk-end'), t.end);
+  $('blk-note').value = t.note || '';
+  setBulkBreak(t.brk || 0);
+  renderBulkWeek();
+  toast(`Applied template: ${t.name}`);
+}
+function deleteRosterTemplate(idx) {
+  if (!Array.isArray(settings.rosterTemplates)) return;
+  settings.rosterTemplates.splice(idx, 1);
+  persistSettings(); renderBulkTemplates(); toast('Template removed');
+}
+
+/* ================= Multi-Job / Employer Profiles ================= */
+function captureJobFields() {
+  return {
+    hourlyRate: settings.hourlyRate, calabarzonArea: settings.calabarzonArea, schedule: settings.schedule,
+    workProfile: settings.workProfile || 'custom', preHolidayRule: settings.preHolidayRule !== false,
+    midnightHolidaySplit: settings.midnightHolidaySplit !== false, ndRate: +(settings.ndRate ?? 0.10),
+    otThreshold: +(settings.otThreshold ?? 8), autoDeduct: !!settings.autoDeduct,
+    deductMode: settings.deductMode || 'first', statMinGross: +(settings.statMinGross ?? 2000), mwe: !!settings.mwe
+  };
+}
+function ensureJobs() {
+  if (!Array.isArray(settings.jobs) || !settings.jobs.length) {
+    const id = 'job_main';
+    settings.jobs = [{ id, name: 'Main job', ...captureJobFields() }];
+    settings.activeJobId = id;
+  } else if (!settings.jobs.some(j => j.id === settings.activeJobId)) {
+    settings.activeJobId = settings.jobs[0].id;
+  }
+}
+function getActiveJob() {
+  ensureJobs();
+  return settings.jobs.find(j => j.id === settings.activeJobId) || settings.jobs[0];
+}
+function syncActiveJobFromSettings() {
+  if (!Array.isArray(settings.jobs) || !settings.jobs.length) return;
+  const j = settings.jobs.find(x => x.id === settings.activeJobId);
+  if (j) Object.assign(j, captureJobFields());
+}
+function syncJobUI() {
+  ensureJobs();
+  const sel = $('set-job'); if (!sel) return;
+  setHTML(sel, settings.jobs.map(j => `<option value="${esc(j.id)}">${esc(j.name)} — ${peso(j.hourlyRate)}/hr</option>`).join(''));
+  sel.value = settings.activeJobId;
+  if ($('set-job-edit')) $('set-job-edit').classList.remove('hidden');
+}
+function switchJob(id) {
+  ensureJobs();
+  const target = settings.jobs.find(j => j.id === id); if (!target) return;
+  syncActiveJobFromSettings();
+  settings.activeJobId = target.id;
+  Object.assign(settings, {
+    hourlyRate: target.hourlyRate, calabarzonArea: target.calabarzonArea, schedule: target.schedule,
+    workProfile: target.workProfile, preHolidayRule: target.preHolidayRule,
+    midnightHolidaySplit: target.midnightHolidaySplit, ndRate: target.ndRate,
+    otThreshold: target.otThreshold, autoDeduct: target.autoDeduct,
+    deductMode: target.deductMode, statMinGross: target.statMinGross, mwe: target.mwe
+  });
+  _pm.clear(); selKey = curPeriod().key;
+  persistSettings(); syncSettingsUI(); render();
+  toast(`Switched workplace: ${target.name} (${peso(target.hourlyRate)}/hr)`);
+}
+let editingJobId = null;
+function openJobSheet(id = null) {
+  ensureJobs();
+  editingJobId = id;
+  const j = id ? settings.jobs.find(x => x.id === id) : null;
+  setText($('job-sheet-t'), j ? 'Edit workplace profile' : 'New workplace profile');
+  setText($('jb-save'), j ? 'Update workplace' : 'Create workplace');
+  $('jb-del').classList.toggle('hidden', !j || settings.jobs.length <= 1);
+  $('jb-name').value = j ? j.name : '';
+  $('jb-rate').value = j ? j.hourlyRate : settings.hourlyRate;
+  openSheet('job-sheet');
+  setTimeout(() => $('jb-name').focus(), 160);
+}
+function saveJobProfile() {
+  const name = $('jb-name').value.trim(); if (!name) return toast('Enter a workplace name');
+  const rate = r2(Math.max(0, parseFloat($('jb-rate').value) || settings.hourlyRate));
+  ensureJobs();
+  if (editingJobId) {
+    const j = settings.jobs.find(x => x.id === editingJobId);
+    if (j) {
+      j.name = name; j.hourlyRate = rate;
+      if (j.id === settings.activeJobId) settings.hourlyRate = rate;
+    }
+  } else {
+    const id = 'job_' + Date.now();
+    const match = Object.keys(PH_WAGE_PRESETS).find(k => Math.abs(PH_WAGE_PRESETS[k].rate - rate) < 0.005);
+    const job = { id, name, ...captureJobFields(), hourlyRate: rate, calabarzonArea: match || 'custom' };
+    settings.jobs.push(job);
+    settings.activeJobId = id;
+    settings.hourlyRate = rate;
+    settings.calabarzonArea = job.calabarzonArea;
+  }
+  editingJobId = null; persistSettings(); closeSheet('job-sheet'); syncSettingsUI(); render();
+  toast(`Workplace saved: ${name}`);
+}
+async function deleteJobFromSheet() {
+  const id = editingJobId; if (!id || settings.jobs.length <= 1) return;
+  const j = settings.jobs.find(x => x.id === id); if (!j) return;
+  closeSheet('job-sheet'); editingJobId = null;
+  if (!await askConfirm({ title: 'Delete workplace profile?', body: `Remove <b>${esc(j.name)}</b>? Previously logged shifts stay untouched.`, ok: 'Delete' })) return;
+  settings.jobs = settings.jobs.filter(x => x.id !== id);
+  if (settings.activeJobId === id) switchJob(settings.jobs[0].id);
+  else { persistSettings(); syncJobUI(); }
+  toast('Workplace removed');
+}
+
+/* ================= Payday Cashflow Timeline (Budget) ================= */
+function renderCashflow(startCash) {
+  const listEl = $('cf-list'), badge = $('cf-badge'), sub = $('cf-sub');
+  if (!listEl) return;
+  const td = today(), tdNum = dayNum(td), horizon = tdNum + 30;
+  const events = [];
+  // 1. Pending side-gig payouts (not yet counted in startCash)
+  gigs.forEach(g => {
+    if (g.status !== 'pending') return;
+    const ds = g.dueDate || g.date;
+    const dn = dayNum(ds);
+    if (dn <= horizon) events.push({ date: ds, dn, label: `${g.stream}${g.title ? ' · ' + g.title : ''}`, kind: 'Pending gig payout', amt: +g.amount });
+  });
+  // 2. Unpaid recurring bills in current cutoff
+  const ck = curPeriod().key, paidBillIds = new Set(expensesIn(ck).filter(e => e.billId).map(e => e.billId));
+  const curEndStr = curPeriod().endStr, curEndDn = dayNum(curEndStr);
+  (settings.bills || []).forEach(b => {
+    if (billDueIn(b, ck) && !paidBillIds.has(b.id)) {
+      events.push({ date: curEndStr, dn: curEndDn, label: b.name, kind: 'Recurring bill', amt: -r2(+b.amount || 0) });
+    }
+  });
+  // 3. Active PayLater & Utang dues in next 30d (including overdue)
+  debts.forEach(d => {
+    if (d.settled || !d.dueDate) return;
+    const dn = dayNum(d.dueDate);
+    if (dn <= horizon) {
+      const a = d.kind === 'paylater' ? d.amount : debtRemaining(d);
+      events.push({ date: d.dueDate, dn, label: d.name, kind: d.kind === 'owed' ? 'Receivable' : (d.kind === 'paylater' ? 'PayLater due' : 'Utang due'), amt: d.kind === 'owed' ? +a : -a });
+    }
+  });
+  // 4. Next cutoff projected payroll (only if shifts are already logged in the next cutoff)
+  const nextP = periodOf(dstr(addDays(curPeriod().end, 1)));
+  const nextD = periodData(nextP.key);
+  if (nextD.net > 0) {
+    const payDate = dstr(addDays(nextP.end, Math.max(0, +settings.payLag || 0)));
+    const dn = dayNum(payDate);
+    if (dn <= horizon) events.push({ date: payDate, dn, label: `Next payday (${nextP.badge})`, kind: 'Projected payroll', amt: +nextD.net });
+  }
+  events.sort((a, b) => a.dn - b.dn || b.amt - a.amt);
+  if (!events.length) {
+    setText(badge, 'All clear'); badge.className = 'chip ok num';
+    setText(sub, `Current pool: ${money(startCash)} · no upcoming bills or dues in 30d`);
+    setHTML(listEl, '<p class="note" style="padding:10px 0 2px">Add recurring bills, PayLater dues, or pending side-gig payout dates to project your cash balance ahead of payday.</p>');
+    return;
+  }
+  let bal = r2(startCash), minBal = bal;
+  const rowsHtml = events.slice(0, 10).map(ev => {
+    bal = r2(bal + ev.amt);
+    if (bal < minBal) minBal = bal;
+    const dObj = pd(ev.date), over = ev.dn < tdNum;
+    const dTxt = over ? 'Overdue' : `${MON[dObj.getMonth()]} ${dObj.getDate()}`;
+    const amtTxt = settings.hide ? MASK : `${ev.amt >= 0 ? '+' : '−'}${peso(Math.abs(ev.amt))}`;
+    return `<div class="cf-row"><span class="cf-date num" style="${over ? 'color:var(--bad)' : ''}">${dTxt}</span>` +
+      `<div class="grow" style="min-width:0"><p style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(ev.label)}</p><p class="card-s" style="margin-top:0">${esc(ev.kind)}</p></div>` +
+      `<div style="text-align:right"><b class="num ${ev.amt >= 0 ? 'pos-ok' : 'neg'}">${amtTxt}</b><p class="cf-bal num${bal < 0 ? ' short' : ''}">Bal ${money(bal)}</p></div></div>`;
+  }).join('');
+  setHTML(listEl, rowsHtml);
+  setText(sub, `${events.length} upcoming item${events.length === 1 ? '' : 's'} · projected end ${money(bal)}`);
+  if (minBal < 0) {
+    setText(badge, settings.hide ? 'Shortfall' : `Short ${peso(Math.abs(minBal))}`); badge.className = 'chip bad num';
+  } else {
+    setText(badge, 'Covered ✓'); badge.className = 'chip ok num';
+  }
+}
+
+/* ================= Print-Ready PDF Bank Statement Export ================= */
+function printStatement(kind) {
+  const box = $('print-sheet'); if (!box) return;
+  const job = getActiveJob(), genDate = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+  let docTitle = 'SweldoPulse-Statement';
+  if (kind === 'statutory') {
+    const D = _insCache || computeYearData(ui.insYear);
+    docTitle = `SweldoPulse-Statutory-${D.yr}`;
+    const rows = D.months.filter(x => (x.sss + x.ph + x.pi + x.tax + x.gross) > 0);
+    const body = rows.length
+      ? rows.map(x => `<tr><td>${MONF[x.m]}</td><td>${peso(x.gross)}</td><td>${peso(x.sss)}</td><td>${peso(x.ph)}</td><td>${peso(x.pi)}</td><td>${peso(x.tax)}</td></tr>`).join('')
+      : `<tr><td colspan="6" style="text-align:center;color:#64748B">No payroll records logged in ${D.yr}.</td></tr>`;
+    box.innerHTML =
+      `<div class="pr-hdr"><div><h1>SweldoPulse</h1><p class="pr-sub">Annual Statutory Remittance Ledger · ${D.yr}</p></div>` +
+      `<div class="pr-meta"><b>${esc(job ? job.name : 'Main Payroll')}</b><br>Generated ${genDate}</div></div>` +
+      `<div class="pr-net"><div><div class="pr-sub">YEAR-TO-DATE NET PAYROLL</div><strong>${peso(D.totNet)}</strong></div>` +
+      `<div class="pr-meta"><b>13th-Month YTD:</b> ${peso(D.basicYr / 12)}<br><b>Hours:</b> ${fh(D.totHrs)} (${D.totShifts} shifts)</div></div>` +
+      `<div class="pr-sec">Monthly Government Contributions</div>` +
+      `<table class="pr-tbl"><thead><tr><th>Month</th><th>Gross</th><th>SSS</th><th>PhilHealth</th><th>Pag-IBIG</th><th>Tax</th></tr></thead><tbody>` +
+      body +
+      `<tr class="pr-tot"><td>Total (${D.yr})</td><td>${peso(D.totGross)}</td><td>${peso(D.st.sss)}</td><td>${peso(D.st.ph)}</td><td>${peso(D.st.pi)}</td><td>${peso(D.st.tax)}</td></tr></tbody></table>` +
+      `<div class="pr-foot"><span>SweldoPulse v${APP_VERSION} · Personal earnings &amp; remittance record</span><span>Estimate only — verify with employer payslip</span></div>`;
+  } else {
+    const P = periodFromKey(selKey), D = periodData(selKey), t = D.t, d = D.d;
+    docTitle = `SweldoPulse-Payslip-${P.key}`;
+    const shRows = D.list.filter(isShiftActive).sort((a, b) => a.date.localeCompare(b.date)).map(s =>
+      `<tr><td>${fmtDay(s.date)}</td><td>${esc(shiftLabel(s))}</td><td>${s.startTime && s.endTime ? `${t12(s.startTime)}–${t12(s.endTime)}` : '—'}</td><td>${fh(s.reg + s.ot)}</td><td>${peso(s.gross)}</td></tr>`
+    ).join('');
+    box.innerHTML =
+      `<div class="pr-hdr"><div><h1>SweldoPulse</h1><p class="pr-sub">Payslip Statement · ${esc(P.badge)}</p></div>` +
+      `<div class="pr-meta"><b>${esc(P.label)}</b><br>${esc(job ? job.name : 'Main Payroll')} · ${peso(settings.hourlyRate)}/hr</div></div>` +
+      `<div class="pr-net"><div><div class="pr-sub">NET TAKE-HOME PAY</div><strong>${peso(D.net)}</strong></div>` +
+      `<div class="pr-meta">${t.n} shift${t.n === 1 ? '' : 's'} · ${fh(t.hrs)}${D.gigPaid > 0 ? `<br>+ ${peso(D.gigPaid)} paid side gigs` : ''}</div></div>` +
+      `<div class="pr-grid"><div><span>Gross Earnings</span><b>${peso(D.grossAll)}</b></div><div><span>Total Deductions</span><b>−${peso(d.total)}</b></div><div><span>Hours (Reg / ND / OT)</span><b>${fh(t.reg)} / ${fh(t.ndH)} / ${fh(t.otH)}</b></div></div>` +
+      `<div class="pr-sec">Earnings &amp; Deductions</div>` +
+      `<table class="pr-tbl"><thead><tr><th>Line Item</th><th>Amount (PHP)</th></tr></thead><tbody>` +
+      `<tr><td>Basic regular pay</td><td>${peso(t.basic)}</td></tr>` +
+      `<tr><td>Night differential</td><td>+${peso(t.nd)}</td></tr>` +
+      `<tr><td>Overtime &amp; holiday premium</td><td>+${peso(t.otp)}</td></tr>` +
+      (D.allow > 0 ? `<tr><td>Allowances &amp; add-ons</td><td>+${peso(D.allow)}</td></tr>` : '') +
+      `<tr class="pr-tot"><td>Gross earnings</td><td>${peso(D.grossAll)}</td></tr>` +
+      `<tr><td>SSS</td><td>−${peso(d.sss)}</td></tr>` +
+      `<tr><td>PhilHealth</td><td>−${peso(d.ph)}</td></tr>` +
+      `<tr><td>Pag-IBIG</td><td>−${peso(d.pi)}</td></tr>` +
+      `<tr><td>Withholding tax</td><td>−${peso(d.tax)}</td></tr>` +
+      `<tr><td>Other / cash advance</td><td>−${peso(d.oth)}</td></tr>` +
+      `<tr class="pr-tot"><td>Total deductions</td><td>−${peso(d.total)}</td></tr>` +
+      (D.actual !== null ? `<tr class="pr-tot"><td>Actual pay received</td><td>${peso(D.actual)}</td></tr>` : '') +
+      `</tbody></table>` +
+      (shRows ? `<div class="pr-sec">Itemized Shifts</div><table class="pr-tbl"><thead><tr><th>Date</th><th>Station / Label</th><th>Time</th><th>Hours</th><th>Gross</th></tr></thead><tbody>${shRows}</tbody></table>` : '') +
+      `<div class="pr-foot"><span>Generated by SweldoPulse v${APP_VERSION} on ${genDate}</span><span>Estimate only — not an official employer payslip</span></div>`;
+  }
+  if (window.AndroidBridge && typeof AndroidBridge.printPage === 'function') {
+    AndroidBridge.printPage(docTitle);
+  } else {
+    const prevTitle = document.title;
+    document.title = docTitle;
+    window.print();
+    setTimeout(() => { document.title = prevTitle; }, 400);
+  }
 }
 
 /* ================= boot ================= */
@@ -3870,12 +4365,21 @@ window.handleAndroidBack = function () {
   return false;
 };
 
-// Desktop Escape key closes top modal/sheet smoothly
+// Keyboard accessibility: Escape closes top modal/sheet; Enter/Space activates focused [role="button"] rows
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !lockVisible()) {
+  if (lockVisible()) return;
+  if (e.key === 'Escape') {
     const handled = window.handleAndroidBack && window.handleAndroidBack();
     if (handled) e.preventDefault();
+  } else if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.getAttribute && e.target.getAttribute('role') === 'button' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+    e.preventDefault();
+    e.target.click();
   }
+});
+let _resT = 0;
+window.addEventListener('resize', () => {
+  clearTimeout(_resT);
+  _resT = setTimeout(() => { Object.keys(_sparkSigs).forEach(k => delete _sparkSigs[k]); if (curView === 'home') renderHome(); }, 160);
 });
 
 function boot() {
@@ -3927,8 +4431,9 @@ function boot() {
       setInterval(tickDay, 30000),
       setInterval(smartCheckUpdates, 900000)
     ];
+    if (settings.activeTimer) startTimerTicker();
   };
-  const stopFgTimers = () => { fgTimers.forEach(clearInterval); fgTimers = []; };
+  const stopFgTimers = () => { fgTimers.forEach(clearInterval); fgTimers = []; stopTimerTicker(); };
   startFgTimers();
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { stopFgTimers(); }

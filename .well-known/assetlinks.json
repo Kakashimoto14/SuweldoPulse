@@ -5,9 +5,9 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "app.vercel.suweldopulse.twa",
+      "package_name": "com.kakashimoto14.sweldopulse",
       "sha256_cert_fingerprints": [
-        "PASTE_YOUR_PWABUILDER_SHA256_FINGERPRINT_HERE"
+        "PASTE_YOUR_KEYSTORE_SHA256_FINGERPRINT_HERE"
       ]
     }
   }

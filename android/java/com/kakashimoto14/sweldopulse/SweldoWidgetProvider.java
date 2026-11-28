@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.RemoteViews;
 import org.json.JSONObject;
 
@@ -76,6 +77,7 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
             if (o.has("pinLocked")) ed.putBoolean("pinLocked", o.optBoolean("pinLocked", false));
             if (o.has("theme")) ed.putString("theme", o.optString("theme", "dark"));
             if (o.has("cardStyle")) ed.putString("cardStyle", o.optString("cardStyle", "surface"));
+            if (o.has("tintBg")) ed.putString("tintBg", o.optString("tintBg", "#171A40"));
             if (o.has("accent")) ed.putString("accent", o.optString("accent", "#4F46E5"));
             if (o.has("accentFg")) ed.putString("accentFg", o.optString("accentFg", "#FFFFFF"));
             if (o.has("accentText")) ed.putString("accentText", o.optString("accentText", "#A5B4FC"));
@@ -154,9 +156,11 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
             int accentFg = contrastFg(accentColor, sp.getString("accentFg", null));
             int accentTextColor = safeColor(sp.getString("accentText", "#A5B4FC"), 0xFFA5B4FC);
 
-            boolean isObsidian = "obsidian".equals(cardStyle);
-            boolean isLight = !isObsidian && "light".equals(theme);
-            boolean isAmoled = !isObsidian && "amoled".equals(theme);
+            boolean isTinted = "tinted".equals(cardStyle);
+            boolean isObsidian = !isTinted && "obsidian".equals(cardStyle);
+            boolean isLight = !isTinted && !isObsidian && "light".equals(theme);
+            boolean isAmoled = !isTinted && !isObsidian && "amoled".equals(theme);
+            int tintBgColor = safeColor(sp.getString("tintBg", "#171A40"), 0xFF171A40);
 
             int minW = opts != null ? opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 220) : 220;
             int minH = opts != null ? opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110) : 110;
@@ -175,20 +179,30 @@ public class SweldoWidgetProvider extends AppWidgetProvider {
             }
 
             int bgRes = isObsidian ? R.drawable.widget_bg_obsidian : (isLight ? R.drawable.widget_bg_light : (isAmoled ? R.drawable.widget_bg_amoled : R.drawable.widget_bg_dark));
-            int stripRes = isObsidian ? R.drawable.widget_strip_obsidian : (isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark));
-            int t1 = isLight ? 0xFF0B0F19 : 0xFFF5F7FA;
-            int t2 = isLight ? 0xFF64748B : 0xFF8895AA;
-            int divColor = isLight ? 0xFFE2E6EE : (isObsidian ? 0xFF252B3B : 0xFF232938);
-            int dedColor = isLight ? 0xFFDC2626 : 0xFFF43F5E;
-            if (isObsidian && "light".equals(theme)) {
-                // Ensure meta accent text stays legible on obsidian card when app is in light mode
+            int stripRes = isTinted ? R.drawable.widget_strip_tinted : (isObsidian ? R.drawable.widget_strip_obsidian : (isLight ? R.drawable.widget_strip_light : (isAmoled ? R.drawable.widget_strip_amoled : R.drawable.widget_strip_dark)));
+            int t1 = isLight ? 0xFF0B0F19 : 0xFFFFFFFF;
+            int t2 = isTinted ? 0xCCFFFFFF : (isLight ? 0xFF64748B : 0xFF8895AA);
+            int divColor = isTinted ? 0x33FFFFFF : (isLight ? 0xFFE2E6EE : (isObsidian ? 0xFF252B3B : 0xFF232938));
+            int dedColor = isTinted ? 0xFFFDA4AF : (isLight ? 0xFFDC2626 : 0xFFF43F5E);
+            if (isTinted) {
+                accentTextColor = 0xE6FFFFFF;
+                accentColor = 0xFFFFFFFF;
+                accentFg = tintBgColor;
+            } else if (isObsidian && "light".equals(theme)) {
                 double lum = (0.299 * Color.red(accentTextColor) + 0.587 * Color.green(accentTextColor) + 0.114 * Color.blue(accentTextColor)) / 255.0;
                 if (lum < 0.45) accentTextColor = 0xFFCBD5E1;
                 if (accentColor == 0xFF111827) { accentColor = 0xFFF8FAFC; accentFg = 0xFF0B0D12; }
             }
 
             RemoteViews rv = new RemoteViews(ctx.getPackageName(), layoutId);
-            rv.setInt(R.id.widget_root, "setBackgroundResource", bgRes);
+            if (isTinted) {
+                rv.setViewVisibility(R.id.widget_tint_bg, View.VISIBLE);
+                rv.setInt(R.id.widget_tint_bg, "setColorFilter", tintBgColor);
+                rv.setInt(R.id.widget_root, "setBackgroundColor", 0x00000000);
+            } else {
+                rv.setViewVisibility(R.id.widget_tint_bg, View.GONE);
+                rv.setInt(R.id.widget_root, "setBackgroundResource", bgRes);
+            }
             rv.setImageViewBitmap(R.id.widget_add_bg, makeRoundedButton(accentColor));
             rv.setTextColor(R.id.widget_add_txt, accentFg);
 

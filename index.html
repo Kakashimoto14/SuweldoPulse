@@ -74,6 +74,7 @@ if(window.AndroidBridge){
 <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
 <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5zM2 13l10 5 10-5M2 18l10 5 10-5"/></symbol>
 <symbol id="i-brief" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></symbol>
 </defs></svg>
 
 <div id="sp-splash" onclick="dismissSplash()" role="presentation"><svg class="sp-tile" viewBox="0 0 64 64" role="img" aria-label="SweldoPulse"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path class="sp-a" pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path class="sp-k" pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path class="sp-b" pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg><div class="sp-word">Sweldo<span>Pulse</span></div></div>
@@ -129,7 +130,7 @@ if(window.AndroidBridge){
       <button type="button" class="sb-it press" id="sb-settings" onclick="go('settings')"><svg class="ic sm"><use href="#i-sliders"/></svg>Settings</button>
     </nav>
     <div class="sb-foot">
-      <span class="num" id="sb-ver">v2.7.2</span>
+      <span class="num" id="sb-ver">v2.8.0</span>
       <button type="button" class="link" style="padding:2px 4px;font-size:11.5px" onclick="showWhatsNew()">What's new</button>
     </div>
   </aside>
@@ -208,6 +209,24 @@ if(window.AndroidBridge){
             <button type="button" class="qa-i" onclick="go('budget')"><span class="qa-ic"><svg class="ic"><use href="#i-pie"/></svg></span>Budget</button>
           </div>
 
+          <div class="timer-bar" id="timer-bar">
+            <div class="row between" id="timer-idle">
+              <div class="row" style="gap:9px;min-width:0"><span class="bc-ic"><svg class="ic"><use href="#i-clock"/></svg></span><div style="min-width:0"><p style="font-size:13px;font-weight:700">Live shift timer</p><p class="card-s" style="margin-top:0">Track duty hours, breaks &amp; live pay</p></div></div>
+              <button type="button" class="btn soft sm press" onclick="timerStart()">Clock in</button>
+            </div>
+            <div class="stack hidden" id="timer-active" style="gap:9px">
+              <div class="row between">
+                <div class="row" style="gap:8px;min-width:0"><span class="timer-dot" id="timer-dot"></span><div style="min-width:0"><p class="eyebrow" id="timer-status-lbl">On duty</p><p class="timer-clock num" id="timer-clock">00:00:00</p></div></div>
+                <div style="text-align:right"><p class="timer-earn num" id="timer-earn">₱0.00</p><p class="card-s num" id="timer-meta" style="margin-top:1px">Started —</p></div>
+              </div>
+              <div class="grid3">
+                <button type="button" class="btn ghost sm press" id="timer-brk-btn" onclick="timerToggleBreak()">Break</button>
+                <button type="button" class="btn primary sm press" onclick="timerClockOut()">Clock out</button>
+                <button type="button" class="btn soft-bad sm press" onclick="timerDiscard()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
           <div class="checkin hidden" id="checkin-card">
             <div class="row between"><div class="grow" style="min-width:0"><p style="font-size:13.5px;font-weight:700;color:var(--t1)" id="ci-title">Finished your shift?</p><p class="card-s num" id="ci-sub"></p></div><span class="chip num" id="ci-badge">Check-in</span></div>
             <div class="grid3">
@@ -281,6 +300,10 @@ if(window.AndroidBridge){
               <div class="row between"><div class="row"><i class="c-save" style="width:8px;height:8px;border-radius:9px"></i><div><p style="font-weight:600">Savings</p><p class="card-s num" id="bp-s">10% share</p></div></div><div style="text-align:right"><b class="num" id="ba-s" style="color:var(--ok)">₱0.00</b><p class="card-s num" id="br-s">Move to Vaults</p></div></div>
             </div>
           </div>
+        </div>
+        <div class="card" id="cashflow-card">
+          <div class="card-h" style="margin-bottom:8px"><div><p class="card-t">Cashflow timeline</p><p class="card-s num" id="cf-sub">Upcoming paydays, bills &amp; dues (30d)</p></div><span class="chip ok num" id="cf-badge">On track</span></div>
+          <div class="cf-list" id="cf-list"></div>
         </div>
         <details class="card fold">
           <summary><div><p class="card-t">Customize split</p><p class="card-s">Adjust Needs / Wants / Savings ratio</p></div><span class="chip ok num" id="bud-total">100%</span></summary>
@@ -373,7 +396,7 @@ if(window.AndroidBridge){
           <div class="kpi"><p class="kl">Withholding tax</p><p class="kv num neg" id="st-tax">₱0.00</p><p class="ks">BIR Form 2316</p></div>
         </div>
         <div class="card">
-          <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Monthly remittances</p><p class="card-s">Cross-check against employer postings</p></div><button type="button" class="btn soft sm press" onclick="copyStatutoryLedger()">Copy</button></div>
+          <div class="card-h" style="margin-bottom:10px"><div><p class="card-t">Monthly remittances</p><p class="card-s">Cross-check against employer postings</p></div><div class="row" style="gap:6px"><button type="button" class="btn ghost sm press" onclick="printStatement('statutory')">PDF</button><button type="button" class="btn soft sm press" onclick="copyStatutoryLedger()">Copy</button></div></div>
           <div style="overflow-x:auto"><table class="stat-tbl" id="st-table"></table></div>
         </div>
       </div>
@@ -432,9 +455,10 @@ if(window.AndroidBridge){
         <p class="note hidden" id="ps-gig-note" style="margin-top:10px"></p>
       </div>
 
-      <div class="grid2">
-        <button type="button" class="btn ghost press" onclick="copyPayslip()"><svg class="ic sm"><use href="#i-copy"/></svg>Copy</button>
-        <button type="button" class="btn soft press" onclick="viewPayslip()"><svg class="ic sm"><use href="#i-image"/></svg>Save image</button>
+      <div class="grid3">
+        <button type="button" class="btn ghost sm press" onclick="copyPayslip()"><svg class="ic sm"><use href="#i-copy"/></svg>Copy</button>
+        <button type="button" class="btn soft sm press" onclick="viewPayslip()"><svg class="ic sm"><use href="#i-image"/></svg>Image</button>
+        <button type="button" class="btn ghost sm press" onclick="printStatement('payslip')"><svg class="ic sm"><use href="#i-print"/></svg>PDF</button>
       </div>
       </div>
       <div class="desk-col">
@@ -494,6 +518,10 @@ if(window.AndroidBridge){
         <div class="card-h"><div><p class="card-t">Pay, cutoff &amp; rules</p><p class="card-s">Tailor SweldoPulse to your job &amp; PH labor standards</p></div><span class="chip mute" id="set-region-chip">PH 2026</span></div>
         <div class="stack">
           <div>
+            <div class="row between" style="margin-bottom:6px"><label class="lbl" for="set-job" style="margin:0">Workplace / job profile</label><div class="row" style="gap:8px"><button type="button" class="link" style="padding:0;font-size:12px" onclick="openJobSheet()">+ Add job</button><button type="button" class="link hidden" id="set-job-edit" style="padding:0;font-size:12px" onclick="openJobSheet(settings.activeJobId)">Edit</button></div></div>
+            <select id="set-job" class="field" onchange="switchJob(this.value)"></select>
+          </div>
+          <div>
             <label class="lbl" for="set-profile">My work situation (quick setup)</label>
             <select id="set-profile" class="field" onchange="applyWorkProfile(this.value)">
               <option value="crew">Working Student / Part-Time Crew (1.3× pre-holiday, MWE)</option>
@@ -505,13 +533,15 @@ if(window.AndroidBridge){
             </select>
           </div>
           <div>
-            <label class="lbl" for="set-area">PH Wage Order preset (2026 DOLE)</label>
+            <label class="lbl" for="set-area">PH Wage Order preset (2026–2027 DOLE)</label>
             <select id="set-area" class="field" onchange="applyArea()">
-              <option value="ncr_nonagri">NCR (Metro Manila) — ₱94.38/hr (₱755/day)</option>
-              <option value="ncr_retail">NCR Retail ≤15 workers — ₱89.75/hr (₱718/day)</option>
-              <option value="80.63">CALABARZON Cities / Ext. Metro — ₱80.63/hr (₱645/day)</option>
+              <option value="ncr_2027_nonagri">NCR Non-Agri (Eff. Jan 20, 2027) — ₱97.50/hr (₱780/day)</option>
+              <option value="ncr_2027_retail">NCR Retail ≤15 (Eff. Jan 20, 2027) — ₱92.88/hr (₱743/day)</option>
+              <option value="ncr_nonagri">NCR Non-Agri (2026) — ₱94.38/hr (₱755/day)</option>
+              <option value="ncr_retail">NCR Retail ≤15 (2026) — ₱89.75/hr (₱718/day)</option>
+              <option value="80.63">CALABARZON Cities / Ext. Metro / Rosario — ₱80.63/hr (₱645/day)</option>
               <option value="73.75">CALABARZON 1st Class Mun. — ₱73.75/hr (₱590/day)</option>
-              <option value="68.75">CALABARZON 2nd–5th Class — ₱68.75/hr (₱550/day)</option>
+              <option value="68.75">CALABARZON 2nd–5th Class / Retail ≤10 — ₱68.75/hr (₱550/day)</option>
               <option value="r3_nonagri">Central Luzon (Region III) — ₱75.00/hr (₱600/day)</option>
               <option value="r6_nonagri">Western Visayas (Region VI) — ₱73.75/hr (₱590/day)</option>
               <option value="r7_classa">Central Visayas / Cebu — ₱72.75/hr (₱582/day)</option>
@@ -539,6 +569,10 @@ if(window.AndroidBridge){
           <div class="setting" style="min-height:42px;border:0;padding:0;margin:0">
             <div><p class="k" style="font-size:13px">Pre-holiday 1.30× auto-detect</p><p class="d">Auto-apply 1.3× on the day before Regular Holidays (Crew/Retail rule). Turn off for standard DOLE 1.0×.</p></div>
             <span class="switch"><input type="checkbox" id="set-prehol" onchange="onWorkRulesChange()"><i></i></span>
+          </div>
+          <div class="setting" style="min-height:42px">
+            <div><p class="k" style="font-size:13px">Midnight holiday split (graveyard)</p><p class="d">Split overnight shifts at 12:00 AM so post-midnight hours earn the next day's holiday multiplier.</p></div>
+            <span class="switch"><input type="checkbox" id="set-midsplit" onchange="onWorkRulesChange()"><i></i></span>
           </div>
           <div class="grid2">
             <div>
@@ -619,7 +653,7 @@ if(window.AndroidBridge){
 
       <p class="sec-lbl">App &amp; Updates</p>
       <div class="card">
-        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.7.2</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
+        <div class="row between"><div class="row"><div class="hdr-logo" style="width:34px;height:34px"><svg viewBox="0 0 64 64" role="img" aria-label="SweldoPulse" style="width:100%;height:100%;display:block"><rect width="64" height="64" rx="16" fill="url(#spTile)"/><rect width="64" height="64" rx="16" fill="url(#spGloss)"/><path pathLength="1" d="M32 13A19 19 0 1 1 31.99 13" fill="none" stroke="url(#spGold)" stroke-width="4.4" stroke-linecap="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#0B0F1E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M7 34H22L27 22L33 46L38 34H57" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="57" cy="34" r="2.8" fill="#F5A524"/></svg></div><div><p class="card-t">SweldoPulse</p><p class="card-s num" id="ver-label">Version 2.8.0</p></div></div><span class="chip mute" id="upd-badge">Ready</span></div>
         <div id="upd-box" class="hidden" style="margin-top:12px">
           <div class="row between"><b id="upd-title">Update</b><span class="muted num" id="upd-size" style="font-size:12px"></span></div>
           <p class="note" id="upd-notes" style="margin:4px 0 10px"></p>
@@ -656,7 +690,7 @@ if(window.AndroidBridge){
 
 <!-- ================= SHEETS ================= -->
 <div id="shift-sheet" class="scrim" onclick="if(event.target===this)closeShift()">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t" id="shift-title">Log shift</h2><p class="card-s num" id="shift-hint">—</p></div><button type="button" class="icon-btn press" onclick="closeShift()" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="seg" id="m-kind" style="margin-bottom:14px"><button type="button" data-k="shift" class="on" onclick="setLogKind('shift')">Hourly shift</button><button type="button" data-k="gig" onclick="setLogKind('gig')">Side gig</button></div>
@@ -694,13 +728,14 @@ if(window.AndroidBridge){
       <div><label class="lbl" for="g-stream">Income stream</label><input id="g-stream" class="field" style="font-weight:500" placeholder="e.g. Catering, Freelance, Sound System" autocomplete="off" oninput="syncGigChips()"><div class="st-chips" id="g-streams"></div></div>
       <div><label class="lbl" for="g-title">Event / description (optional)</label><input id="g-title" class="field" style="font-weight:500" placeholder="e.g. Weekend event, Website fix" autocomplete="off"></div>
       <div><label class="lbl">Payment status</label><div class="seg" id="g-status"><button type="button" data-gs="paid" class="on" onclick="setGigStatus('paid')">Paid</button><button type="button" data-gs="pending" onclick="setGigStatus('pending')">Pending</button></div></div>
+      <div class="hidden" id="g-due-wrap"><label class="lbl" for="g-due">Expected payout date (optional)</label><input type="date" id="g-due" class="field"></div>
       <div class="row"><button type="button" class="btn ghost press hidden" id="g-del" onclick="deleteGigFromSheet()" aria-label="Delete gig"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="g-save" onclick="saveGig()">Save side gig</button></div>
     </div>
   </div>
 </div>
 
 <div id="menu-sheet" class="scrim" onclick="if(event.target===this)closeSheet('menu-sheet')">
-  <div class="sheet"><div class="grab"></div>
+  <div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>
     <button type="button" class="menu-it" onclick="closeSheet('menu-sheet');setTimeout(openBulkSheet,180)"><span class="ico"><svg class="ic"><use href="#i-layers"/></svg></span>Bulk log weekly roster</button>
     <button type="button" class="menu-it" onclick="closeSheet('menu-sheet');setTimeout(openIO,180)"><span class="ico"><svg class="ic"><use href="#i-swap"/></svg></span>Import / export schedule</button>
     <button type="button" class="menu-it bad" onclick="closeSheet('menu-sheet');setTimeout(clearCutoff,180)"><span class="ico"><svg class="ic"><use href="#i-trash"/></svg></span>Clear this cutoff</button>
@@ -708,7 +743,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="bulk-sheet" class="scrim" onclick="if(event.target===this)closeSheet('bulk-sheet')">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t">Bulk log week</h2><p class="card-s num" id="bk-week-lbl">Select duty days</p></div><button type="button" class="icon-btn press" onclick="closeSheet('bulk-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:12px">
@@ -716,6 +751,10 @@ if(window.AndroidBridge){
         <button type="button" class="icon-btn press" style="width:36px;height:36px;border-radius:11px" onclick="stepBulkWeek(-1)" aria-label="Previous week"><svg class="ic sm"><use href="#i-l"/></svg></button>
         <span class="chip mute num" id="bk-week-range">—</span>
         <button type="button" class="icon-btn press" style="width:36px;height:36px;border-radius:11px" onclick="stepBulkWeek(1)" aria-label="Next week"><svg class="ic sm"><use href="#i-r"/></svg></button>
+      </div>
+      <div>
+        <div class="row between" style="margin-bottom:6px"><span class="eyebrow">Saved roster templates</span><button type="button" class="link" style="padding:0;font-size:12px" onclick="saveRosterTemplate()">+ Save week</button></div>
+        <div class="presets" id="bk-templates"></div>
       </div>
       <div class="week-strip" id="bk-days"></div>
       <div class="presets" id="bk-presets"></div>
@@ -734,7 +773,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="exp-sheet" class="scrim" onclick="if(event.target===this)closeSheet('exp-sheet')">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t">Log expense</h2><p class="card-s" id="exp-sheet-sub">Tracked in this cutoff</p></div><button type="button" class="icon-btn press" onclick="closeSheet('exp-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:12px">
@@ -759,7 +798,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="vault-sheet" class="scrim" onclick="if(event.target===this)closeSheet('vault-sheet')">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t" id="vlt-title">New savings vault</h2><p class="card-s" id="vlt-sub">Track persistent goals across cutoffs</p></div><button type="button" class="icon-btn press" onclick="closeSheet('vault-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:12px">
@@ -775,7 +814,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="bill-sheet" class="scrim" onclick="if(event.target===this)closeSheet('bill-sheet')">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t" id="bill-sheet-t">New recurring bill</h2><p class="card-s">Appears automatically in your cutoff checklist</p></div><button type="button" class="icon-btn press" onclick="closeSheet('bill-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:12px">
@@ -791,7 +830,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="debt-sheet" class="scrim" onclick="if(event.target===this)closeSheet('debt-sheet')">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t" id="debt-sheet-t">Add PayLater / Utang</h2><p class="card-s" id="debt-sheet-sub">Track due dates &amp; installment progress</p></div><button type="button" class="icon-btn press" onclick="closeSheet('debt-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:12px">
@@ -831,7 +870,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="partpay-sheet" class="scrim" onclick="if(event.target===this)closeSheet('partpay-sheet')">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t" id="pp-title">Record payment</h2><p class="card-s num" id="pp-sub">Remaining balance: ₱0.00</p></div><button type="button" class="icon-btn press" onclick="closeSheet('partpay-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" style="gap:12px">
@@ -848,7 +887,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="io-sheet" class="scrim" onclick="if(event.target===this)closeSheet('io-sheet')">
-  <div class="sheet"><div class="grab"></div>
+  <div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t">Smart shift importer</h2><p class="card-s">Paste any crew roster or use the standard template</p></div><button type="button" class="icon-btn press" onclick="closeSheet('io-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="io-tools">
       <button type="button" class="fchip press" onclick="pasteIntoIo()">Paste</button>
@@ -871,7 +910,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="backup-sheet" class="scrim" onclick="if(event.target===this)closeSheet('backup-sheet')">
-  <div class="sheet"><div class="grab"></div>
+  <div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>
     <div class="sheet-h"><div><h2 class="sheet-t" id="bk-title">Back up</h2><p class="card-s" id="bk-sub"></p></div><button type="button" class="icon-btn press" onclick="closeSheet('backup-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div id="bk-enc-wrap" class="enc-box hidden">
       <div class="setting" style="min-height:34px;border:0;padding:0;margin:0"><div><p class="k" style="font-size:13px">Encrypt backup (.spbackup)</p><p class="d">AES-256-GCM passphrase protection</p></div><span class="switch"><input type="checkbox" id="bk-enc-on" onchange="toggleBkEncrypt()"><i></i></span></div>
@@ -894,8 +933,8 @@ if(window.AndroidBridge){
 </div>
 
 <div id="whatsnew-sheet" class="scrim" onclick="if(event.target===this)closeSheet('whatsnew-sheet')">
-  <div class="sheet"><div class="grab"></div>
-    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.7.2</span></h2><p class="card-s" id="wn-sub">Faster, responsive &amp; built for every PH worker</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+  <div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>
+    <div class="sheet-h"><div><h2 class="sheet-t">What's new in <span id="wn-ver">2.8.0</span></h2><p class="card-s" id="wn-sub">Faster, responsive &amp; built for every PH worker</p></div><button type="button" class="icon-btn press" onclick="closeSheet('whatsnew-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="stack" id="wn-list" style="gap:11px;font-size:13.5px"></div>
     <div class="grid2" style="margin-top:16px">
       <button type="button" class="btn soft press" onclick="closeSheet('whatsnew-sheet');setTimeout(()=>startTour(),180)">Quick tour</button>
@@ -905,7 +944,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="conflict-sheet" class="scrim top" onclick="if(event.target===this)closeConflictSheet()">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="row" style="align-items:flex-start;gap:12px">
       <div class="confirm-ic" id="cfl-ic"><svg class="ic"><use href="#i-alert"/></svg></div>
       <div class="grow"><h3 style="font-size:17px;font-weight:700;letter-spacing:-.01em" id="cfl-title">Schedule overlap</h3><p class="sub" style="font-size:13px;margin-top:4px;line-height:1.45" id="cfl-body"></p></div>
@@ -920,7 +959,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="screenlock-sheet" class="scrim top" onclick="if(event.target===this)cancelScreenLockAuth()">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="sheet-h" style="margin-bottom:10px"><div><h3 class="sheet-t" id="sl-title">Verify screen lock</h3><p class="card-s" id="sl-desc">Confirm to change screenshot protection</p></div><button type="button" class="icon-btn press" onclick="cancelScreenLockAuth()" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="sl-fp-box hidden" id="sl-fp-box">
       <div class="sl-fp-ic"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 11v3a5 5 0 0 1-1 3"/><path d="M8 12a4 4 0 0 1 8 0v2a8 8 0 0 1-1.5 4.5"/><path d="M5 12a7 7 0 0 1 14 0v1"/><path d="M5 15c0 2 .5 3.5 1.5 5"/></svg></div>
@@ -936,7 +975,7 @@ if(window.AndroidBridge){
 </div>
 
 <div id="confirm" class="scrim top" onclick="if(event.target===this)confirmAnswer(false)">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
     <div class="row" style="align-items:flex-start;gap:14px"><div class="confirm-ic" id="cf-ic"><svg class="ic"><use href="#i-alert"/></svg></div><div class="grow"><h3 style="font-size:17px;font-weight:700;letter-spacing:-.01em" id="cf-title">Are you sure?</h3><p class="sub" style="font-size:13.5px;margin-top:5px;line-height:1.5" id="cf-body"></p></div></div>
     <input id="cf-input" class="field hidden" style="margin-top:14px" autocomplete="off" autocapitalize="characters" oninput="confirmTyped()">
     <div class="grid2" style="margin-top:18px"><button type="button" class="btn ghost press" onclick="confirmAnswer(false)" id="cf-cancel">Cancel</button><button type="button" class="btn danger press" id="cf-ok" onclick="confirmAnswer(true)">Delete</button></div>
@@ -958,6 +997,19 @@ if(window.AndroidBridge){
     <div class="row" style="margin-top:16px"><button type="button" id="tour-back" onclick="tourStep(-1)" class="btn ghost sm press">Back</button><button type="button" id="tour-next" onclick="tourStep(1)" class="btn primary sm press grow">Next</button></div>
   </div>
 </div>
+
+<div id="job-sheet" class="scrim top" onclick="if(event.target===this)closeSheet('job-sheet')">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="job-sheet-t">
+    <div class="sheet-h"><div><h3 class="sheet-t" id="job-sheet-t">New workplace profile</h3><p class="card-s">Separate hourly rate, cutoff &amp; payroll rules</p></div><button type="button" class="icon-btn press" onclick="closeSheet('job-sheet')" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="stack" style="gap:12px">
+      <div><label class="lbl" for="jb-name">Workplace / employer name</label><input id="jb-name" class="field" style="font-weight:500" placeholder="e.g. McDonald's, Catering Crew, Office" autocomplete="off"></div>
+      <div><label class="lbl" for="jb-rate">Base hourly rate (optional)</label><label class="money-field"><span>₱</span><input id="jb-rate" type="number" inputmode="decimal" step="0.01" min="0" placeholder="73.75"></label></div>
+      <div class="row"><button type="button" class="btn ghost press hidden" id="jb-del" onclick="deleteJobFromSheet()" aria-label="Delete job"><svg class="ic sm"><use href="#i-trash"/></svg></button><button type="button" class="btn primary press grow" id="jb-save" onclick="saveJobProfile()">Save workplace</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="print-sheet" aria-hidden="true"></div>
 
 <script src="app.js" defer></script>
 </body>

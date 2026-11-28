@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sweldopulse-v272';
+const CACHE_NAME = 'sweldopulse-v280';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './manifest.json',
   './version.json',
   './icon.svg',
+  './icon-maskable.svg',
   './icon-192.png',
   './icon-512.png',
   './fonts/inter-latin-400-normal.woff2',

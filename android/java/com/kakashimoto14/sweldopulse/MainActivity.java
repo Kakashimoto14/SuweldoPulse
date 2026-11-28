@@ -30,6 +30,9 @@ import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.Environment;
 import android.os.SystemClock;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
@@ -330,6 +333,22 @@ public class MainActivity extends Activity {
         return new File(updateDir(), "update.apk");
     }
 
+    Signature[] extractSignatures(PackageInfo pi) {
+        if (pi == null) return null;
+        if (Build.VERSION.SDK_INT >= 28) {
+            try {
+                Object si = PackageInfo.class.getField("signingInfo").get(pi);
+                if (si != null) {
+                    Object arr = si.getClass().getMethod("getApkContentsSigners").invoke(si);
+                    if (arr instanceof Signature[] && ((Signature[]) arr).length > 0) {
+                        return (Signature[]) arr;
+                    }
+                }
+            } catch (Throwable ignored) { }
+        }
+        return pi.signatures;
+    }
+
     String verifyApkFile(File f) {
         if (f == null || !f.isFile() || f.length() < 65536L) {
             return "Downloaded APK is incomplete or too small.";
@@ -349,7 +368,11 @@ public class MainActivity extends Activity {
         }
         // Layer 2: Android PackageManager parser + signing certificate match pre-check
         try {
-            PackageInfo info = getPackageManager().getPackageArchiveInfo(f.getAbsolutePath(), PackageManager.GET_SIGNATURES);
+            int sigFlags = Build.VERSION.SDK_INT >= 28 ? 0x08000000 : PackageManager.GET_SIGNATURES;
+            PackageInfo info = getPackageManager().getPackageArchiveInfo(f.getAbsolutePath(), sigFlags);
+            if (info == null && sigFlags != PackageManager.GET_SIGNATURES) {
+                info = getPackageManager().getPackageArchiveInfo(f.getAbsolutePath(), PackageManager.GET_SIGNATURES);
+            }
             if (info == null) {
                 return "APK failed Android package verification (corrupted download).";
             }
@@ -360,14 +383,18 @@ public class MainActivity extends Activity {
             if (installed > 0 && info.versionCode <= installed) {
                 return "Downloaded APK (code " + info.versionCode + ") is not newer than installed app.";
             }
-            PackageInfo instInfo = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES);
-            if (instInfo != null && instInfo.signatures != null && instInfo.signatures.length > 0
-                    && info.signatures != null && info.signatures.length > 0) {
+            PackageInfo instInfo = getPackageManager().getPackageInfo(getPackageName(), sigFlags);
+            if (instInfo == null && sigFlags != PackageManager.GET_SIGNATURES) {
+                instInfo = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES);
+            }
+            Signature[] instSigs = extractSignatures(instInfo);
+            Signature[] apkSigs = extractSignatures(info);
+            if (instSigs != null && instSigs.length > 0 && apkSigs != null && apkSigs.length > 0) {
                 boolean matched = false;
-                for (int i = 0; i < instInfo.signatures.length; i++) {
-                    byte[] a = instInfo.signatures[i].toByteArray();
-                    for (int j = 0; j < info.signatures.length; j++) {
-                        if (Arrays.equals(a, info.signatures[j].toByteArray())) {
+                for (int i = 0; i < instSigs.length; i++) {
+                    byte[] a = instSigs[i].toByteArray();
+                    for (int j = 0; j < apkSigs.length; j++) {
+                        if (Arrays.equals(a, apkSigs[j].toByteArray())) {
                             matched = true;
                             break;
                         }
@@ -1209,6 +1236,23 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void scheduleReminder(final boolean enabled, final int hour, final int min) {
             ReminderReceiver.schedule(MainActivity.this, enabled, hour, min);
+        }
+
+        @JavascriptInterface
+        public boolean printPage(final String jobName) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        if (web == null) return;
+                        PrintManager pm = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+                        if (pm == null) return;
+                        String name = (jobName != null && jobName.length() > 0) ? jobName : "SweldoPulse Statement";
+                        PrintDocumentAdapter adapter = web.createPrintDocumentAdapter(name);
+                        pm.print(name, adapter, new PrintAttributes.Builder().build());
+                    } catch (Throwable ignored) { }
+                }
+            });
+            return true;
         }
 
         @JavascriptInterface

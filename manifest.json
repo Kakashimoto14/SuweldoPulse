@@ -5,10 +5,10 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#07090F",
-  "theme_color": "#0B0F1E",
-  "description": "Salary, shift, smart budget, and 13th-month tracker for Philippine hourly workers.",
+  "orientation": "any",
+  "background_color": "#0B0D12",
+  "theme_color": "#0B0D12",
+  "description": "Salary, shift timer, PH 2026/2027 payroll, smart budget, and 13th-month tracker for Philippine hourly workers.",
   "icons": [
     {
       "src": "./icon-192.png",
@@ -21,6 +21,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }
