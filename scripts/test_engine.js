@@ -9,7 +9,7 @@ const ROOT = path.resolve(__dirname, '..');
 
 function makeEl() {
   return {
-    style: {},
+    style: { setProperty() {}, removeProperty() {}, getPropertyValue() { return ''; } },
     dataset: {},
     classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
     addEventListener() {},
@@ -19,8 +19,32 @@ function makeEl() {
     querySelectorAll() { return []; },
     querySelector() { return null; },
     closest() { return null; },
+    getBoundingClientRect() { return { left: 0, top: 0, width: 320, height: 40, right: 320, bottom: 40 }; },
+    setPointerCapture() {},
+    releasePointerCapture() {},
+    scrollTo() {},
+    scrollIntoView() {},
+    insertBefore() {},
+    appendChild() {},
+    removeChild() {},
+    remove() {},
+    click() {},
+    select() {},
     focus() {},
     blur() {},
+    options: [],
+    children: [],
+    firstChild: null,
+    lastElementChild: null,
+    clientWidth: 360,
+    offsetWidth: 120,
+    offsetHeight: 40,
+    scrollLeft: 0,
+    className: '',
+    disabled: false,
+    href: '',
+    src: '',
+    title: '',
     value: '',
     checked: false,
     textContent: '',
@@ -28,15 +52,17 @@ function makeEl() {
   };
 }
 
-const memStore = new Map();
-const localStorageStub = {
-  getItem: k => (memStore.has(k) ? memStore.get(k) : null),
-  setItem: (k, v) => { memStore.set(k, String(v)); },
-  removeItem: k => { memStore.delete(k); },
-  clear: () => { memStore.clear(); },
-  key: i => [...memStore.keys()][i] || null,
-  get length() { return memStore.size; }
-};
+function makeStorage() {
+  const map = new Map();
+  return {
+    getItem: k => (map.has(k) ? map.get(k) : null),
+    setItem: (k, v) => { map.set(k, String(v)); },
+    removeItem: k => { map.delete(k); },
+    clear: () => { map.clear(); },
+    key: i => [...map.keys()][i] || null,
+    get length() { return map.size; }
+  };
+}
 
 const docStub = {
   documentElement: makeEl(),
@@ -54,12 +80,16 @@ const ctx = {
   console, Math, Date, JSON, Number, String, Boolean, Array, Object, Set, Map, RegExp, Error, parseInt, parseFloat, isNaN, isFinite,
   setTimeout: () => 0, clearTimeout: () => {}, setInterval: () => 0, clearInterval: () => {},
   requestAnimationFrame: () => 0, cancelAnimationFrame: () => {},
+  performance: { now: () => Date.now() },
   document: docStub,
-  localStorage: localStorageStub,
+  localStorage: makeStorage(),
+  sessionStorage: makeStorage(),
   navigator: { userAgent: 'node-test' },
-  location: { href: 'https://appassets.sweldopulse.local/', origin: 'https://appassets.sweldopulse.local' },
+  location: { href: 'https://appassets.sweldopulse.local/', origin: 'https://appassets.sweldopulse.local', hash: '', reload() {} },
   matchMedia: () => ({ matches: true, addEventListener() {} }),
+  scrollTo() {},
   innerWidth: 390,
+  innerHeight: 844,
   addEventListener() {}
 };
 ctx.window = ctx;
@@ -69,11 +99,10 @@ const appCode = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
 vm.createContext(ctx);
 vm.runInContext(appCode, ctx, { filename: 'app.js' });
 
-// Export test hooks cleanly inside VM scope
 const api = vm.runInContext(`({
   APP_VERSION, PH_WAGE_PRESETS, settings,
-  setShifts: arr => { shifts = arr; },
-  setSettings: patch => { Object.assign(settings, patch); _pm.clear(); },
+  setShifts: arr => { shifts = arr; dv++; _idx = null; _pdc.clear(); },
+  setSettings: patch => { Object.assign(settings, patch); dv++; _pm.clear(); _pdc.clear(); },
   calcPay, ndOverlapMin, holidayFor, nextDayMultFor, periodOf, estimateStatutory,
   parseScheduleText, resolveTimeRange, semver, sanitizeRestoredSettings
 })`, ctx);
@@ -130,9 +159,6 @@ test('calcPay: Midnight Holiday Split (22:00 Dec 24 @ 1.3x -> 04:00 Dec 25 @ 2.0
   assert.strictEqual(r.splitApplied, true);
   assert.strictEqual(r.reg, 6);
   assert.strictEqual(r.nd, 6);
-  // Pre-midnight: 2h * 100 * 1.3 = 260 (+26 ND = 286)
-  // Post-midnight: 4h * 100 * 2.0 = 800 (+80 ND = 880)
-  // Total = 1060 base + 106 ND = 1166
   assert.strictEqual(r.ndPay, 106);
   assert.strictEqual(r.gross, 1166);
 });
@@ -140,9 +166,9 @@ test('calcPay: Midnight Holiday Split (22:00 Dec 24 @ 1.3x -> 04:00 Dec 25 @ 2.0
 // 5. Overtime on Regular Day (1.25x) vs Holiday (1.30x)
 test('calcPay: 10h shift OT factor 1.25x regular vs 1.30x holiday', () => {
   const reg = api.calcPay({ start: '08:00', end: '18:00', mult: 1, rate: 100, brk: 0, prior: 0, ndRate: 0.10, otHrs: 8 });
-  assert.strictEqual(reg.gross, 1050); // 8*100 + 2*125
+  assert.strictEqual(reg.gross, 1050);
   const hol = api.calcPay({ start: '08:00', end: '18:00', mult: 2, rate: 100, brk: 0, prior: 0, ndRate: 0.10, otHrs: 8 });
-  assert.strictEqual(hol.gross, 2120); // 8*200 + 2*260
+  assert.strictEqual(hol.gross, 2120);
 });
 
 // 6. Unpaid break deducted cleanly
@@ -157,7 +183,7 @@ test('calcPay: 9h span with 60m unpaid break = 8h paid, 0h OT', () => {
 test('holidayFor: 2027 Good Friday & Pre-Holiday 1.3x toggle', () => {
   api.setSettings({ preHolidayRule: true });
   assert.strictEqual(api.holidayFor('2027-03-26').mult, 2);
-  assert.strictEqual(api.holidayFor('2026-11-29').mult, 1.3); // Day before Bonifacio Day
+  assert.strictEqual(api.holidayFor('2026-11-29').mult, 1.3);
   api.setSettings({ preHolidayRule: false });
   assert.strictEqual(api.holidayFor('2026-11-29'), null);
   api.setSettings({ preHolidayRule: true });
@@ -181,18 +207,17 @@ test('estimateStatutory: semi25 2nd cutoff (11-25) includes 26-31 from prior mon
     { id: 2, date: '2026-11-15', startTime: '08:00', endTime: '16:00', hourlyRate: 100, multiplier: 1, reg: 40, ot: 0, nd: 0, ndPay: 0, gross: 4000, status: 'worked' }
   ]);
   const d = api.estimateStatutory('2026-11-25', 4000, 4000);
-  // Combined monthly gross = 8000 (Oct 28 in 2026-11-10 cutoff) + 4000 (Nov 15 in 2026-11-25 cutoff) = 12000
-  // MSC = 12000 -> monthly SSS = 600 -> split 2nd cutoff SSS = 300 (if Oct 28 was dropped, monthly would be 8000 -> SSS 200!)
   assert.strictEqual(d.sss, 300);
 });
 
 // 10. Multi-day roster parser
-test('parseScheduleText: parses McDonald\'s graveyard roster cleanly', () => {
+test('parseScheduleText: parses graveyard roster cleanly', () => {
+  api.setShifts([]);
   api.setSettings({ schedule: 'semi', hourlyRate: 73.75, midnightHolidaySplit: true });
-  const rows = api.parseScheduleText('Thu 10p-4a GR\nSat 10p-4a GR\nSun 10p-4a Lobby', '2026-11-23');
+  const rows = api.parseScheduleText('Thu 10p-4a GR\nSat 10p-4a GR\nSun 10p-4a Lobby');
   assert.strictEqual(rows.length, 3);
-  assert.strictEqual(rows[0].startTime, '22:00');
-  assert.strictEqual(rows[0].endTime, '04:00');
+  assert.strictEqual(rows[0].start, '22:00');
+  assert.strictEqual(rows[0].end, '04:00');
   assert.strictEqual(rows[0].note, 'GR');
   assert.strictEqual(rows[2].note, 'Lobby');
 });
